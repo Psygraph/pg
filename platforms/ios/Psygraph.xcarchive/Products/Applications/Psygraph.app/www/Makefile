@@ -1,0 +1,6 @@
+
+
+
+.DEFAULT:
+	cd .. && $(MAKE) $(MAKECMDGOALS)
+

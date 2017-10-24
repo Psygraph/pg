@@ -1,0 +1,75 @@
+{
+    "prepare_queue": {
+        "installed": [],
+        "uninstalled": []
+    },
+    "config_munge": {
+        "files": {}
+    },
+    "installed_plugins": {
+        "cordova-plugin-ios-disableshaketoedit": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-network-information": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-splashscreen": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-statusbar": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-vibration": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-whitelist": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-inappbrowser": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-file": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-dialogs": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-device": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-device-motion": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-compat": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-console": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-app-event": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-geolocation": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-mauron85-background-geolocation": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "de.appplant.cordova.plugin.local-notification": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-media": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-android-permissions": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-file-transfer": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        },
+        "cordova-plugin-device-orientation": {
+            "PACKAGE_NAME": "com.psygraph.pg"
+        }
+    },
+    "dependent_plugins": {}
+}

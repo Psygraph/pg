@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<!--html manifest="offline.appcache"-->
+<html>
+    <head>
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="format-detection" content="telephone=no">
+
+        <meta charset="utf-8" />
+        <meta http-equiv="Content-Type" content="text/html" />
+        <meta http-equiv="Content-Security-Policy" content="default-src * data: gap://ready; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'"/>
+
+        <meta name="description" content="The Psygraph Digital Mala" />
+
+        <link rel="stylesheet" type="text/css" href="css/pg-theme.min.css" />
+        <link rel="stylesheet" type="text/css" href="css/jquery.mobile.icons.min.css" />
+        <link rel="stylesheet" type="text/css" href="css/jquery.mobile.structure-1.4.5.min.css" />
+        <link rel="stylesheet" type="text/css" href="css/vis.min.css" />
+        <link rel="stylesheet" type="text/css" href="css/leaflet.css" />
+        <link rel="stylesheet" type="text/css" href="css/select2.min.css" />
+        <link rel="stylesheet" type="text/css" href="css/jtsage-datebox.css" />
+  
+        <link rel="stylesheet" type="text/css" id="base_style"  href="css/psygraph.css" />
+        <link rel="stylesheet" type="text/css" id="user_style"  href="media/default.css" />
+        <noscript><h2>Error: Javascript must be enabled.</h2></noscript>
+
+        <!-- robust 3P libraries -->
+        <script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
+        <script type="text/javascript" src="js/vis.min.js"></script>
+        <script type="text/javascript" src="js/hammer.js"></script>
+        <!--script type="text/javascript" src="js/hammer-time.min.js"></script-->
+        <!--script type="text/javascript" src="js/fastclick.js"></script-->
+        <!--script type="text/javascript" src="js/leaflet.js"></script-->
+
+        <!-- PG files -->
+        <script type="text/javascript" src="js/URI.js"></script>
+        <script type="text/javascript" src="js/pg.js"></script>
+
+        <!-- PG utilities -->
+        <script type="text/javascript" src="js/xml.js"></script>
+        <script type="text/javascript" src="js/file.js"></script>
+        <script type="text/javascript" src="js/audio.js"></script>
+        <script type="text/javascript" src="js/accel.js"></script>
+        <script type="text/javascript" src="js/location.js"></script>
+        <script type="text/javascript" src="js/clock.js"></script>
+        <script type="text/javascript" src="js/notify.js"></script>
+        <script type="text/javascript" src="js/arr.js"></script>
+        <script type="text/javascript" src="js/pNode.js"></script>
+
+        <title>Psygraph</title>
+    </head>
+    <body id="pgbody">
+        
+        <!-- Psygraph.js needs access to the head element -->
+        <script type="text/javascript" src="js/psygraph.js"></script>
+        <script type="text/javascript" src="html/page.js"></script>
+        <!-- init code must occur between jq and jqm -->
+        <script type="text/javascript" src="js/init.js"></script>
+        <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+        <!-- widgets that depend on jquery mobile -->
+        <script type="text/javascript" src="js/select2.full.min.js"></script>
+        <script type="text/javascript" src="js/jquery.knob.js"></script>
+        <script type="text/javascript" src="js/jtsage-datebox.js"></script>
+        <script type="text/javascript" src="js/pgUI.js"></script>
+        <script type="text/javascript" src="cordova.js"></script>
+
+<script>
+// The next line should not be altered, it is subject to string replacement.
+var WORDPRESS=false;
+
+// final JS loading command
+if(pgInitialized.state()=="resolved") {
+    gotoPage("home");
+}
+else { 
+    $.when(pgInitialized).then(gotoPage.bind(this,"home"));
+}
+</script>
+
+    </body>
+</html>

@@ -1,0 +1,25 @@
+
+<div id="subheader_counter" data-role="control-group">
+  <div class="category">Loading...</div>
+</div>
+
+<div data-role="control-group" class="inset">
+    <div class="ui-field-contain no-field-separator" id="counter_div">
+        <input id="counter_edit" class="clock_widget" type="text" value="0" readonly></input>
+    </div>
+
+  <div>
+    <input type="image" class="button fast" id="counter_reset" title="Reset" onClick="return UI.counter.reset();" src="img/reset.png" alt="reset"/>
+    <input type="image" class="button fast" id="counter_start" title="Start/Stop" 
+	 onClick="return UI.counter.startStop();" src="img/start.png" alt="start"/>
+  </div>
+
+</div>
+
+<div>
+  <input type="text" id="counter_enso" class="enso" data-wrapper-class="enso" >
+</div>
+
+<!--div class="clickarea"/-->
+
+<script src="html/counter.js">

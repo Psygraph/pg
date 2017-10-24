@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget android-versionCode="7010" id="com.psygraph.pg" version="0.7.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <feature name="Device">
+        <param name="browser-package" value="Device" />
+    </feature>
+    <name>Psygraph</name>
+    <description>
+      Graph your mind.
+    </description>
+    <author email="alec@psygraph.com" href="https://psygraph.com">
+        Alec Rogers
+    </author>
+    <content src="index.html" />
+    <access origin="*" />
+    <asset src="www/img" target="img" />
+    <preference name="StatusBarOverlaysWebView" value="false" />
+    <preference name="StatusBarStyle" value="default" />
+    <preference name="StatusBarBackgroundColor" value="#90A0BB" />
+    <preference name="DisallowOverscroll" value="true" />
+    <preference name="UIWebViewBounce" value="false" />
+    <preference name="android-windowSoftInputMode" value="adjustResize" />
+    <preference name="Orientation" value="portrait" />
+    <preference name="BackupWebStorage" value="local" />
+    <preference name="iosPersistentFileLocation" value="Library" />
+    <preference name="AndroidPersistentFileLocation" value="Internal" />
+    <preference name="ShowSplashScreen" value="true" />
+    <preference name="SplashScreenDelay" value="000" />
+    <preference name="AutoHideSplashScreen" value="false" />
+    <preference name="FadeSplashScreen" value="true" />
+    <preference name="SplashScreen" value="img/logo.png" />
+</widget>

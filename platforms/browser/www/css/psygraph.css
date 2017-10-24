@@ -1,0 +1,441 @@
+/* CSS for Psygraph client */
+
+
+/* 
+==============================================================
+basic elements 
+==============================================================
+*/
+
+* {
+}
+html {
+    border:  none; 
+    margin:  0px;
+    padding: 0px;
+    vertical-align: middle;
+}
+html,body { 
+    width:      100%;
+    height:     100%;
+    overflow-x: hidden; 
+    overflow-y: hidden; 
+}
+body {
+    -webkit-touch-callout: none;                /* prevent callout to copy image, etc when tap to hold */
+    -webkit-user-select:   none;                /* prevent copy paste, to allow, change 'none' to 'text' */
+    -webkit-text-size-adjust: none;             /* prevent webkit from resizing text to fit */
+    -webkit-backface-visibility:hidden;
+    -webkit-overflow-scrolling: none;
+    backface-visibility:hidden;
+    -ms-content-zooming: none;
+    border:  none; 
+}
+p { 
+    text-align: center;
+    vertical-align: middle;
+}
+h3 { 
+    font: normal;
+    letter-spacing: 1px;
+    margin-bottom: 0; 
+}
+a:link { 
+    font-weight: bold; 
+    text-decoration: none; 
+}
+a:visited { 
+    font-weight: bold; 
+    text-decoration: none; 
+}
+a:hover, a:active { 
+    text-decoration: underline;
+}
+/* Various text properties */
+html {
+    /*
+    font-family: Helvetica; 
+    font-size: 16px;
+    font-family:'HelveticaNeue-Light', 'HelveticaNeue', Helvetica, Arial, sans-serif;
+    */
+    text-align: center;
+}
+
+/* 
+==============================================================
+Title Bar and Common Elements
+==============================================================
+*/
+.rightTitlePopup, .leftTitlePopup,
+.ui-header .ui-btn-left, .ui-header .ui-btn-right {
+    font-size: 1.0em;
+    line-height: 1.0;
+    width: 36pt;
+    text-align: left;
+    text-overflow: clip;
+    border-width: 1px;
+    border-style: solid;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+}
+.ui-btn-right {
+    right: 2px;
+}
+.ui-btn-left {
+    left: 2px;
+}
+.ui-btn-icon-left {
+    padding-left: 2.0em;
+}
+.ui-popup {
+    min-width: 140px;
+}
+/* 
+==============================================================
+JQuery elements 
+==============================================================
+*/
+.ui-content .ui-listview, .ui-panel-inner>.ui-listview {
+    margin: 1px;
+}
+.ui-listview, .ui-listview>li {
+    background: rgba(255,255,255, 0.8);
+}
+.ui-listview, .ui-listview>li {
+    background: rgba(255,255,255, 0.8);
+}
+.ui-body-a, .ui-overlay-a, .ui-content, .ui-page {
+    background: transparent;
+    text-shadow: none;
+}
+.ui-title {
+    xxxheight: 36px;
+}
+.ui-header .ui-title {
+    margin-left:  10%;
+    margin-right: 10%;
+}
+div.ui-header, div.ui-content, div.ui-footer {
+    border-top-width: 0px;
+    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: hidden
+}
+div.ui-content, div.ui-footer {
+    margin:  0px;
+    padding: 0px;
+}
+div.ui-header {
+    line-height: 1em;
+    xxxpadding-bottom: 8px;
+}
+div [data-role="collapsibleset"] {
+    margin: 0px;
+}
+.ui-mobile, .ui-page, .page {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+}
+textarea.ui-input-text,
+div.ui-input-text,
+div.ui-field-contain {
+    margin: 0px 0px 8px 0px;
+    border-width: 0px 0px 0px 0px;
+    padding: 6px 0px 0px 0px;
+}
+div.ui-field-contain {
+    outline: 0 none; /* turn off ios underscore */
+}
+a.ui-btn {
+    xxmargin: 1px 1px 8px 1px;
+}
+input {
+    outline: 0 none; /* turn off button highlight */
+}
+/* The title bar icon */
+img.banner {
+    height: 20px;
+    margin: 0px 0px 0px 0px;
+}
+#banner {
+    font-size: 24px;
+    padding: 0.5em 0px;
+}
+.ui-header .ui-title {
+    xmargin:  0px 0px 0px 0px;
+}
+
+.ui-grid-b .navbar_button {
+    padding-top:    0px;
+    padding-left:   2px;
+    padding-right:  2px;
+    padding-bottom: 2px;
+}
+/* ui-field-contain put a strange underscore between elements on IOS.
+Add the .no-field-separator class to avoid that */
+.ui-hide-label.ui-br, .no-field-separator {
+    border-bottom-width: 0px;
+}
+.ui-field-contain.ui-hide-label, .no-field-separator {
+    margin: 1em 0em;
+    padding: 0px;
+}
+
+/*
+==============================================================
+CSS for categories 
+==============================================================
+*/
+#categoryName, #pageName { 
+    text-align: center;
+    vertical-align: middle;
+    margin: 1px; 
+}
+div.category, div.home {
+    padding: 3px 0px 0px 0px;
+    text-shadow: none;
+    font-size:   14pt;
+    font-weight: bold;
+    font-style: italic;
+}
+a.catPopup {
+    margin: 8px 1px 1px 1px;
+}
+
+/*
+==============================================================
+CSS for pages 
+==============================================================
+*/
+
+/* there are a few scrollabe divs: about, list, help pages */
+div.scrollable {
+    overflow: scroll;
+}
+div.clickarea {
+    height: 100%;
+}
+
+/* Various widgets
+============================================================== */
+fieldset.settings {
+    border-width: 2px;
+    border-style: solid;
+    margin: 10px 5px 2px 5px;
+    padding: 5px;
+}
+textarea {
+    margin: 4px 4px 4px 4px;
+    border-width: 0px 0px 0px 0px;
+    padding: 0px 0px 0px 0px;
+}
+input {
+    margin: 4px 4px 4px 4px;
+    border-width: 0px 0px 0px 0px;
+    padding: 0px 0px 0px 0px;
+    outline: 0 none; /* turn off button highlight */
+}
+input.button {
+    font-family: monospace;
+    text-align: center;
+    vertical-align: middle;
+    height: 128px;
+    width: 128px;
+    opacity: 0.99;
+    /* images should not be selectable */
+    user-drag: none; 
+    -moz-user-select: none;
+    -webkit-user-drag: none;
+}
+.inset {
+    /* This is to inset the time and stopwatch text input boxes */
+    margin-left:  10px;
+    margin-right: 10px;
+    margin-top:    0px;
+}
+
+#loading_div {
+    width:       auto;
+    text-align:  center;
+    margin-top:  20%;
+}
+#loading_page {
+    position:   fixed;
+    width:      100%;
+    height:     100%;
+    background: rgba(255, 255, 255, 1);
+    left:       0;
+    top:        0;
+    zIndex:     10000;
+}
+
+/* ALERT, DIALOG
+============================================================== */
+#alertText {
+    text-align:  center;
+    padding:     10px 10px 10px 10px;
+}
+#alertBody { /* tint the alert background to a very light color*/
+    background: #FFFFFF;
+}
+#pgAlert-popup {
+    width:  90%;
+}
+#dialogText {
+    margin-top: 6px;
+}
+
+/* LIST
+============================================================== */
+table {
+    width: 90%;
+}
+#eventlist {
+    height: 100%;
+    width:  100%;
+}
+.data {
+    vertical-align: middle;
+    border: 1px solid black;
+    padding: 4px;
+}
+td.fill {
+}
+tr.data, td.data { /* tint all rows to a lighter color for legibility*/
+    background: rgba(255,255,255, 0.1);
+}
+th.data, tr.selected, td.selected { /* tint the headers and selected rows to a very light color*/
+    background: rgba(255,255,255, 0.8);
+}
+
+/* HELP, ABOUT
+============================================================== */
+div#helpDiv, div#aboutDiv {
+    margin:  0px;
+    padding: 12px;
+}
+div#aboutDiv, div#helpDiv {
+    background: #EFEFEF; /* #90A0BB; */
+}
+ul {
+    text-align: left;
+}
+p.help {
+    text-align: left;
+}
+div#helpText {
+    display: none;
+}
+div#levers {
+    display: inline-table;
+}
+.legal {
+    font-size: 0.4em;
+    text-align: left;
+}
+#help_rightButton {
+    padding-right: 4em;
+}
+
+/* PREFS
+============================================================== */
+#new_pgaes_button {
+    font-size: 1.1em;
+}
+#prefsPage label {
+    text-align: left;
+}
+.select2-selection__choice {
+    font-size: 1.2em;
+}          
+
+/* HOME 
+============================================================== */
+#home_status {
+    margin: 10px;
+    text-align: left;
+    font-size: 22px;
+}
+#home_status p {
+    margin: 10px;
+    text-align: left;
+    font-size: 22px;
+}
+#home_status p.banner {
+    margin: 10px;
+    text-align: center;
+}
+input#passw { /* this is in a dialog, and appears small otherwise. */
+    border-width: 1px;
+    padding: 6px;
+}
+
+/* STOPWATCH, TIMER
+============================================================== */
+input#stopwatch_stop,input#timer_stop {
+    display: none;
+}
+input.clock_widget {
+    text-align: center;
+    font-size: 42px;
+    font-family: sans-serif,monospace;
+    padding: 0em;
+    font-weight: bold;
+}
+
+.ui-input-text.knob, input.knob {
+   border: none;  
+   background: none;
+   box-shadow: none;
+}
+
+.ui-datebox-container {
+   background: white;
+}
+
+/* COUNTER
+============================================================== */
+
+/* NOTE
+============================================================== */
+.note {
+    font-size: 16pt;
+}
+
+#noteDiv .mce-container, #noteDiv .mce-fullscreen {
+    z-index: 1000;
+}
+
+/* MAP 
+============================================================== */
+img#map_mark, input.map_mark {
+    height: 54px;
+    width: 54px;
+}
+.leaflet-bar {
+    box-shadow: none;
+    border: 0px;
+}
+div#mapid {
+    background: transparent;
+}
+
+/* GRAPH, CHART
+============================================================== */
+#graphContainer {
+  width: 100px;
+  height: 100px;
+  position: relative;
+}
+#graph {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+.graphStyle {
+  stroke: black;
+  fill: grey;
+}

@@ -1,0 +1,14 @@
+{
+    "name": "com.psygraph.pg",
+    "version": "0.7.2",
+    "displayName": "Psygraph",
+    "cordova": {
+        "platforms": [
+            "android",
+            "ios"
+        ]
+    },
+    "dependencies": {
+        "cordova-android": "~6.2.3"
+    }
+}

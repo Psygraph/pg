@@ -1,0 +1,327 @@
+CACHE MANIFEST
+# v1 2014-09-08
+
+# Main page
+index.html
+
+# js/
+js/index.js
+js/URI.js
+js/audio.js
+js/notify.js
+js/clock.js
+js/cordova.js
+js/cordova_plugins.js
+js/file.js
+js/init.js
+js/jquery-2.1.4.min.js
+js/jquery-2.1.4.min.map
+js/jquery.mobile-1.4.5.min.js
+js/jquery.mobile-1.4.5.min.map
+js/psygraph.js
+js/pg.js
+js/shake.js
+js/vis.map
+js/vis.min.js
+js/leaflet.js
+js/location.js
+js/accel.js
+js/xml.js
+
+# html/
+html/about.html
+html/about.js
+html/help.html
+html/help.js
+html/home.html
+html/home.js
+html/list.html
+html/list.js
+html/counter.html
+html/counter.js
+html/graph.html
+html/graph.js
+html/chart.html
+html/chart.js
+html/map.html
+html/map.js
+html/note.html
+html/note.js
+html/prefs.html
+html/prefs.js
+html/settings.html
+html/settings.js
+html/stopwatch.html
+html/stopwatch.js
+html/timer.html
+html/timer.js
+
+# img/
+img/cursor.png
+img/login.png
+img/logo.png
+img/logout.png
+img/mark.png
+img/note.png
+img/reset.png
+img/start.png
+img/stop.png
+
+# media/
+media/alarm.mp3
+media/aqua.css
+media/bell.mp3
+media/bigText.css
+media/bike.mp3
+media/birds.mp3
+media/black.css
+media/crickets.mp3
+media/default.css
+media/default.mp3
+media/default.xml
+media/dkgrey.css
+media/einstein.xml
+media/grey.css
+media/inverse.css
+media/lime.css
+media/lojong.xml
+media/ltblue.css
+media/ltgreen.css
+media/ltgrey.css
+media/ltltgrey.css
+media/ltpurple.css
+media/null.xml
+media/orange.css
+media/pink.css
+media/singingBowl.mp3
+media/steelblue.css
+media/twain.xml
+media/violet.css
+media/white.css
+media/yellow.css
+media/zen.xml
+
+# css/
+css/index.css
+#css/jquery.mobile-1.4.5.min.css
+css/jquery.mobile.structure-1.4.5.min.css
+css/jquery.mobile.icons.min.css
+css/vis.min.css
+css/psygraph.css
+css/leaflet.css
+# css/images
+css/images/ajax-loader.gif
+css/images/logo.png
+
+# # css/images/icons-png
+# css/images/icons-png/action-black.png
+# css/images/icons-png/action-white.png
+# css/images/icons-png/alert-black.png
+# css/images/icons-png/alert-white.png
+# css/images/icons-png/arrow-d-black.png
+# css/images/icons-png/arrow-d-l-black.png
+# css/images/icons-png/arrow-d-l-white.png
+# css/images/icons-png/arrow-d-r-black.png
+# css/images/icons-png/arrow-d-r-white.png
+# css/images/icons-png/arrow-d-white.png
+# css/images/icons-png/arrow-l-black.png
+# css/images/icons-png/arrow-l-white.png
+# css/images/icons-png/arrow-r-black.png
+# css/images/icons-png/arrow-r-white.png
+# css/images/icons-png/arrow-u-black.png
+# css/images/icons-png/arrow-u-l-black.png
+# css/images/icons-png/arrow-u-l-white.png
+# css/images/icons-png/arrow-u-r-black.png
+# css/images/icons-png/arrow-u-r-white.png
+# css/images/icons-png/arrow-u-white.png
+# css/images/icons-png/audio-black.png
+# css/images/icons-png/audio-white.png
+# css/images/icons-png/back-black.png
+# css/images/icons-png/back-white.png
+# css/images/icons-png/bars-black.png
+# css/images/icons-png/bars-white.png
+# css/images/icons-png/bullets-black.png
+# css/images/icons-png/bullets-white.png
+# css/images/icons-png/calendar-black.png
+# css/images/icons-png/calendar-white.png
+# css/images/icons-png/camera-black.png
+# css/images/icons-png/camera-white.png
+# css/images/icons-png/carat-d-black.png
+# css/images/icons-png/carat-d-white.png
+# css/images/icons-png/carat-l-black.png
+# css/images/icons-png/carat-l-white.png
+# css/images/icons-png/carat-r-black.png
+# css/images/icons-png/carat-r-white.png
+# css/images/icons-png/carat-u-black.png
+# css/images/icons-png/carat-u-white.png
+# css/images/icons-png/check-black.png
+# css/images/icons-png/check-white.png
+# css/images/icons-png/clock-black.png
+# css/images/icons-png/clock-white.png
+# css/images/icons-png/cloud-black.png
+# css/images/icons-png/cloud-white.png
+# css/images/icons-png/comment-black.png
+# css/images/icons-png/comment-white.png
+# css/images/icons-png/delete-black.png
+# css/images/icons-png/delete-white.png
+# css/images/icons-png/edit-black.png
+# css/images/icons-png/edit-white.png
+# css/images/icons-png/eye-black.png
+# css/images/icons-png/eye-white.png
+# css/images/icons-png/forbidden-black.png
+# css/images/icons-png/forbidden-white.png
+# css/images/icons-png/forward-black.png
+# css/images/icons-png/forward-white.png
+# css/images/icons-png/gear-black.png
+# css/images/icons-png/gear-white.png
+# css/images/icons-png/grid-black.png
+# css/images/icons-png/grid-white.png
+# css/images/icons-png/heart-black.png
+# css/images/icons-png/heart-white.png
+# css/images/icons-png/home-black.png
+# css/images/icons-png/home-white.png
+# css/images/icons-png/info-black.png
+# css/images/icons-png/info-white.png
+# css/images/icons-png/location-black.png
+# css/images/icons-png/location-white.png
+# css/images/icons-png/lock-black.png
+# css/images/icons-png/lock-white.png
+# css/images/icons-png/mail-black.png
+# css/images/icons-png/mail-white.png
+# css/images/icons-png/minus-black.png
+# css/images/icons-png/minus-white.png
+# css/images/icons-png/navigation-black.png
+# css/images/icons-png/navigation-white.png
+# css/images/icons-png/phone-black.png
+# css/images/icons-png/phone-white.png
+# css/images/icons-png/plus-black.png
+# css/images/icons-png/plus-white.png
+# css/images/icons-png/power-black.png
+# css/images/icons-png/power-white.png
+# css/images/icons-png/recycle-black.png
+# css/images/icons-png/recycle-white.png
+# css/images/icons-png/refresh-black.png
+# css/images/icons-png/refresh-white.png
+# css/images/icons-png/search-black.png
+# css/images/icons-png/search-white.png
+# css/images/icons-png/shop-black.png
+# css/images/icons-png/shop-white.png
+# css/images/icons-png/star-black.png
+# css/images/icons-png/star-white.png
+# css/images/icons-png/tag-black.png
+# css/images/icons-png/tag-white.png
+# css/images/icons-png/user-black.png
+# css/images/icons-png/user-white.png
+# css/images/icons-png/video-black.png
+# css/images/icons-png/video-white.png
+# 
+# # css/images/icons-svg
+# css/images/icons-svg/
+# css/images/icons-svg/action-black.svg
+# css/images/icons-svg/action-white.svg
+# css/images/icons-svg/alert-black.svg
+# css/images/icons-svg/alert-white.svg
+# css/images/icons-svg/arrow-d-black.svg
+# css/images/icons-svg/arrow-d-l-black.svg
+# css/images/icons-svg/arrow-d-l-white.svg
+# css/images/icons-svg/arrow-d-r-black.svg
+# css/images/icons-svg/arrow-d-r-white.svg
+# css/images/icons-svg/arrow-d-white.svg
+# css/images/icons-svg/arrow-l-black.svg
+# css/images/icons-svg/arrow-l-white.svg
+# css/images/icons-svg/arrow-r-black.svg
+# css/images/icons-svg/arrow-r-white.svg
+# css/images/icons-svg/arrow-u-black.svg
+# css/images/icons-svg/arrow-u-l-black.svg
+# css/images/icons-svg/arrow-u-l-white.svg
+# css/images/icons-svg/arrow-u-r-black.svg
+# css/images/icons-svg/arrow-u-r-white.svg
+# css/images/icons-svg/arrow-u-white.svg
+# css/images/icons-svg/audio-black.svg
+# css/images/icons-svg/audio-white.svg
+# css/images/icons-svg/back-black.svg
+# css/images/icons-svg/back-white.svg
+# css/images/icons-svg/bars-black.svg
+# css/images/icons-svg/bars-white.svg
+# css/images/icons-svg/bullets-black.svg
+# css/images/icons-svg/bullets-white.svg
+# css/images/icons-svg/calendar-black.svg
+# css/images/icons-svg/calendar-white.svg
+# css/images/icons-svg/camera-black.svg
+# css/images/icons-svg/camera-white.svg
+# css/images/icons-svg/carat-d-black.svg
+# css/images/icons-svg/carat-d-white.svg
+# css/images/icons-svg/carat-l-black.svg
+# css/images/icons-svg/carat-l-white.svg
+# css/images/icons-svg/carat-r-black.svg
+# css/images/icons-svg/carat-r-white.svg
+# css/images/icons-svg/carat-u-black.svg
+# css/images/icons-svg/carat-u-white.svg
+# css/images/icons-svg/check-black.svg
+# css/images/icons-svg/check-white.svg
+# css/images/icons-svg/clock-black.svg
+# css/images/icons-svg/clock-white.svg
+# css/images/icons-svg/cloud-black.svg
+# css/images/icons-svg/cloud-white.svg
+# css/images/icons-svg/comment-black.svg
+# css/images/icons-svg/comment-white.svg
+# css/images/icons-svg/delete-black.svg
+# css/images/icons-svg/delete-white.svg
+# css/images/icons-svg/edit-black.svg
+# css/images/icons-svg/edit-white.svg
+# css/images/icons-svg/eye-black.svg
+# css/images/icons-svg/eye-white.svg
+# css/images/icons-svg/forbidden-black.svg
+# css/images/icons-svg/forbidden-white.svg
+# css/images/icons-svg/forward-black.svg
+# css/images/icons-svg/forward-white.svg
+# css/images/icons-svg/gear-black.svg
+# css/images/icons-svg/gear-white.svg
+# css/images/icons-svg/grid-black.svg
+# css/images/icons-svg/grid-white.svg
+# css/images/icons-svg/heart-black.svg
+# css/images/icons-svg/heart-white.svg
+# css/images/icons-svg/home-black.svg
+# css/images/icons-svg/home-white.svg
+# css/images/icons-svg/info-black.svg
+# css/images/icons-svg/info-white.svg
+# css/images/icons-svg/location-black.svg
+# css/images/icons-svg/location-white.svg
+# css/images/icons-svg/lock-black.svg
+# css/images/icons-svg/lock-white.svg
+# css/images/icons-svg/mail-black.svg
+# css/images/icons-svg/mail-white.svg
+# css/images/icons-svg/minus-black.svg
+# css/images/icons-svg/minus-white.svg
+# css/images/icons-svg/navigation-black.svg
+# css/images/icons-svg/navigation-white.svg
+# css/images/icons-svg/phone-black.svg
+# css/images/icons-svg/phone-white.svg
+# css/images/icons-svg/plus-black.svg
+# css/images/icons-svg/plus-white.svg
+# css/images/icons-svg/power-black.svg
+# css/images/icons-svg/power-white.svg
+# css/images/icons-svg/recycle-black.svg
+# css/images/icons-svg/recycle-white.svg
+# css/images/icons-svg/refresh-black.svg
+# css/images/icons-svg/refresh-white.svg
+# css/images/icons-svg/search-black.svg
+# css/images/icons-svg/search-white.svg
+# css/images/icons-svg/shop-black.svg
+# css/images/icons-svg/shop-white.svg
+# css/images/icons-svg/star-black.svg
+# css/images/icons-svg/star-white.svg
+# css/images/icons-svg/tag-black.svg
+# css/images/icons-svg/tag-white.svg
+# css/images/icons-svg/user-black.svg
+# css/images/icons-svg/user-white.svg
+# css/images/icons-svg/video-black.svg
+# css/images/icons-svg/video-white.svg
+
+# Use from network if available
+NETWORK:
+http://www.google.com/jsapi
+
+# Fallback content
+FALLBACK:
+#

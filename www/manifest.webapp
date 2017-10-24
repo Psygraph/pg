@@ -1,0 +1,10 @@
+{ 
+    "launch_path":"/index.html",
+    "installs_allowed_from":["*"],
+    "version":"0.7.0",
+    "name":"Psygraph",
+    "pkgName":"com.psygraph.pg",
+    "icons": {
+        "128": "img/logo.png"
+    }
+}

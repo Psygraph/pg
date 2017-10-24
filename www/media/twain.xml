@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE U SYSTEM "U.dtd" >
+<U>
+  <thing id="Twain">
+    <thing><p>The secret of getting ahead is getting started.</p></thing>
+    <thing><p>Go to Heaven for the climate, Hell for the company.</p></thing>
+    <thing><p>It is better to keep your mouth closed and let people think you are a fool than to open it and remove all doubt.</p></thing>
+    <thing><p>You can't depend on your eyes when your imagination is out of focus.</p></thing>
+    <thing><p>Loyalty to the Nation all the time, loyalty to the Government when it deserves it.</p></thing>
+    <thing><p>The lack of money is the root of all evil.</p></thing>
+    <thing><p>Giving up smoking is the easiest thing in the world. I know because I've done it thousands of times.</p></thing>
+    <thing><p>The man who does not read good books has no advantage over the man who cannot read them.</p></thing>
+    <thing><p>If you tell the truth, you don't have to remember anything.</p></thing>
+    <thing><p>The right word may be effective, but no word was ever as effective as a rightly timed pause.</p></thing>
+    <thing><p>Don't let schooling interfere with your education.</p></thing>
+    <thing><p>Only one thing is impossible for God: To find any sense in any copyright law on the planet.</p></thing>
+    <thing><p>Buy land, they're not making it anymore.</p></thing>
+    <thing><p>To refuse awards is another way of accepting them with more noise than is normal.</p></thing>
+    <thing><p>The most interesting information comes from children, for they tell all they know and then stop.</p></thing>
+    <thing><p>It ain't what you don't know that gets you into trouble. It's what you know for sure that just ain't so.</p></thing>
+    <thing><p>Never put off till tomorrow what you can do the day after tomorrow.</p></thing>
+    <thing><p>We have the best government that money can buy.</p></thing>
+    <thing><p>Thousands of geniuses live and die undiscovered - either by themselves or by others.</p></thing>
+    <thing><p>I am an old man and have known a great many troubles, but most of them never happened.</p></thing>
+    <thing><p>I don't like to commit myself about heaven and hell - you see, I have friends in both places.</p></thing>
+    <thing><p>Words are only painted fire; a look is the fire itself.</p></thing>
+    <thing><p>Laws control the lesser man... Right conduct controls the greater one.</p></thing>
+    <thing><p>Life would be infinitely happier if we could only be born at the age of eighty and gradually approach eighteen.</p></thing>
+    <thing><p>Familiarity breeds contempt - and children.</p></thing>
+    <thing><p>Man is the only animal that blushes - or needs to.</p></thing>
+    <thing><p>To be good is noble; but to show others how to be good is nobler and no trouble.</p></thing>
+  </thing>
+
+  
+  <ref name="text" src="//U/thing[@id='Twain']"></ref>
+
+</U>

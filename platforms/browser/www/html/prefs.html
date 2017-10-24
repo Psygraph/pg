@@ -1,0 +1,57 @@
+
+<div id="prefsPage" >
+  <div id="prefsDiv" class="scrollable">
+    <div data-role="control-group" class="inset">
+      
+      <div  id="prefsSettings">
+        
+        <div id="page_select" class="ui-field-contain no-field-separator needsclick">
+        </div>
+        
+        <div>
+          <label for="new_categories">Categories (separate with a space):</label>
+          <select id="new_categories" data-tags="true" data-placeholder="Displayed Categories" multiple="multiple" data-role="none"></select>
+          <!--input type="text" id="new_categories" name="categories" value=""/ -->
+        </div>
+        
+        <div id="swipeDiv" class="ui-field-contain no-field-separator">
+          <label for="swipeSlider">Swipe sensitivity:</label>
+          <input type="range" name="swipeSlider" id="swipeSlider" value="20" min="5" max="100">
+        </div>
+        
+        <label for="debug">Turn on debugging and error reporting.</label>
+        <input type="checkbox" name="debug" id="debug"></input>
+
+        <!--
+        <label for="publicAccess">Allow public, read-only access to generated files.</label>
+        <input type="checkbox" name="publicAccess" id="publicAccess"></input>
+        -->
+
+        <label for="wifiOnly">Upload files using WIFI only.</label>
+        <input type="checkbox" name="wifiOnly" id="wifiOnly"></input>
+        
+        <label for="screenTaps">Allow screen taps to press buttons.</label>
+        <input type="checkbox" name="screenTaps" id="screenTaps"></input>
+        
+        <label for="perCategorySettings">Allow different page settings for each category.</label>
+        <input type="checkbox" name="perCategorySettings" id="perCategorySettings"></input>
+        
+        <!--
+            <label for="createPosts">Create posts from notes.</label>
+            <input type="checkbox" name="createPosts" id="createPosts"></input>
+            <input type="checkbox" name="importCategories" id="importCategories" $importCategories > Import categories from WordPress</input>
+            -->
+        
+        <br/>
+      </div>
+      
+      <div data-role="fieldcontain" id="settingButtons">
+	    <input type="button" id="cancelPrefs" onClick="gotoPage(pg.page(),true); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"></input>
+	    <!--input type="button" id="applyPrefs" onClick="UI.prefs.submitSettings(false); return false;" class="btn fast" value="Apply" title="apply" data-inline="true"></input-->
+	    <input type="button" id="OKPrefs" onClick="UI.prefs.submitSettings(true); return false;" class="btn fast" value="OK" title="OK" data-inline="true"/></input>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="html/prefs.js"></script>
