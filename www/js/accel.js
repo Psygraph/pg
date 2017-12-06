@@ -80,10 +80,13 @@ var pgAccel = {
     hasCompass: function(callback) {
         var d = $.Deferred();
         $.when(d).done(callback);
-        if(typeof(navigator.compass)=="undefined")
+        if(typeof(navigator.compass)=="undefined") {
             d.resolve(false);
-        else
-            navigator.compass.getCurrentHeading(onSuccess, onError);
+        }
+        else {
+            d.resolve(true);
+            //navigator.compass.getCurrentHeading(onSuccess, onError);
+        }
         function onSuccess(heading) {
             d.resolve(true);
         }

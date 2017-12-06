@@ -67,13 +67,14 @@ Title Bar and Common Elements
 .ui-header .rightTitlePopup, .ui-header .leftTitlePopup {
     font-size: 1.0em;
     line-height: 1.0em;
-    width: 2.6em;
+    width: 3.2em;
     text-align: left;
     text-overflow: clip;
     border-width: 1px;
     border-style: solid;
     padding-top: 0.5em;
     padding-bottom: 0.5em;
+    padding-left: 2.0em;
 }
 .ui-btn-right {
     right: 0.2em;
@@ -99,7 +100,7 @@ JQuery elements
     background: rgba(255,255,255, 0.8);
 }
 .ui-listview, .ui-listview>li {
-    background: rgba(255,255,255, 0.8);
+    background: rgba(255,255,255, 1);
 }
 .ui-body-a, .ui-overlay-a, .ui-content, .ui-page {
     background: transparent;
@@ -124,6 +125,7 @@ div.ui-content, div.ui-footer {
 }
 div.ui-header {
     line-height: 1.4em;
+    xxxposition: relative;
     xxxpadding-bottom: 8px;
 }
 div [data-role="collapsibleset"] {
@@ -137,7 +139,7 @@ div [data-role="collapsibleset"] {
 textarea.ui-input-text,
 div.ui-input-text,
 div.ui-field-contain {
-    margin: 0em 0em 0.4em 0em;
+    margin: 0.2em 0.2em 0.4em 0em;
     border-width: 0em 0em 0em 0em;
     padding: 0.4em 0em 0em 0em;
 }
@@ -145,7 +147,7 @@ div.ui-field-contain {
     outline: 0 none; /* turn off ios underscore */
 }
 a.ui-btn {
-    xxmargin: 1px 1px 8px 1px;
+    color: black;
 }
 input {
     outline: 0 none; /* turn off button highlight */
@@ -196,6 +198,12 @@ div.category, div.home {
     font-weight: bold;
     font-style: italic;
 }
+div.leftFloat {
+    float: left;
+}
+div.rightFloat {
+    float: right;
+}
 /* category button */
 .ui-navbar li .ui-btn {
     font-size: 0.8em; 
@@ -222,6 +230,10 @@ div.scrollable {
 }
 div.clickarea {
     height: 100%;
+}
+
+div.page {
+    padding-top: 0px !important
 }
 
 /* Various widgets
@@ -253,6 +265,7 @@ input.button {
     height: 8em;
     width: 8em;
     opacity: 0.99;
+    background-color: transparent;
     /* images should not be selectable */
     user-drag: none; 
     -moz-user-select: none;
@@ -321,9 +334,16 @@ th.data, tr.selected, td.selected { /* tint the headers and selected rows to a v
 
 /* HELP, ABOUT
 ============================================================== */
+#helpPage {
+    padding-top: 0px;
+}
 div#helpDiv, div#aboutDiv {
     margin:  0em;
     padding: 12px;
+}
+div.helpPageDiv {
+    margin-bottom: 40px;
+    margin-bottom: 40px;
 }
 div#aboutDiv, div#helpDiv {
     background: #EFEFEF; /* #90A0BB; */
@@ -336,6 +356,7 @@ p.help {
 }
 div#helpText {
     display: none;
+    xxxheight: 0px;
 }
 div#levers {
     display: inline-table;
@@ -392,6 +413,12 @@ input.clock_widget {
     font-family: sans-serif,monospace;
     padding: 0em;
     font-weight: bold;
+}
+input.half_clock_widget {
+    text-align: center;
+    font-size: 1.2em;
+    font-family: sans-serif,monospace;
+    xxxpadding: 0em;
 }
 
 .ui-datebox-container {

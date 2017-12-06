@@ -68,8 +68,10 @@ var pgFile = {
                     
                     var soundDir;
                     if(device.platform=="iOS") {
-                        soundDir = cordova.file.dataDirectory.replace("/NoCloud","");
-                        window.resolveLocalFileSystemURL(soundDir, onFSSound, soundFail);
+                        //soundDir = cordova.file.dataDirectory.replace("/NoCloud","");
+                        //window.resolveLocalFileSystemURL(soundDir, onFSSound, soundFail);
+                        pgFile.soundEntry = pgFile.persistEntry;
+                        pgFile.soundURL   = pgFile.persistURL;
                     }
                     else {
                         //soundDir = cordova.file.dataDirectory;
@@ -86,18 +88,18 @@ var pgFile = {
                     pgFile.mutex.resolve(false);
                 }
                 function onFSSound(fileSystem) {
-                    fileSystem.getDirectory('Sounds', { create: true }, 
-                                            function(subDirEntry) {
-                                                pgFile.soundEntry = subDirEntry;
-                                                pgFile.soundURL   = subDirEntry.toURL().replace(/\/$/, "");
-                                                showLog("Created Sounds directory: "+pgFile.soundURL);
-                                            },
-                                            function() {
-                                                pgFile.soundEntry = pgFile.persistEntry;
-                                                pgFile.soundURL   = pgFile.persistURL;
-                                                showError("Could not create Sounds directory: "+pgFile.soundURL);
-                                            }
-                    );
+                    //fileSystem.getDirectory('Sounds', { create: true }, 
+                    //                        function(subDirEntry) {
+                    //                            pgFile.soundEntry = subDirEntry;
+                    //                            pgFile.soundURL   = subDirEntry.toURL().replace(/\/$/, "");
+                    //                            showLog("Created Sounds directory: "+pgFile.soundURL);
+                    //                        },
+                    //                        function() {
+                    pgFile.soundEntry = fileSystem;
+                    pgFile.soundURL   = fileSystem.toURL().replace(/\/$/, "");
+                    //showError("Could not create Sounds directory.");
+                    //                        }
+                    //);
                 }
                 function soundFail(err) {
                     showLog("Could not get Sounds fileSystem");
@@ -330,40 +332,39 @@ var pgFile = {
     },
 
     getRecordingPath: function(callback, filename) {
-        pgFile.persistEntry.getFile(filename, {create: true, exclusive: false }, gotFile.bind(this,true), gotFile.bind(this,false));
+        pgFile.soundEntry.getFile(filename, {create: true, exclusive: false }, gotFile.bind(this,true), gotFile.bind(this,false));
         function gotFile(success, fileEntry) {
             if(success) {
-                // WORKING callback("documents://" + fileEntry.name);
                 callback(fileEntry.toURL());
             }
             else
                 callback();
         }
     },
-
+    
     basename: function(str) {
         var base = new String(str).substring(str.lastIndexOf('/') + 1);
         //if(base.lastIndexOf(".") != -1)
         //    base = base.substring(0, base.lastIndexOf("."));
         return base;
     },
-    // In fact, we create a temporary file in the "Sounds" directory
+    // In fact, we create a temporary file in the temp directory
     copySoundFile: function(src, callback, fn) {
         var tmpFile = "temp_" + fn;
-        pgFile.existFile(tmpFile, cb.bind(this, tmpFile), "sound");
+        pgFile.existFile(tmpFile, cb.bind(this, tmpFile), "temp");
         function cb(tmpFile, success) {
             if(success) {
-                callback(true, pgFile.getSoundURL() +"/" +tmpFile);
+                callback(true, pgFile.getTempURL() +"/" +tmpFile);
                 return;
             }
             if(src.indexOf("http")==0) {
                 var fileTransfer = new FileTransfer();
-                var fileURL = pgFile.getSoundURL() +"/" +tmpFile;
+                var fileURL = pgFile.getTempURL() +"/" +tmpFile;
                 fileTransfer.download(
                     src,
                     fileURL,
-                    function(entry) {
-                        callback(true, entry.toURL());
+                    function(ent) {
+                        callback(true, ent.toURL());
                     },
                     function(err) {
                         showLog("Error copying temp file("+src+"): " + err.source);
@@ -372,18 +373,17 @@ var pgFile = {
                 );
             }
             else {
-                pgFile.soundEntry.getFile(tmpFile, {create: false, exclusive: true}, remove, create);
+                pgFile.tempEntry.getFile(tmpFile, {create: false, exclusive: true}, remove, create);
                 function remove(entry) {
                     // we should not end up here, since if the file existed, we would have played it.
                     entry.remove(create, fail);
                 }
                 function create() {
-                    pgFile.persistEntry.getFile(src, {create: false, exclusive: false}, success, fail);
+                    pgFile.soundEntry.getFile(src, {create: false, exclusive: false}, success, fail);
                     function success(srcEntry) {
-                        srcEntry.copyTo(pgFile.soundEntry, tmpFile, s2, fail);
+                        srcEntry.copyTo(pgFile.tempEntry, tmpFile, s2, fail);
                         function s2(ent) {
                             callback(true, ent.toURL());
-                            // WORKING callback("documents://" + ent.name);
                         }
                     }
                 }

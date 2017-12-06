@@ -18,6 +18,7 @@ timer.prototype.update = function(show, state) {
     if(initializing) {
         this.timerWidget    = $('#countdown_timer');
         this.durationWidget = $('#countdown_duration');
+        this.durationWidget.prop("disabled", true);
         pgNotify.setCallback(this.notificationCallback.bind(this));
         this.clock  = new Clock(this.timerCallback.bind(this), 50, function(a,b,c){});
     }
@@ -62,6 +63,13 @@ timer.prototype.refreshTimer = function(category) {
         this.countdownDuration[category] = e.countdownTime;
     this.durationWidget.val(pgUtil.getStringFromMS(this.countdownDuration[category]));
     this.clock.setCountdown(this.countdownDuration[category]);
+
+    // update the screen widgets
+    $("#countdown_set_duration").val(pgUtil.getStringFromMS(data.countdownTime));
+    $("#countdown_set_random").val(pgUtil.getStringFromMS(data.randomInterval));
+    $("#countdown_set_duration").prop("disabled", e.running);
+    $("#countdown_set_random").prop("disabled", e.running);
+    
     if(e.running == 1) {
         this.clock.startFromTime(e.startTime);
     }
@@ -94,9 +102,9 @@ timer.prototype.settings = function() {
         s += "</div>";
         s += "<div class='ui-field-contain no-field-separator' data-role='controlgroup'>";
         s += "<legend>Loop:</legend>";
-        s += printCheckbox("loop", "Loop", data['loop']);
+        s += printCheckbox("loop", "Loop", data.loop);
         s += "</div>";
-
+        
         if(pg.getUserDataValue("debug")) {
             s += "<div class='ui-field-contain no-field-separator'>";
             s += "  <label for='extraAlarms:'>Additional alarms:</label>";
@@ -104,66 +112,96 @@ timer.prototype.settings = function() {
             s += "  <input class='settings' type='text' id='extraAlarms' value='"+alarmVal+"'/>";
             s += "</div>";
         }
+        /*
         s += "<div class='ui-field-contain no-field-separator'>";
-        s += "  <label for='countdownTime'>Countdown Time (d,h,m,s):</label>";
+        s += "  <label for='countdownTime'>Countdown Time (h:m:s):</label>";
         var timeVal = pgUtil.getStringFromMS(data.countdownTime);
         s += "  <input class='settings' type='text' id='countdownTime' value='"+timeVal+"'/>";
         s += "</div>";
         s += "<div class='ui-field-contain no-field-separator'>";
-        s += "  <label for='randomInterval'>Random interval (d,h,m,s):</label>";
+        s += "  <label for='randomInterval'>Random interval (h:m:s):</label>";
         var randVal = pgUtil.getStringFromMS(data.randomInterval);
         s += "  <input class='settings' type='text' id='randomInterval' value='"+randVal+"'/>";
         s += "</div>";
-        
+        */
+
         UI.settings.setPageContent(s);
         $("#timerAlarm").val(data.timerAlarm).change();
+        $("#loop").attr('checked', data.loop);
 
-        var dbOpts = {
-            mode: "durationflipbox",
-            //useInline: false,
-            useButton: true,
-            lockInput: false,
-            showInitialValue: true
-        };
-        $('#countdownTime').datebox(dbOpts);
-        $('#randomInterval').datebox(dbOpts);
+        //var dbOpts = {
+        //    mode: "durationflipbox",
+        //    //useInline: false,
+        //    useButton: true,
+        //    lockInput: false,
+        //    showInitialValue: true
+        //};
+        //$('#countdownTime').datebox(dbOpts);
+        //$('#randomInterval').datebox(dbOpts);
         // the following are necessary to get dateBox to display the icon within the input element.
-        $('#countdownTime').parent().parent().css('display','flex');
-        $('#randomInterval').parent().parent().css('display','flex');
-        var initDate = $("#countdownTime").data('jtsage-datebox').initDate;
-        $('#countdownTime').datebox('setTheDate', new Date(initDate.getTime() + Math.round(data.countdownTime,1000) ));
-        $('#randomInterval').datebox('setTheDate', new Date(initDate.getTime() + Math.round(data.randomInterval,1000) ));
+        //$('#countdownTime').parent().parent().css('display','flex');
+        //$('#randomInterval').parent().parent().css('display','flex');
+        //var initDate = $("#countdownTime").data('jtsage-datebox').initDate;
+        //$('#countdownTime').datebox('setTheDate', new Date(initDate.getTime() + Math.round(data.countdownTime,1000) ));
+        //$('#randomInterval').datebox('setTheDate', new Date(initDate.getTime() + Math.round(data.randomInterval,1000) ));
         UI.settings.pageCreate();
     }
     else {
         this.refreshTimer();
-        var data = {
-            //timerType:      $("#timerType").val(),
-            timerAlarm:     $("#timerAlarm").val(),
-            loop:           $("#loop")[0].checked,
-            countdownTime:  pgUtil.getMSFromString($("#countdownTime").val()),
-            randomInterval: pgUtil.getMSFromString($("#randomInterval").val())
-        };
-        var oldData = this.getPageData();
+        var data = this.getPageData();
+        data.timerAlarm = $("#timerAlarm").val();
+        data.loop =       $("#loop")[0].checked;
+        //data.countdownTime = pgUtil.getMSFromString($("#countdownTime").val());
+        //data.randomInterval = pgUtil.getMSFromString($("#randomInterval").val());
         if(pg.getUserDataValue("debug"))
             data.extraAlarms = parseInt($("#extraAlarms").val());
-        else
-            data.extraAlarms = oldData.extraAlarms;
-        var countdownTime = Math.floor(data.countdownTime + data.randomInterval * Math.random() );
-        // should the following set all categories?
-        var category = pg.category();
-        this.countdownDuration[category] = countdownTime;
-        this.refreshTimer(category);
+        this.changedCountdownTime(data);
         return data;
     }
 };
 
-//timer.prototype.changeCountdownValue = function(value) {
-//var data = this.getPageData();
-//data.countdownTime = value;//this.durationWidget.value;
-// no way to update this value xxx
-//this.setPageData(data);
-//}
+timer.prototype.resize = function() {
+    page.prototype.resize.call(this, false);
+};
+
+timer.prototype.changeCountdownValue = function() {
+    var value = pgUtil.getMSFromString($("#countdown_set_duration").val());
+    var data = this.getPageData();
+    data.countdownTime = value;
+    this.setPageData(data);
+    UI.timer.changedCountdownTime(data);
+    return false;
+}
+timer.prototype.changeRandomValue = function(value) {
+    var value = pgUtil.getMSFromString($("#countdown_set_random").val());
+    var data = this.getPageData();
+    data.randomInterval = value;
+    this.setPageData(data);
+    UI.timer.changedCountdownTime(data);
+    return false;
+}
+
+timer.prototype.changedCountdownTime = function(data) {
+    // should the following set all categories?
+    var category = pg.category();
+    var countdownTime = Math.floor(data.countdownTime + data.randomInterval * Math.random() );
+    UI.timer.countdownDuration[category] = countdownTime;
+    UI.timer.refreshTimer(category);
+}
+
+timer.prototype.setPageData = function(newPageData) {
+    var pageData = this.getPageData();
+    if(!pgUtil.equal(pageData, newPageData)) {
+    }
+};
+
+timer.prototype.setPageDataField = function(name, value) {
+    var data = this.getPageData();
+    data[name] = value;
+    this.setPageData(data);
+};
+
+
 timer.prototype.running = function(cat) {
     return this.startTime.hasOwnProperty(cat) && (this.startTime[cat] > 0);
 };
@@ -172,13 +210,13 @@ timer.prototype.getPageData = function(category) {
     category = (typeof(category) != "undefined") ? category : pg.category();
     var data = pg.getPageData("timer", category);
     if(! ('timerAlarm' in data))
-        data.timerAlarm     = "sound";
+        data.timerAlarm     = "both";
     if(! ('loop' in data))
         data.loop           = 0;
     if(! ('countdownTime' in data))
-        data.countdownTime  = 60*1000;
+        data.countdownTime  = 4*1000;
     if(! ('randomInterval' in data))
-        data.randomInterval = 0;
+        data.randomInterval = 4*1000;
     if(! ('extraAlarms' in data))
         data.extraAlarms = 0;
     return data;
@@ -247,7 +285,7 @@ timer.prototype.timerCallback = function(ms) {
     //$('#timer_knob').val(frac).trigger('change');
 };
 
-timer.prototype.startStop = function(category, time) {
+timer.prototype.startStop = function(category, time, isNotification) {
     category = (typeof(category) != "undefined") ? category : pg.category();
     var remaining = this.clock.getRemaining();
     if(remaining==0 && !this.running(category) ) {
@@ -271,14 +309,16 @@ timer.prototype.startStop = function(category, time) {
         this.setNotification(category, time + remaining);
     }
     else {
-        this.unsetNotification(category);
+        if(!isNotification)
+            this.unsetNotification(category);
         this.clock.stop();
         $('#timer_start').show().prop('disabled', false);
         $('#timer_stop').hide().prop('disabled', true);
+        var dur = time - this.startTime[category];
         pg.addNewEvents({'page': "timer",
                     'type': "interval",
                     'start': this.startTime[category],
-                    'duration': time - this.startTime[category],
+                    'duration': dur,
                     }, true);
         this.startTime[category] = 0;
         this.refreshTimer(category);
@@ -305,23 +345,24 @@ timer.prototype.reset = function(category, complete, notification) {
         scheduledEnd = notification.time;
     var finished       = complete && data.loop==0;
 
+    // trigger startStop if we have finished
+    var resetTime = time;
+    if(finished) {
+        resetTime = scheduledEnd;
+        // set the start time, execute the alarm.
+        if(this.running(category))
+            this.startStop(category, resetTime, isNotification); // was "time", could be notification.time
+        if(currentPage)
+            this.refreshTimer(category);
+    }
     // add the new event
     if(complete) {
         newInterval = this.computeNewInterval(category);
         this.countdownDuration[category] = newInterval;
     }
     var edata = {'resetTime': newInterval, 'complete': complete};
-    pg.addNewEvents({'page': "timer", 'type': "reset", 'category': category, 'start': time, 'data': edata}, true);
-    
-    // trigger startStop if we have finished
-    if(finished) {
-        // set the start time, execute the alarm.
-        if(this.running(category))
-            this.startStop(category, scheduledEnd); // was "time", could be notification.time
-        if(currentPage)
-            this.refreshTimer(category);
-    }
-    else {
+    pg.addNewEvents({'page': "timer", 'type': "reset", 'category': category, 'start': resetTime, 'data': edata}, true);
+    if(!finished) {
         // If we are called from the pgNotify callback, reschedule
         if(newInterval) {
             if(complete) {
@@ -336,15 +377,12 @@ timer.prototype.reset = function(category, complete, notification) {
                 }
             }
         }
-        
         // if this is the current page, update the clock
         if(currentPage) {
             this.refreshTimer(category);
         }
     }
-    // execute the alarm.
-    //if(complete && isNotification)
-    //    this.alarm(category, notification);
+    
     syncSoon();
     return false;
 };
@@ -355,9 +393,12 @@ timer.prototype.getElapsedTimer = function(category) {
     if(this.startTime.hasOwnProperty(category))
         startTime = this.startTime[category];
     var running        = startTime != 0;
+    // We are not allowed to use the page data in this computation.
+    // however, the first event will have no prior reset events, so needs a starting value.
     var data           = this.getPageData(category);
-    //var countdownTime  = data.countdownTime;
     var countdownTime  = Math.floor(data.countdownTime + data.randomInterval * Math.random() );
+    //var countdownTime  = data.countdownTime;
+    //var countdownTime  = 0.0;
     var duration       = 0.0;
     var resetTime      = 0.0;
     

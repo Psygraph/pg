@@ -38,12 +38,13 @@ home.prototype.update = function(show) {
                 cert = struct.cert;
             
             if(struct.loggedIn && pg.online) {
-                var server = struct.server;
+                var server   = struct.server;
+                var username = struct.username;
                 var pluginIndex = server.indexOf("/wp-content");
                 if(pluginIndex != -1)
                     server = server.substr(0, pluginIndex);
-                PGEN.login(struct.username, 
-                           this.passwordCB.bind(this, server, struct.username, "", cert, this.endLogin.bind(this)));
+                PGEN.login(username,
+                           this.passwordCB.bind(this, server, username, "", cert, this.endLogin.bind(this)));
                 return;
             }
         }
@@ -57,15 +58,60 @@ home.prototype.update = function(show) {
     }
 };
 
-home.prototype.finishedLogin = function() {
-    return this.initialized && !this.loggingIn;
+home.prototype.resize = function() {
+    page.prototype.resize.call(this, false);
+};
+
+home.prototype.settings = function(data) {
+    if(arguments.length) {
+        var data = this.getPageData(); // this line clears any state (when login button is pressed).
+        var s = "";
+        
+        //s += printCheckbox("home_stayOffline", "Stay offline", data['stayOffline']);
+        s += '<div class="ui-field-contain no-field-separator" id="userDiv">';
+        s += '  <label for="user">User:</label>';
+        s += '  <input type="text" id="username" name="username" value=""/>';
+        s += '</div>';
+        s += '<div class="ui-field-contain no-field-separator" id="serverDiv">';
+        s += '  <label for="server">Server:</label>';
+        s += '  <input type="text" id="server" name="server" value="localhost" data-clear-btn="true" />';
+        s += '</div>';
+        s += '<div class="ui-field-contain no-field-separator" id="loginDiv">';
+        s += '  <input type="button" id="login" name="login" value="Login" onClick="UI.home.loginUser(true);"/>';
+        s += '</div>';
+
+        if(pg.getUserDataValue("debug"))
+            s += printCheckbox("home_createLoginEvents", "Create login events", data['createLoginEvents']);
+
+        UI.settings.setPageContent(s);
+
+        $("#username").val(data.username);
+        $('#username').prop('readonly', pg.loggedIn);
+
+        $("#server").val(data.server);
+        $('#server').prop('readonly', pg.loggedIn);
+
+        var loginString = pg.loggedIn ? "Logout" : "Login";
+        $('#login').val(loginString).button("refresh");
+
+        UI.settings.pageCreate(s);
+    }
+    else {
+        var data = this.getPageData();
+        if(!pg.loggedIn) {
+            data.server = $("#server").val();
+            data.username = $("#username").val();
+        }
+        if(pg.getUserDataValue("debug"))
+            data.createLoginEvents = $("#home_createLoginEvents")[0].checked;
+        this.setPageData(data, "home", "Uncategorized"); // make sure we write to the "Uncategorized" section.
+        return data;
+    }
 };
 
 home.prototype.beginLogin = function(callback) {
     if(navigator.splashscreen) {
-        navigator.splashscreen.show();
-    }
-    if(navigator.splashscreen) {
+        //navigator.splashscreen.show();
         navigator.splashscreen.hide();
     }
     showBusy();
@@ -113,6 +159,11 @@ home.prototype.beginLogin = function(callback) {
         }
     }
 };
+
+home.prototype.hasFinishedLogin = function() {
+    return this.initialized && !this.loggingIn;
+};
+
 home.prototype.endLogin = function() {
     hideBusy();
     showLog("LOGIN_END");
@@ -121,13 +172,11 @@ home.prototype.endLogin = function() {
     pgFile.readFile("com.psygraph.exit", handleExit);
     PGEN.readPsygraph(cb);
     function cb(success) {
-        if(success) {
-            // the only call to gotoPage
-            gotoLoadedPage(pg.page());
+        var firstPage = pg.page();
+        if(!success) {
+            firstPage = "help";
         }
-        else {
-            gotoLoadedPage("help");
-        }
+        setTimeout(gotoLoadedPage.bind(this,firstPage), 200);
     }
     function handleExit(success, event) {
         if(success) {
@@ -137,140 +186,82 @@ home.prototype.endLogin = function() {
     }
 };
 
-home.prototype.settings = function(show) {
-    if(arguments.length) {
-        var data = this.getPageData();
-        var s = "";
-
-        //s += printCheckbox("home_stayOffline", "Stay offline", data['stayOffline']);
-        s += '<div class="ui-field-contain no-field-separator" id="userDiv">';
-        s += '  <label for="user">User:</label>';
-        s += '  <input type="text" id="username" name="username" value=""/>';
-        s += '</div>';
-        s += '<div class="ui-field-contain no-field-separator" id="serverDiv">';
-        s += '  <label for="server">Server:</label>';
-        s += '  <input type="text" id="server" name="server" value="localhost" data-clear-btn="true" />';
-        s += '</div>';
-
-        if(pg.getUserDataValue("debug"))
-            s += printCheckbox("home_createLoginEvents", "Create login events", data['createLoginEvents']);
-
-        UI.settings.setPageContent(s);
-
-        $("#username").val(data.username);
-        $('#username').prop('readonly', pg.loggedIn);
-
-        $("#server").val(data.server);
-        $('#server').prop('readonly', pg.loggedIn);
-
-        UI.settings.pageCreate(s);
-    }
-    else {
-        var data = this.getPageData();
-        if(!pg.loggedIn) {
-            data.server = $("#server").val();
-            data.username = $("#username").val();
-        }
-        if(pg.getUserDataValue("debug"))
-            data.createLoginEvents = $("#home_createLoginEvents")[0].checked;
-
-        this.setPageData(data); // make sure we write to the "Uncategorized" section.
-        return data;
-    }
-};
-
 home.prototype.lever = function(arg) {
 };
 
-// xxx add the following to the help
-// "<p>Visit "+this.getServerLink(server)+" to create an account.</p><br/>",
-
-home.prototype.loginUser = function() {
+home.prototype.loginUser = function(onSettingsPage) {
     UI.home.loggingIn = true;
     var data = this.getPageData();
     var username = data.username;
     var server   = data.server;
-    //var f = function(){hideBusy();}; // this.endLogin.bind(this));
+    if(onSettingsPage) {
+        username = $('#username').val();
+        server   = $('#server').val();
+        //this.setPageDataField("username", username, "home", "Uncategorized");
+        //this.setPageDataField("server", server, "home", "Uncategorized");
+        //data = this.getPageData();
+    }
     showBusy();
-    var f = function(){UI.home.loggingIn=false;hideBusy();};
+    var f = function(){UI.home.loggingIn=false; hideBusy();};
+    var nextPage = onSettingsPage ? "settings" : pg.page();
     if(pg.loggedIn) {
         PGEN.logout(this.logoutCB.bind(this));
+        return
+    }
+    if(!pg.online) {
+        showDialog({title: "Not online", true: "OK"},
+                   "<p>This device is not currently online, please either connect or work in offline mode.</p>",
+                   f, nextPage);
+        return;
+    }
+    if(onSettingsPage) {
+        if(username=="") {
+            showDialog({title: "Invalid username", true: "OK"},
+                       "<p>Please provide a username with an existing server account.</p>",
+                       f, nextPage);
+        }
     }
     else {
-        if(!pg.online) {
-            showDialog({title: "Not online", true: "OK"},
-                       "<p>This device is not currently online, please either connect or work in offline mode.</p>",
-                       f);
-            return;
-        }
-        if(data.server == "" || data.username == "") {
-            data.server = "http://psygraph.com";
-            data.server = UI.home.getDefaultServerURL();
-            showDialog({title: "Specify login info", true: "OK", false: "Cancel"},
-                       "<label for='dlg_server'>Server:</label>"+
-                       "<input type='text'     id='dlg_server' name='server' value='"+data.server+"'/><br/>"+
-                       "<label for='dlg_username'>Username:</label>"+
-                       "<input type='text'     id='dlg_username' name='username' value='"+data.username+"'/><br/>",
-                       cb.bind(this, server)
-            );
-        }
-        else
-            verifyUser();
-    }
-    function cb(server, clickedOK) {
-        if(!clickedOK) {
+        if(username=="") {
+            gotoPage("home",true);
+            gotoPage("settings",true);
             f();
             return;
-        }
-        var user = $('#dlg_username').val();
-        var server = $('#dlg_server').val();
-        if(user=="") {
-            showDialog({title: "Invalid username", true: "OK"},
-                       "<p>Please choose a non-empty username that has an account on the server.</p>",
-                       f);
-            return;
+        }   
+    }
+    if(server=="") {
+        server = UI.home.getDefaultServerURL();
+    }
+    PGEN.verifyUser(server, username, verifyUserCB);
+    function verifyUserCB(err) {
+        if(!err) {
+            UI.home.getPassword(server, username, f);
         }
         else {
-            UI.home.setPageDataField("username", $('#dlg_username')[0].value);
-            UI.home.setPageDataField("server", $('#dlg_server')[0].value);
-            verifyUser();
-        }
-    }
-    function verifyUser() {
-        var data = UI.home.getPageData();
-        showBusy();
-        PGEN.verifyUser(data.server, data.username, verifyUserCB);
-        function verifyUserCB(err) {
-            if(!err) {
-                UI.home.getPassword(f);
+            if(err=="user") {
+                showDialog({'title': "Username failure", 'true': "OK"},
+                           "<p>No account (username: "+username+") at server: "+
+                           server+".<br/>"+
+                           "You may need to "+UI.home.getRegisterLink(server, "create an account")+".</p>",
+                           f, nextPage
+                );
+            }
+            else if(err=="server") {
+                showDialog({'title': "Server failure", 'true': "OK"},
+                           "<p>There was a problem contacting the server: "+server+"<br/>"+
+                           "Please check your internet connection.</p>",
+                           f, nextPage
+                );
             }
             else {
-                if(err=="user") {
-                    showDialog({'title': "Username failure", 'true': "OK"},
-                               "<p>No account (username: "+data.username+") at server: "+
-                               UI.home.getServerLink(data.server)+".<br/>"+
-                               "You may need to visit that site to create an account.</p>",
-                               f
-                    );
-                }
-                else if(err=="server") {
-                    showDialog({'title': "Server failure", 'true': "OK"},
-                               "<p>There was a problem contacting the server: "+data.server+"<br/>"+
-                               "Please check your internet connection.</p>",
-                               f
-                    );
-                }
-                else {
-                    showLog("Error logging in: " + err);
-                    f();
-                }
+                showLog("Error logging in: " + err);
+                f();
             }
         }
     }
 };
 
 home.prototype.status = function(onlineStatus) {
-
     onlineStatus = typeof(onlineSatus)!="undefined" ? onlineStatus : pg.loggedIn; 
     var txt = "<br/>";
     txt += "<p class='banner'><img src='img/logo.png' height='108' width='108'></img></p>";
@@ -278,9 +269,11 @@ home.prototype.status = function(onlineStatus) {
     txt += '<div id="statistics"></div>';
     if(onlineStatus) { // online
         $(".loginButton").html("Logout");
+        $('#login').val("Logout").button("refresh");
     } 
     else {
         $(".loginButton").html("Login");
+        $('#login').val("Login").button("refresh");
     }
     $("#home_status").html(txt);
     computeStats.call(this);
@@ -295,8 +288,8 @@ home.prototype.status = function(onlineStatus) {
         if(onlineStatus) { // online
             txt += "<p><b>Online</b></p>";
             txt += "<ul>";
-            txt += "<li><b>username</b>: "+data.username+"</li>";
-            txt += "<li><b>server</b>: "+this.getServerLink(data.server)+"</li>";
+            txt += "<li><b>username</b>: "  +data.username+"</li>";
+            txt += "<li><b>server</b>: "    +this.getServerLink(data.server)+"</li>";
             txt += "<li><b>Last sync</b>: " +lastSync +"</li>";
             txt += "</ul>";
         }
@@ -324,27 +317,30 @@ home.prototype.status = function(onlineStatus) {
         */
         $("#statistics").html(txt);
     }
-
 };
 
 home.prototype.getServerLink = function(server) {
     var serverURL = "http://" + pgUtil.extractDomain(server);
     return "<a href='' onClick='return pgUtil.openWeb(\""+serverURL+"\")'>"+serverURL+"</a>";
 };
+home.prototype.getRegisterLink = function(server, txt) {
+    var serverURL = "http://" + pgUtil.extractDomain(server);
+    return "<a href='' onClick='return pgUtil.openWeb(\""+serverURL+"/register\")'>"+txt+"</a>";
+};
 
-home.prototype.getPassword = function(callback) {
+home.prototype.getPassword = function(server, username, callback) {
     var data = this.getPageData();
     if(typeof(data.cert) != "undefined" && data.cert != "") {
         // we have the information we need, skip the dialog
-        this.passwordCB(data.server, data.username, "", data.cert, callback);
+        this.passwordCB(server, username, "", data.cert, callback);
     }
     else {
         this.askedForPW = true;
-        var server = this.getServerLink(data.server);
+        var serverLink = this.getServerLink(server);
         gotoPage(pg.page());
         showDialog({title: "Enter your password", true: "OK", false: "Cancel"},
-                   "<p>"+server+"</p><input type='password' id='passw' name='password' value=''/>", 
-                   pwcb
+                   "<p>"+serverLink+"</p><input type='password' id='passw' name='password' value=''/>", 
+                   pwcb, "settings"
         );
     }
     function pwcb(clickedOK) {
@@ -353,7 +349,7 @@ home.prototype.getPassword = function(callback) {
         }
         else {
             var pass = $('#passw').val();
-            UI.home.passwordCB(data.server, data.username, pass, data.cert, callback);
+            UI.home.passwordCB(server, username, pass, data.cert, callback);
         }
     }
 };
@@ -371,23 +367,23 @@ home.prototype.serverLoginCB = function(server, username, callback, success) {
         data.username = username;
         data.server   = server;
         data.cert     = pg.cert;
-        this.setPageData(data);
+        this.setPageData(data, "home", "Uncategorized");
         this.logEvent("login");
         this.status(true);
         callback();
     }
     else {
         this.status(false);
-        this.setPageDataField("cert", "");
+        this.setPageDataField("cert", "", "home", "Uncategorized");
         if(this.askedForPW == false) {
             // try one more time after getting a password from the user.
-            this.getPassword(callback);
+            this.getPassword(server, username, callback);
             return;
         }
-        showDialog({title: "Login failure for "+data.username, true: "OK"},
+        showDialog({title: "Login failure for "+username, true: "OK"},
                    "<p>If you need to register or recover your password, <br/>"+
-                   "visit " + this.getServerLink(data.server) + "</p>",
-                   callback
+                   "visit " + this.getServerLink(server) + "</p>",
+                   callback, "settings"
         );
     }
 };
@@ -400,7 +396,7 @@ home.prototype.logoutAndErase = function(callback) {
     data.server   = "";
     data.username = "";
     data.cert     = "";
-    this.setPageData(data);
+    this.setPageData(data, "home", "Uncategorized");
     gotoLoadedPage("home", true);
     callback();
 };
@@ -420,20 +416,6 @@ home.prototype.getPageData = function() {
 
 home.prototype.getDefaultServerURL = function() {
     return "https://psygraph.com";
-};
-
-home.prototype.setPageData = function(newPageData) {
-    var pageData = this.getPageData();
-    if(!pgUtil.equal(pageData, newPageData)) {
-        pmtime = pgUtil.getCurrentTime();
-        pg.setPageData(pmtime, newPageData, "home", "Uncategorized");
-    }
-};
-
-home.prototype.setPageDataField = function(name, value) {
-    var data = this.getPageData();
-    data[name] = value;
-    this.setPageData(data);
 };
 
 home.prototype.logoutCB = function(success) {

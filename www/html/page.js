@@ -201,19 +201,28 @@ page.prototype.encodeFile = function (id, file, encode) {
 };
 */
 
-page.prototype.resize = function(scrollable) {
+page.prototype.resize = function(scrollable, scrollDiv) {
     scrollable = (typeof(scrollable)!="undefined") ? scrollable : true;
+    scrollDiv = (typeof(scrollDiv)!="undefined") ? scrollDiv : $("#"+this.name+"_content");
     if(scrollable) {
         var head   = $("#" + this.name + "_header").outerHeight(true);
         var foot   = 0;//$("#" + this.name + "_footer").outerHeight(true);
         // var kbdHeight = UI.window.kbdHeight;
         // window.innerHeight
         var win    = getWindowDims();
+        var width  = win.width;
         var totalHeight = head;
-        $("#"+this.name+"_content").children().each(function(){
+        scrollDiv.children().each(function(){
                 totalHeight = totalHeight + $(this).outerHeight(true);
             });
-        $("#"+this.name+"_content").height(Math.max(totalHeight, win.height));
+        totHeight = Math.max(totalHeight, win.height);
+        $("#"+this.name+"_content").css({
+                'position': "absolute",
+                    'top':    head+"px",
+                    'height': totHeight+"px",
+                    'width':  width+"px"
+                    }
+        );
     }
     else {
         var head   = $("#" + this.name + "_header").outerHeight(true);
@@ -221,13 +230,38 @@ page.prototype.resize = function(scrollable) {
         var win    = getWindowDims();
         var height = win.height - (head+foot);
         var width  = win.width;
-        $("#"+this.name+"_content").height(height);
+        $("#"+this.name+"_content").css({
+                'position': "absolute",
+                    'top':    head+"px",
+                    'height': height+"px",
+                    'width':  width+"px"
+                    }
+        );
     }
 };
 
-page.prototype.getPageData = function() {
-    var data = pg.getPageData(this.name, pg.category());
+page.prototype.getPageData = function(cat) {
+    var cat = (typeof(cat) != "undefined") ? cat: pg.category();
+    var data = pg.getPageData(this.name, cat);
     return data;
+};
+
+page.prototype.setPageData = function(newPageData, page, cat) {
+    var page = (typeof(page) != "undefined") ? page: pg.page();
+    var cat  = (typeof(cat) != "undefined") ? cat: pg.category();
+    var pageData = this.getPageData();
+    if(!pgUtil.equal(pageData, newPageData)) {
+        var pmtime = pgUtil.getCurrentTime();
+        pg.setPageData(pmtime, newPageData, page, cat);
+    }
+};
+
+page.prototype.setPageDataField = function(name, value, page, cat) {
+    var page = (typeof(page) != "undefined") ? page: pg.page();
+    var cat  = (typeof(cat) != "undefined") ? cat: pg.category();
+    var data = this.getPageData(page, cat);
+    data[name] = value;
+    this.setPageData(data, cat);
 };
 
 page.prototype.getSummary = function(page, category) {
@@ -278,6 +312,8 @@ page.prototype.displayEventData = function(e) {
                 txt += " +acc";
             if(typeof(e.data.orientation)!="undefined")
                 txt += " +orient";
+            if(typeof(e.data.bluetooth)!="undefined")
+                txt += " +bt";
             if(typeof(e.data.pathLength)!="undefined")
                 txt += " " + e.data.pathLength.toFixed(2) + " miles";
         }

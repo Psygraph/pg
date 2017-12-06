@@ -109,6 +109,10 @@ counter.prototype.settings = function() {
     }
 };
 
+counter.prototype.resize = function() {
+    page.prototype.resize.call(this, false);
+};
+
 counter.prototype.setMotionResponse = function(response, val) {
     if(response != "none" && ! pgUtil.isWebBrowser()) {
         pgAccel.shake(this.onMotion.bind(this), val, 2000);

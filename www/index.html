@@ -17,22 +17,28 @@
         <link rel="stylesheet" type="text/css" href="css/pg-theme.min.css" />
         <link rel="stylesheet" type="text/css" href="css/jquery.mobile.icons.min.css" />
         <link rel="stylesheet" type="text/css" href="css/jquery.mobile.structure-1.4.5.min.css" />
+
+        <!--
+        <link rel="stylesheet" type="text/css" href="css/onsenui.css" />
+        <link rel="stylesheet" type="text/css" href="css/onsen-css-components.css" />
+        -->
+
         <link rel="stylesheet" type="text/css" href="css/vis.min.css" />
         <link rel="stylesheet" type="text/css" href="css/leaflet.css" />
         <link rel="stylesheet" type="text/css" href="css/select2.min.css" />
-        <link rel="stylesheet" type="text/css" href="css/jtsage-datebox.css" />
+        <!--link rel="stylesheet" type="text/css" href="css/jtsage-datebox.css" / -->
   
         <link rel="stylesheet" type="text/css" id="base_style"  href="css/psygraph.css" />
         <link rel="stylesheet" type="text/css" id="user_style"  href="media/default.css" />
         <noscript><h2>Error: Javascript must be enabled.</h2></noscript>
 
         <!-- robust 3P libraries -->
+        <!--
+            <script type="text/javascript" src="js/onsenui.js"></script>
+        -->
         <script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
         <script type="text/javascript" src="js/vis.min.js"></script>
         <script type="text/javascript" src="js/hammer.js"></script>
-        <!--script type="text/javascript" src="js/hammer-time.min.js"></script-->
-        <!--script type="text/javascript" src="js/fastclick.js"></script-->
-        <!--script type="text/javascript" src="js/leaflet.js"></script-->
 
         <!-- PG files -->
         <script type="text/javascript" src="js/URI.js"></script>
@@ -42,6 +48,7 @@
         <script type="text/javascript" src="js/xml.js"></script>
         <script type="text/javascript" src="js/file.js"></script>
         <script type="text/javascript" src="js/audio.js"></script>
+        <script type="text/javascript" src="js/bluetooth.js"></script>
         <script type="text/javascript" src="js/accel.js"></script>
         <script type="text/javascript" src="js/location.js"></script>
         <script type="text/javascript" src="js/clock.js"></script>
@@ -52,7 +59,34 @@
         <title>Psygraph</title>
     </head>
     <body id="pgbody">
-        
+      <audio id="alarm" preload="none"><source id="alarmSrc" src="default.mp3" type="audio/mp3"/></audio>
+      <audio id="record" preload="none"><source id="recordSrc" src="default.mp3" type="audio/mp3"/></audio>
+
+      <!--
+          <ons-navigator id="onsNavigator">
+            <ons-page>
+              <ons-toolbar>
+                <div class=”center”>Toolbar</div>
+              </ons-toolbar>
+            </ons-page>
+            
+      </ons-navigator
+         -->
+        <div id="home_page"      class="page"  data-role="page" data-fullscreen="true"></div>
+        <div id="stopwatch_page" class="page"  data-role="page" data-fullscreen="true"></div>
+        <div id="timer_page"     class="page"  data-role="page" data-fullscreen="true"></div>
+        <div id="counter_page"   class="page"  data-role="page" data-fullscreen="true"></div>
+        <div id="note_page"      class="page"  data-role="page" data-fullscreen="true"></div>
+        <div id="list_page"      class="page"  data-role="page" data-fullscreen="true"></div>
+        <div id="graph_page"     class="page"  data-role="page" data-fullscreen="true"></div>
+        <div id="chart_page"     class="page"  data-role="page" data-fullscreen="true"></div>
+        <div id="map_page"       class="page"  data-role="page" data-fullscreen="true"></div>
+        <div id="about_page"     class="page"  data-role="page" data-fullscreen="true"></div>
+        <div id="prefs_page"     class="page"  data-role="page" data-fullscreen="true"></div>
+        <div id="settings_page"  class="page"  data-role="page" data-fullscreen="true"></div>
+        <div id="help_page"      class="page"  data-role="page" data-fullscreen="true"></div>
+        <div id="dialog_page"    class="page"  data-role="page" data-fullscreen="true" data-dialog="true"></div>
+
         <!-- Psygraph.js needs access to the head element -->
         <script type="text/javascript" src="js/psygraph.js"></script>
         <script type="text/javascript" src="html/page.js"></script>
@@ -62,7 +96,7 @@
         <!-- widgets that depend on jquery mobile -->
         <script type="text/javascript" src="js/select2.full.min.js"></script>
         <script type="text/javascript" src="js/jquery.knob.js"></script>
-        <script type="text/javascript" src="js/jtsage-datebox.js"></script>
+        <!--script type="text/javascript" src="js/jtsage-datebox.js"></script-->
         <script type="text/javascript" src="js/pgUI.js"></script>
         <script type="text/javascript" src="cordova.js"></script>
 
@@ -72,10 +106,10 @@ var WORDPRESS=false;
 
 // final JS loading command
 if(pgInitialized.state()=="resolved") {
-    gotoPage("home");
+    gotoLoadedPage("home");
 }
 else { 
-    $.when(pgInitialized).then(gotoPage.bind(this,"home"));
+    $.when(pgInitialized).then(gotoLoadedPage.bind(this,"home"));
 }
 </script>
 

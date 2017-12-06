@@ -5,11 +5,22 @@
 </div>
 
 <div data-role="control-group" class="inset">
-    <div class="ui-field-contain no-field-separator" id="timer_div">
+  <div class="ui-field-contain no-field-separator" id="timer_div">
     <input id="countdown_timer" class="clock_widget" type="text" value="00:00.00" readonly></input>
     <input id="countdown_duration" class="clock_widget" type="text" value="00:00.00" readonly></input>
-    <!-- onchange="UI.timer.changeCountdownValue(this.value); return true;" -->
   </div>
+  
+  <div class="ui-grid-a">
+    <div class="ui-block-a">
+      <label for="countdown_set_duration">Coundown duration:</label>
+      <input id="countdown_set_duration" class="half_clock_widget" type="text" value="00:00.00" onchange="return UI.timer.changeCountdownValue()"></input>
+    </div>
+    <div class= "ui-block-b">
+      <label for="countdown_set_random">Random increment:</label>
+      <input id="countdown_set_random"   class="half_clock_widget" type="text" value="00:00.00" onchange="return UI.timer.changeRandomValue()"></input>
+    </div>
+  </div>
+  
   <div>
 
     <input type="image" class="button fast" id="timer_reset" title="Reset" 
@@ -20,5 +31,6 @@
 	       onClick="return UI.timer.startStop(pg.category());" src="img/stop.png" alt="stop"/>
   </div>
 </div>
+
 
 <script src="html/timer.js"></script>

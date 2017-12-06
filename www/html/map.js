@@ -126,6 +126,8 @@ map.prototype.getPageData = function() {
 };
 
 map.prototype.resize = function() {
+    page.prototype.resize.call(this, false);
+    
     var head    = $("#map_header").outerHeight(true);
     var subHead = $("#subheader_map").outerHeight(true);
     var foot    = $("#map_footer").outerHeight(true);

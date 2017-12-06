@@ -44,10 +44,10 @@ chart.prototype.update = function(show, state) {
 };
 
 chart.prototype.resize = function() {
+    page.prototype.resize.call(this, false);
     var head    = $("#chart_header").outerHeight(true);
     var subHead = $("#subheader_chart").outerHeight(true);
     var foot    = $("#chart_footer").outerHeight(true);
-
     var height = $(window).height() -(head+subHead+foot);
     var width = $(window).width();
     $("#gantt").height(height);

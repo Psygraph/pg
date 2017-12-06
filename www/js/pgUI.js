@@ -49,8 +49,8 @@ var jtopts = {
     }
 };
 
-jQuery.extend(jQuery.jtsage.datebox.prototype.options.lang, jtopts);
-jQuery.extend(jQuery.jtsage.datebox.prototype.options, {useLang: 'en'});
+//jQuery.extend(jQuery.jtsage.datebox.prototype.options.lang, jtopts);
+//jQuery.extend(jQuery.jtsage.datebox.prototype.options, {useLang: 'en'});
 
 function getWindowDims(current) {
     current = typeof(current)!="undefined" ? current : true;

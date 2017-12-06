@@ -27,14 +27,15 @@ about.prototype.settings = function() {
 
 about.prototype.resize = function() {
     var head    = $("#" + this.name + "_header").outerHeight(true);
-    var foot    = $("#" + this.name + "_footer").outerHeight(true);
+    var foot    = 0;//$("#" + this.name + "_footer").outerHeight(true);
     var win     = getWindowDims();
     var height  = win.height - (head);
     var width   = win.width;
     $("#aboutDiv").css({
             top:    head-1, 
-            height: height
-            });
+                height: height,
+                position: "absolute"
+                });
 };
 
 about.prototype.lever = function(arg) {

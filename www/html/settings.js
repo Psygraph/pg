@@ -50,10 +50,10 @@ settings.prototype.update = function(show) {
         UI[page].categorySettings(data);
 
         // show the applyAll button?
-        if(pg.getUserDataValue('perCategorySettings'))
-            $('#applyAllSettings').parent().show();
-        else
-            $('#applyAllSettings').parent().hide();
+        //if(pg.getUserDataValue('perCategorySettings'))
+        //$('#applyAllSettings').parent().show();
+        //else
+        $('#applyAllSettings').parent().hide();
         this.resize();
     }
 };
@@ -68,6 +68,10 @@ settings.prototype.pageCreate = function() {
     var ps = $("#page_settings");
     ps.trigger('refresh');
 };
+
+settings.prototype.resize = function() {
+    page.prototype.resize.call(this, true);
+}
 
 settings.prototype.submitSettings = function(doClose) {
     var page        = pg.page();

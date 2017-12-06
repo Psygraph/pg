@@ -1,3 +1,0 @@
-this.handler.cordova.getActivity().getAssets().open("www/media/default.mp3")
-
-"/android_asset/www/media/default.mp3"

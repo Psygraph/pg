@@ -3,7 +3,7 @@
   <div class="category">Loading...</div>
 </div>
 
-<div data-role="control-group" class="inset">
+<div id="stopwatch_controls" data-role="control-group" class="inset">
     <div class="ui-field-contain no-field-separator" id="clock_div">
     <input id="clock" class="clock_widget" type="text" value="00:00:00.00" size="10" readonly></input>
   </div>
@@ -17,6 +17,10 @@
     <!--img class="button" id="stopwatch_stop" title="Start/Stop" 
 	     onClick="UI.stopwatch.startStop(); return false;" src="img/stop.png" alt="stop"-->
   </div>
+</div>
+
+<div id="stopwatch_graphContainer" style="height:10px">
+  <div id="stopwatch_graph" />
 </div>
 
 <script src="html/stopwatch.js"></script>
