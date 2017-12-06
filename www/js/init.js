@@ -8,11 +8,13 @@ var app = {
     initialize: function(callback) {
 	    this.bindEvents();
 
-	    var browser = document.URL.match(/^https?:/);
-	    // on non-mobile devices, we fire the deviceready event ourselves.
-	    //if (! navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)) {
-	    //}
-        
+        var browser = document.URL.match(/^https?:/);
+        /*
+          var browser = true; 
+          if((typeof(device) != "undefined") &&
+          (device.platform=="Android" || device.platform=="iOS"))
+          browser = false;
+        */
 	    if(browser) {
 	        showLog("Simulating deviceready event");
 	        this.onDeviceReady();
@@ -24,7 +26,10 @@ var app = {
     bindEvents: function() {
 	    document.addEventListener('deviceready', this.onDeviceReady, false);
 	    //$(document).on("pageinit", this.onMobileInit);
-	    $(document).on("mobileinit", this.onMobileInit);
+	    if(ONSEN)
+            ons.ready(this.onMobileInit);
+        else
+            $(document).on("mobileinit", this.onMobileInit);
     },
     onDeviceReady: function() {
 	    showLog("onDeviceReady");
@@ -34,17 +39,19 @@ var app = {
 	    showLog("OnMobileInit");
 	    $.support.cors                   = true;
 	    $.support.mediaquery             = true;
-	    $.mobile.allowCrossDomainPages   = true;
 
-	    $.mobile.defaultPageTransition   = "none";
-	    $.mobile.defaultDialogTransition = "none";
-        //$.mobile.buttonMarkup.hoverDelay = 50
-	    $.mobile.hashListeningEnabled    = false;
-	    //$.mobile.autoInitializePage      = false;
-	    //$.mobile.linkBindingEnabled      = false;
-
+        if(!ONSEN) {
+            $.mobile.allowCrossDomainPages   = true;
+            $.mobile.defaultPageTransition   = "none";
+            $.mobile.defaultDialogTransition = "none";
+            //$.mobile.buttonMarkup.hoverDelay = 50
+            $.mobile.hashListeningEnabled    = false;
+            //$.mobile.autoInitializePage      = false;
+            //$.mobile.linkBindingEnabled      = false;
+        }
 	    jqmReady.resolve();
     }
 };
+
 
 app.initialize();

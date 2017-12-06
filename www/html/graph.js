@@ -45,6 +45,7 @@ graph.prototype.onDoubleClick = function(e) {
 };
 
 graph.prototype.resize = function() {
+    page.prototype.resize.call(this, false);
     var head    = $("#graph_header").outerHeight(true);
     var subHead = $("#subheader_graph").outerHeight(true);
     var foot    = $("#graph_footer").outerHeight(true);
@@ -71,10 +72,12 @@ graph.prototype.settings = function() {
         //s += '  <option value="events">events</option>'; 
         //s += '  <option value="acceleration">acceleration</option>'; 
         //s += '  <option value="rotation">rotation</option>'; 
-        s += '  <option value="orientation">orientation</option>'; 
-        s += '  <option value="accelerationNorm">norm of acceleration</option>'; 
-        s += '  <option value="count">count</option>'; 
+        s += '  <option value="accelerationNorm">acceleration norm</option>';
+        if(pg.getUserDataValue("debug"))
+            s += '  <option value="bluetooth">bluetooth</option>'; 
         s += '  <option value="correctCount">correct/incorrect count</option>'; 
+        s += '  <option value="count">count</option>'; 
+        s += '  <option value="orientation">orientation</option>'; 
         s += '  <option value="totalTime">total time</option>'; 
         //s += '  <option value="eventCount">number of events</option>'; 
         s += '</select></div>';
@@ -131,9 +134,9 @@ graph.prototype.setOptions = function(data, opts) {
 graph.prototype.getPageData = function() {
     var data = pg.getPageData("graph", pg.category());
     if(! ('signal' in data))
-        data.signal = "correctCount";
+        data.signal   = "accelerationNorm";
     if(! ('interval' in data))
-        data.interval = "day";
+        data.interval = "none";
     return data;
 };
 
@@ -170,6 +173,26 @@ graph.prototype.updateGraph = function() {
                         norm    += points[j][3]*points[j][3];
                         norm = Math.sqrt(norm);
                         pts.push([points[j][0], norm]);
+                    }
+                }
+            }
+        }
+        if(pts.length>1) {
+            hasPoints = true;
+            this.addPoints(lineIndex++, pts, interval);
+        }
+    }
+    // bluetooth
+    if(data.signal == "bluetooth") {
+        var events = pg.getSelectedEvents(pg.category());
+        var pts = [];
+        for (var i=0; i<events.length; i++) {
+            var e = pgUtil.parseEvent(events[i]);
+            if(e && e.type=="interval") {
+                if(typeof(e.data.bluetooth)!="undefined") {
+                    var points = e.data.bluetooth;
+                    for(var j=0; j<points.length; j++) {
+                        pts.push(points[j]);
                     }
                 }
             }

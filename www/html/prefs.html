@@ -21,6 +21,17 @@
           <label for="swipeSlider">Swipe sensitivity:</label>
           <input type="range" name="swipeSlider" id="swipeSlider" value="20" min="5" max="100">
         </div>
+
+        <div id="BTDiv" class="ui-field-contain no-field-separator"> 
+          <div class="leftFloat">
+            <input type="button" id="BTConnect" onClick="UI.prefs.btConnect()" class="btn fast" value="Connect to Device" title="Connect" data-inline="true"/></input>                      
+          </div>
+          <div class="">
+            <select id="BTDevices" value="none" title="Bluetooth Device" data-native-menu="false" onchange="">
+              <option value="none">none</option>
+            </select>
+          </div>
+        </div>
         
         <label for="debug">Turn on debugging and error reporting.</label>
         <input type="checkbox" name="debug" id="debug"></input>
@@ -33,11 +44,13 @@
         <label for="wifiOnly">Upload files using WIFI only.</label>
         <input type="checkbox" name="wifiOnly" id="wifiOnly"></input>
         
+        <!--
         <label for="screenTaps">Allow screen taps to press buttons.</label>
         <input type="checkbox" name="screenTaps" id="screenTaps"></input>
-        
+
         <label for="perCategorySettings">Allow different page settings for each category.</label>
         <input type="checkbox" name="perCategorySettings" id="perCategorySettings"></input>
+        -->
         
         <!--
             <label for="createPosts">Create posts from notes.</label>

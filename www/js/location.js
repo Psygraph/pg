@@ -266,7 +266,7 @@ var pgLocation = {
                         if (error.code === 2) {
                             showDialog({title: "Location disabled", true: "OK", false: "Cancel"},
                                        'Location detection is not enabled for this app. Would you like to open the app settings?', 
-                                       cb.bind(this,1));
+                                       cb);
                         }
                         else {
                             showAlert('Location monitoring failed: ' + error.message);
@@ -275,16 +275,11 @@ var pgLocation = {
                 );
             } 
             else { // Location services are disabled
-                showDialog({title: "Location disabled", true: "OK", false: "Cancel"},
-                           'Location services are truned off. Would you like to turn them on?', 
-                           cb.bind(this,2));
+                pgLocation.checkLocationEnabled();
             }
-            function cb(type, success) {
+            function cb(success) {
                 if(success) {
-                    if(type==1)
-                        typebackgroundGeolocation.showAppSettings();
-                    else if(type==2)
-                        backgroundGeolocation.showLocationSettings();
+                    typebackgroundGeolocation.showAppSettings();
                 }
             }
         }
@@ -310,6 +305,21 @@ var pgLocation = {
             if(typeof(data) == "string") {
                 showError('GeoLocation error: "' +data +'", lowering accuracy.');
                 pgLocation.cordovaOpts.enableHighAccuracy = false;
+            }
+        }
+    },
+    checkLocationEnabled: function() {
+        backgroundGeolocation.isLocationEnabled(locationEnabled);
+        function locationEnabled(enabled) {
+            if(!enabled) {
+                showDialog({title: "Location disabled", true: "OK", false: "Cancel"},
+                           'Location services are turned off. Would you like to turn them on?', 
+                           cb);
+            }
+        }
+        function cb(success) {
+            if(success) {
+                backgroundGeolocation.showLocationSettings();
             }
         }
     },

@@ -43,9 +43,22 @@ note.prototype.update = function(show, state) {
     this.resize();
 };
 
-//note.prototype.resize = function() {
-//    page.prototype.resize.call(this, false);
-//};
+note.prototype.resize = function() {
+    var head   = $("#" + this.name + "_header").outerHeight(true);
+    var foot   = 0;//$("#" + this.name + "_footer").outerHeight(true);
+    var win    = getWindowDims();
+    var height = win.height - (head+foot);
+    var titleHeight  = $("#noteTitleDiv").outerHeight(true);
+    var buttonHeight = $("#note_submit").outerHeight(true);
+    $("#noteTextContainer").outerHeight(height - (titleHeight+buttonHeight+24));
+    var width  = win.width;
+    $("#"+this.name+"_content").css({
+            top:    head, 
+                height: height,
+                width: "100%",
+                position: "absolute"
+                });
+};
 
 note.prototype.settings = function() {
     if(arguments.length) {
@@ -89,10 +102,10 @@ note.prototype.createEnhancedEditor = function(show) {
             autoresize_min_height: height,
             autoresize_max_height: height,
             plugins: [
-                'advlist autoresize charmap colorpicker fullscreen hr link',
+                'advlist autoresize charmap colorpicker hr link', //fullscreen 
                 'lists spellchecker wordcount'
             ],
-            toolbar: 'fullscreen | undo redo | insert | styleselect', //cut copy paste
+            toolbar: 'undo redo | insert | styleselect', // fullscreen | cut copy paste
             content_css: 'css/content.css'
         };
         tinymce.init(mce_opts);
@@ -139,9 +152,9 @@ note.prototype.getPageData = function() {
     if(! ('showConfirmation' in data))
         data.showConfirmation = true;
     if(! ('addLocation' in data))
-        data.addLocation = false;
+        data.addLocation      = false;
     if(! ('enhancedEditor' in data))
-        data.enhancedEditor = false;
+        data.enhancedEditor   = false;
     return data;
 };
 

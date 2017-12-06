@@ -4,6 +4,7 @@ var prefs = function () {
     page.call(this, "prefs");
     this.userData = {};
     this.localPG = null;
+    this.initialized = false;
     var data = this.getPageData();
     setSwipe(data.swipeVal);
 }
@@ -15,8 +16,11 @@ prefs.prototype.update = function(show, state) {
     if(!show) {
         var cats = $("#new_categories").select2(opts);
         cats.children().remove();
+        pgBluetooth.stopScan(function(){});
     }
     else {
+        // call isConnected to verify device connection.
+        pgBluetooth.isConnected(function(foo){});
         var data = this.getPageData();
         // pages
         var s = "";
@@ -28,10 +32,18 @@ prefs.prototype.update = function(show, state) {
         $("#page_select").html(s).trigger("create");
         // categories
         dispCategories = pgUtil.deepCopy(pg.categories);
-        //dispCategories.pop();     // remove "*"
+        //dispCategories.pop();   // remove "*"
         dispCategories.shift();   // remove "Uncateogrized"
 
-
+        if(!this.initialized) {
+            if(!pg.getUserDataValue("debug")) {
+                $("#BTDiv").hide();
+            }
+            else {
+                $("#BTDiv").show();
+            }
+            this.initialized = true;
+        }
         var opts = {
             tags: true,
             //tokenSeparators: [',', ' '],
@@ -91,10 +103,87 @@ prefs.prototype.update = function(show, state) {
             $("#wifiOnly").parent().hide();
         else
             $("#wifiOnly").prop('checked', data.wifiOnly).checkboxradio("refresh");
-        $("#screenTaps").prop('checked', data.screenTaps).checkboxradio("refresh");
-        $("#perCategorySettings").prop('checked', data.perCategorySettings).checkboxradio("refresh");
+        //$("#screenTaps").prop('checked', data.screenTaps).checkboxradio("refresh");
+        //$("#perCategorySettings").prop('checked', data.perCategorySettings).checkboxradio("refresh");
 	    this.resize();
+        // start bluetooth scanning
+        if(pg.getUserDataValue("debug") ) {
+            // we need to get a location to turn on location permissions, which are required on Android.
+            pgLocation.getCurrentLocation(posCB);
+        }
     }
+    function posCB(loc) {
+        showLog("Bluetooth scan starting...");
+        var devs   = $("#BTDevices");
+        pgBluetooth.startScan(UI.prefs.btCallback);
+        UI.prefs.btSetCurrentDevice();
+    }
+};
+
+prefs.prototype.resize = function() {
+    page.prototype.resize.call(this, false);
+};
+
+prefs.prototype.btConnect = function() {
+    var name = pgBluetooth.getActiveDeviceName();
+    var btDev = $("#BTDevices").val();
+    if(name!="none") {
+        showLog("Bluetooth disconnecting from device: " + btDev);
+        btDev = "none";
+    }
+    else {
+        showLog("Bluetooth connecting to device: " + btDev);
+    }
+    pgBluetooth.stopScan(cb1);
+    function cb1() {
+        pgBluetooth.setActiveDeviceName(btDev, cb2);
+    }
+    function cb2() {
+        UI.prefs.btSetCurrentDevice();
+    }
+};
+
+prefs.prototype.btCallback = function() {
+    showLog("Bluetooth scan found a device");
+    var btDevs = pgBluetooth.devices();
+    var devs   = $("#BTDevices");
+    var v      = devs.val();
+    var len = 0;
+    addDev("none");
+    for(var i=0; i<btDevs.length; i++) {
+        var dev = btDevs[i];
+        var name = dev.name;
+        if(name) {
+            len = len + 1;
+            addDev(name);
+        }
+    }
+    devs.val(v);
+    devs.trigger("change");
+    function addDev(nm) {
+        var exists = false;
+        $('#BTDevices option').each(function(){
+                if (this.value == nm) {
+                    exists = true;
+                    return false;
+                }
+            });
+        if(!exists)
+            devs.append(new Option(nm,nm));
+    }
+};
+
+prefs.prototype.btSetCurrentDevice = function() {
+    var name = pgBluetooth.getActiveDeviceName();
+    showLog("Bluetooth connected to device: " + name);
+    var label = "Connect to device:";
+    if(name != "none")
+        label = "Disconnect from '"+name+"'";
+    $('#BTConnect').val(label).button("refresh");
+    //var dev = $("#BTCurrentDevice");
+    //dev.val(name);
+    //dev.trigger("change");
+    //dev.prop("disabled", true);
 };
 
 prefs.prototype.getPageData = function() {
@@ -125,12 +214,14 @@ prefs.prototype.submitSettings = function(doClose) {
         'debug'       : $("#debug")[0].checked ? 1 : 0,
         //'publicAccess': $("#publicAccess")[0].checked ? 1 : 0,
         'wifiOnly'    : data.wifiOnly,
-        'screenTaps'  : $("#screenTaps")[0].checked ? true : false,
-        'perCategorySettings': $("#perCategorySettings")[0].checked ? true : false
+        'screenTaps'  : false //$("#screenTaps")[0].checked ? true : false,
+        //'perCategorySettings': $("#perCategorySettings")[0].checked ? true : false
     };
     if(!pgUtil.isWebBrowser())
         this.userData.wifiOnly = $("#wifiOnly")[0].checked ? true : false;
 
+    if(data.debug != this.userData.debug)
+        this.initialized = false;
     // no-op if settings have not changed
     if(pgUtil.equal(data, this.userData) &&
        pg.equal(pg.pages, pages)         &&

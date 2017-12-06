@@ -8,9 +8,11 @@
 
 <div data-role="control-group" class="inset">
   <div class="ui-field-contain no-field-separator" id="noteDiv">
-    <input id="noteTitle" class="note inset" type="text" data-clear-btn="true" value="Title"/>
+    <div id="noteTitleDiv">
+      <input id="noteTitle" class="note inset" type="text" data-clear-btn="true" value="Title"/>
+    </div>
     <div id="noteTextContainer"> 
-      <textarea id="noteText" class="note inset" data-autogrow="false" data-clear-btn="true" rows="8" cols="24">Text</textarea>
+      <textarea id="noteText" class="note inset" data-autogrow="false" data-clear-btn="true" rows="12" cols="24">Text</textarea>
     </div>
     <div id="note_audio"></div>
     <input type="image" class="button fast" id="note_submit" title="Submit"

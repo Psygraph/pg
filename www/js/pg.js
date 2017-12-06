@@ -17,7 +17,7 @@ function PG() {
     this.categoryIndex  = null;
     this.pageIndex      = null;
     this.categories     = null;
-    this.allPages       = ["home","stopwatch","timer","counter","note","list","graph","chart","map"];
+    this.allPages       = ["home","stopwatch","timer","counter","note","list","graph","map"];
     this.allEventPages  = ["stopwatch","timer","counter","note"];
     this.pages          = null;
     this.categoryData   = null;
@@ -43,9 +43,9 @@ function PG() {
         this.categoryIndex  = 0;
         this.pageIndex      = 0;
         this.categories     = ["Uncategorized","Meditate","Exercise","Study"];
-        this.pages          = ["home","stopwatch","timer","counter","note","list","graph","chart"];
+        this.pages          = ["home","stopwatch","timer","counter","note","list"];
         this.categoryData   = {"Uncategorized": nd()};
-        this.pageData       = {"home": nd(), "stopwatch": nd(),"timer": nd(),"counter": nd(),"note": nd(),"list": nd(),"map": nd(),"chart": nd(),"graph": nd() };
+        this.pageData       = {"home": nd(), "stopwatch": nd(),"timer": nd(),"counter": nd(),"note": nd(),"list": nd(),"map": nd(),"graph": nd() };
         this.userData       = {};
 
         this.online         = true;
@@ -276,8 +276,8 @@ function PG() {
             data.swipeVal = 64;
         if(typeof(data.wifiOnly)=="undefined")
             data.wifiOnly = true;
-        if(typeof(data.perCategorySettings)=="undefined")
-            data.perCategorySettings = false;
+        //if(typeof(data.perCategorySettings)=="undefined")
+        //    data.perCategorySettings = false;
         return data;
     };
     this.getUserDataValue = function(name) {
@@ -780,6 +780,13 @@ var pgUtil = {
     randomInt: function(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     },
+    norm: function(arr) {
+        var n = 0;
+        for(var i=0; i<arr.length; i++) {
+            n += arr[i]*arr[i];
+        }
+        return Math.sqrt(n);
+    },
     deepCopy: function(a) {
         return JSON.parse(JSON.stringify(a));
     },
@@ -1162,6 +1169,16 @@ var pgUtil = {
         return s;
     },
 
+    closePopup: function(sourceElement, onswitched) {
+        var afterClose = function() {
+            sourceElement.off("popupafterclose", afterClose);  
+            if (onswitched && typeof onswitched === "function"){
+                onswitched();
+            }
+        };    
+        sourceElement.on("popupafterclose", afterClose);
+        sourceElement.popup("close");
+    },
     switchPopup: function(sourceElement, destinationElement, onswitched) {
         var afterClose = function() {
             destinationElement.popup("open").trigger("create");

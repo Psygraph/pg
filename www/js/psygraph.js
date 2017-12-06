@@ -5,6 +5,8 @@
 var pg = new PG();
 pg.init();
 
+ONSEN = false;
+
 var UI = {
     home:       null,
     stopwatch:  null,
@@ -61,6 +63,8 @@ function finalInit() {
                     }
                 });
         });
+    // load Bluetooth
+    pgBluetooth.init();
     // Load all of the pages.
     PGEN.initialize();
     
@@ -85,7 +89,7 @@ function finalInit() {
         setSwipe(64);
     }
     // synchronize every N seconds
-    setInterval(syncCheck, 20*1000);
+    setInterval(syncCheck, 40*1000);
     pgInitialized.resolve(); //gotoPage("home"); this line now lives in index.html
 }
 
@@ -105,11 +109,11 @@ function setSwipe(swipeVal) {
 
 function onOnline() {
     pg.online = true;
-    syncSoon();
+    syncSoon(true);
 }
 function onOffline() {
     pg.online = false;
-    syncSoon();
+    syncSoon(false);
 }
 function onPause() {
     // stay awake in the background until all files are written
@@ -148,7 +152,7 @@ function onError(err) {
     }
     if(pg.getUserDataValue("debug")) {
         pg.addNewEvents(event, true);
-        syncSoon();
+        syncSoon(true);
         showAlert(event.data.text, event.data.title);
     }
     // returning true overrides the default window behaviour (i.e. we handled the error).
@@ -158,15 +162,15 @@ function onError(err) {
 function onSingleTap(ev) {
     if(! pg.getUserDataValue('screenTaps'))
         return;
-    if(ev.target.className.includes("clickarea") || 
-       ev.target.className.includes("page") )
+    var ca = $(ev.target).closest(".clickarea");
+    if(ca.length)
         lever("right");
 }
 function onDoubleTap(ev) {
     if(! pg.getUserDataValue('screenTaps'))
         return;
-    if(ev.target.className.includes("clickarea") || 
-       ev.target.className.includes("page") )
+    var ca = $(ev.target).closest(".clickarea");
+    if(ca.length)
         lever("left");
 }
 
@@ -280,22 +284,24 @@ function syncSoon(now, callback) {
     now = (typeof(now)=="undefined") ? false : now;
     callback = (typeof(callback)=="undefined") ? (function fx(){}) : callback;
     if(now) {
-        PGEN.synchronize(true, callback);
+        PGEN.synchronize(false, callback);
         return;
     }
     clearTimeout(UI.window.t);
     UI.window.t = setTimeout(timeout, 4000);
     function timeout() {
-        if(UI.home && UI.home.finishedLogin())
-            PGEN.synchronize(false);
+        if(UI.home && UI.home.hasFinishedLogin())
+            PGEN.synchronize(true);
     }
 }
 
 // User interaction ================================
 
-function showDialog(s, message, callback) {
+function showDialog(s, message, callback, nextPage) {
+    nextPage = (typeof(nextPage)=="undefined") ? pg.page() : nextPage;
     $("#dialog_header").html("<h4>" + s.title + "</h4>");
     $("#dialogText").html(message);
+    $("#dialogText select").trigger("refresh");
     $(".default").removeClass('default');
 
     if(typeof(s['true'])!="undefined") {
@@ -308,7 +314,7 @@ function showDialog(s, message, callback) {
         $("#dialogOK").hide();
     }
     $("#dialogOK").one('click', function(e) {
-            gotoPage(pg.page(), true);
+            gotoPage(nextPage);
             if(callback) 
                 callback(1);
             return true;
@@ -325,7 +331,7 @@ function showDialog(s, message, callback) {
         $("#dialogCancel").hide();
     }
     $("#dialogCancel").one('click', function(e) {
-            gotoPage(pg.page(), true);
+            gotoPage(nextPage);
             if(callback) 
                 callback(0);
             return true;
@@ -341,7 +347,7 @@ function showDialog(s, message, callback) {
         $("#dialogOther").html(s['other']);
     }
     $("#dialogOther").one('click', function(e) {
-            gotoPage(pg.page(), true);
+            gotoPage(nextPage);
             if(callback)
                 callback(2);
             return true;
@@ -477,10 +483,11 @@ function gotoPage(newPage, back) {
     back = back!=undefined ? back : false;
     newPage = getValidPage(newPage);
     var oldPage = getPage();
+    UI.lastPage = oldPage;
     var opts = {'changeHash': false }
     // update old state
     if(oldPage && UI[oldPage]) {
-        UI.state[oldPage] = UI[oldPage].update(false);
+        UI.state[oldPage] = UI[oldPage].update();
     }
     // change the PG page
     var index = pg.pages.indexOf(newPage);
@@ -499,7 +506,10 @@ function gotoPage(newPage, back) {
         if(oldPage == null)
             opts.allowSamePageTransition = true;
         UI.window.currentPage = newPage;
-        $(":mobile-pagecontainer").pagecontainer("change", "#"+newPage+"_page", opts );
+        if(ONSEN)
+            $("#onsNavigator")[0].replacePage(newPage+"_page");
+        else
+            $(":mobile-pagecontainer").pagecontainer("change", "#"+newPage+"_page", opts );
     }
     // update new state
     if(newPage && UI[newPage]) {
@@ -884,8 +894,10 @@ var PGEN = {
         //if(UI[page]) {
         //    UI.state[page] = UI[page].update(false);
         //}
-        resetPage();// xxx this will leave and return to the page,
-        // which is necessary if we do things like stop a stopwatch after leaving the page.
+
+        if(!quick) // Doing this on the settings pages will blow away any of the user's changes.
+            resetPage();
+
         UI.state.accel    = pgAccel.update(false);
         UI.state.location = pgLocation.update(false);
         //UI.state.help     = UI['help'].update;
@@ -1223,32 +1235,28 @@ var PGEN = {
         PGEN.ajax("html/dialog.html", "dialog", false);
         var header = '<h4>Psygraph</h4>';
         $("#dialog_header").html(header);
+        $("#dialog_page").trigger('create');
+        updateNavbar(["dialog"]);
     },
     // generate home
     generateHome: function(callback) {
         callback = (typeof(callback)!="undefined") ? callback : function(){};
         // only make the ajax call if the page never existed
-        if( $("#home_page")[0] ) {
-            //PGEN.generateMenus("home");
+        if( $("#home_page").children().length ) {
             callback(true);
             return;
         }
         PGEN.ajax("html/home.html", "home", false); // syncronous, since its the first page.
         PGEN.generateMenus("home");
-        // addAudioTags
-        var html = '<audio id="alarm" preload="none"><source id="alarmSrc" src="default.mp3" type="audio/mp3"/></audio>';
-        var audio = $.parseHTML(html);
-        $("body").append(audio[0]);
-        html = '<audio id="record" preload="none"><source id="recordSrc" src="default.mp3" type="audio/mp3"/></audio>';
-        audio = $.parseHTML(html);
-        $("body").append(audio[0]);
+        updateNavbar(["home"]);
+        $("#home_page").trigger('create');
         callback(true);
     },
     // generate about, user, settings, and help pages
     generateMetaPage: function(page, callback) {
         callback = (typeof(callback)!="undefined") ? callback : function(){};
         // only make the ajax call if the page never existed
-        if( $("#"+page+"_page")[0] ) {
+        if( $("#"+page+"_page").children().length ) {
             callback(true);
             return;
         }
@@ -1259,6 +1267,7 @@ var PGEN = {
             header += '<a id="'+page+'_rightButton" data-role="button" data-position="fixed" data-icon="arrow-u" data-iconpos="right" class="ui-btn-right rightTitlePopup">Forward</a>';
             $("#"+page+"_header").html(header);
             $("#"+page+"_rightButton").hide();
+            $("#"+page+"_page").trigger('create');
             callback(true);
         }
     },
@@ -1266,16 +1275,18 @@ var PGEN = {
     generatePage: function(page, callback) {
         callback = typeof(callback)!="undefined" ? callback : function(){};
         // only make the ajax call if the page never existed
-        if( $("#"+page+"_page")[0] ) {
-            PGEN.generateMenus(page);
+        if( $("#"+page+"_page").children().length ) {
             callback(true);
             return;
         }
         var filename = "html/" +page +".html"
-        PGEN.ajax(filename, page, true, cb.bind(this, page));
+        PGEN.ajax(filename, page, false, cb.bind(this, page));
+
         function cb(page, success) {
-            if(success)
-                PGEN.generateMenus(page);
+            updateNavbar([page]);
+            $("#"+page+"_page").trigger('create');
+            PGEN.generateMenus(page);
+            //updateNavbar([page]);
             callback(success);
         }
     },
@@ -1285,19 +1296,6 @@ var PGEN = {
 
         createPopupMenus(page);
 
-        // create the TOOL menu on the left
-        txt  = '<ul data-role="listview" data-inset="true" class="ui-listview-outerx" id="'+page+'PageSet">';
-        txt += '<li data-role="list-divider"><i>Tool...</i></li>';
-        click = 'onclick="gotoPage(\'settings\',true); return true;"';
-        txt += '<li data-icon="gear"><a data-role="button" href="" '+click+' id="'+page+'SettingsButton2">Tool settings</a></li>';
-        click = 'onclick="UI.help.setOverview(false); gotoPage(\'help\',true); return true;"';
-        txt += '<li data-icon="info"><a data-role="button" href="" '+click+' id="'+page+'HelpButton2">Tool help</a></li>';
-        click = 'onclick=\"pgUtil.switchPopup($(\'#'+page+'LeftMenu\'),$(\'#PageNavPopupMenu\')); return true;\"';
-        txt += '<li data-icon="forward"><a data-role="button" href="" id="PageNavPopup" ' +click+ '>Change tool</a></li>';
-        txt += '</ul>';
-        $("#"+page+"LeftMenu").html(txt).trigger("refresh");
-        $("#"+page+"PageSet").listview().listview("refresh");
-
         // create the ACTION menu on the right
         txt = '<ul data-role="listview" data-inset="true" class="ui-listview-outer" id="'+page+'ActionSet">';
         txt += '<li data-role="list-divider"><i>Action...</i></li>';
@@ -1305,12 +1303,15 @@ var PGEN = {
         txt += '<li data-icon="comment"><a data-role="button" href="" '+click+' id="'+page+'AboutButton" >About</a></li>';
         click = 'onclick="gotoPage(\'prefs\',true); return true;"';
         txt += '<li data-icon="gear"><a data-role="button" href="" '+click+' id="'+page+'PrefsButton" >Prefs</a></li>';
-        click = 'onclick="UI.home.loginUser(); return true;"';
+        click = 'onclick="pgUtil.closePopup($(\'#'+page+'RightMenu\'),UI.home.loginUser.bind(UI.home,false)); return true;"';
         var loginString = pg.loggedIn ? "Logout" : "Login";
         txt += '<li data-icon="home"><a data-role="button" href="" class="loginButton" '+click+' id="'+page+'LoginButton" >'+loginString+'</a></li>';
-        click = 'onclick=\"pgUtil.switchPopup($(\'#'+page+'RightMenu\'),$(\'#EventPopupMenu\')); return true;\"';
-        txt += '<li data-icon="alert"><a href="" id="'+page+'EventPopup" ' +click+ ' >Files</a></li>';
-        click = 'onclick="UI.help.setOverview(true); gotoPage(\'help\',true); return true;"';
+        if(pg.getUserDataValue("debug")) {
+            // show options for file handling
+            click = 'onclick=\"pgUtil.switchPopup($(\'#'+page+'RightMenu\'),$(\'#EventPopupMenu\')); return true;\"';
+            txt += '<li data-icon="alert"><a href="" id="'+page+'EventPopup" ' +click+ ' >Files</a></li>';
+        }
+        click = 'onclick="gotoPage(\'help\',true); return true;"';
         txt += '<li data-icon="info"><a data-role="button" href="" '+click+' id="'+page+'HelpButton" >Help</a></li>';
         txt += '</ul>';
         $("#"+page+"RightMenu").html(txt).trigger("refresh");
@@ -1324,7 +1325,7 @@ var PGEN = {
             txt += '<div data-role="popup" id="EventPopupMenu" data-theme="a">';
             txt += '<ul data-role="listview" data-inset="true" class="ui-listview-outer" >';
             txt += '<li data-role="list-divider"><i>Manage Files...</i></li>';
-            if(pg.loggedIn && pg.online && pg.getUserDataValue("debug")) {
+            if(pg.loggedIn && pg.online) {
                 click = "return PGEN.selectAction('downloadEvents');";
                 txt += '<li data-icon="false"><a href="" onclick="'+click+'">Download events</a></li>';
                 click = "return PGEN.selectAction('uploadFiles');";
@@ -1342,6 +1343,7 @@ var PGEN = {
             $("#EventPopupMenu").popup();
             
             // page navigation
+            /*
             var node = $("#PageNavPopupMenu");
             if(node.length)
                 node.remove();
@@ -1356,6 +1358,7 @@ var PGEN = {
             node = $.parseHTML(txt)[0];
             $("body")[0].insertBefore(node, null);
             $("#PageNavPopupMenu").popup();
+            */
         }
     },
     
@@ -1365,10 +1368,9 @@ var PGEN = {
         var txt  = '<div id="' +id+ '" data-role="header" data-theme="b" data-position="fixed" data-tap-toggle="false">';
 
         // Left Menu
-        txt += '<a id="'+page+'LeftPopup" href="" ';
-        txt += ' class="leftTitlePopup ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-action ui-btn-icon-left">Tool</a>';
-        txt += '<div data-role="popup" id="'+page+'LeftMenu" class="LeftMenu">';
-        txt += '</div>';
+        click = 'onclick="gotoPage(\'settings\',true); return true;"';
+        txt += '<a id="'+page+'LeftPopup" href="" '+click+' ';
+        txt += ' class="leftTitlePopup ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-gear ui-btn-icon-left">Settings</a>';
 
         // Center graphic
         var label = page;
@@ -1378,18 +1380,18 @@ var PGEN = {
 
         // Right Menu
         txt += '<a id="'+page+'RightPopup" href="" ';
-        txt += ' class="rightTitlePopup ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-gear ui-btn-icon-left">Action</a>';
+        txt += ' class="rightTitlePopup ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-action ui-btn-icon-left">Action</a>';
         txt += '<div data-role="popup" id="'+page+'RightMenu" class="RightMenu"></div>';
 
         // Navbar
-        txt += '<div id="'+page+'_navbar" class="navbar" data-role="navbar" data-theme="b"></div>';
+        txt += '<div id="'+page+'_navbar" class="navbar" data-role="navbar" data-position="fixed" data-tap-toggle="false" data-theme="b"></div>';
         
         txt += '</div>';
         return txt;
     },
 
     // transform the page
-    ajax: function(filename, page, is_async, callback) {
+    ajax: function(filename, page, is_async, cb) {
         var formdata = URI("?");
         //formdata.addQuery("username",     pg.username);
         //formdata.addQuery("password",     pg.cert);
@@ -1407,8 +1409,8 @@ var PGEN = {
                     contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
                     data:     dat,
                     cache:    false,
-                    success:  function(data){PGEN.ajaxCallback(true, data, page, callback)},
-                    failure:  function(data){PGEN.ajaxCallback(false, filename, page, callback)}
+                    success:  function(data){PGEN.ajaxCallback(true, data, page, cb)},
+                    failure:  function(data){PGEN.ajaxCallback(false, filename, page, cb)}
             });
     },
 
@@ -1420,22 +1422,21 @@ var PGEN = {
         }
 
         // insert the node
-        var dataRole = page=="dialog" ? "data-dialog=\"true\" " : "";
-        // remove the old page if it exists, add a new one.
-        var node = $("#"+page+"_page");
-        node.remove();
-        node = $.parseHTML('<div id="' +page+ '_page" class="page" data-dom-cache="true" data-role="page" '+ dataRole +' data-fullscreen="true"></div>');
+        var node    = $("#"+page+"_page");
         var head    = $.parseHTML( PGEN.getHeader(page) );
         var content = $.parseHTML('<div id="' +page+ '_content" data-role="content">' +data+ '</div>', document, true);
 
-        node[0].appendChild(head[0]);
-        node[0].appendChild(content[0]);
-        if(page=="home")
-            $("body").prepend(node[0]);
-        else
-            $("body").append(node[0]);
-        
-        updateNavbar([page]);
+        node.append(head[0]);
+        node.append(content[0]);
+        //if(ONSEN) {
+        //    $("#onsNavigator").append(node[0]);
+        //}
+        //else {
+        //    if(page=="home")
+        //        $("body").prepend(node[0]);
+        //    else
+        //        $("body").append(node[0]);
+        //}
 
         callback(success);
     }
@@ -1479,10 +1480,10 @@ function updateNavbar(pages) {
                                                      return false;
                                                  });
 
-            $("#"+page+"LeftPopup").on("vclick", function() {
-                    $("#"+page+"LeftMenu").popup("open");
-                    return false;
-                });        
+            //$("#"+page+"LeftPopup").on("vclick", function() {
+            //        $("#"+page+"LeftMenu").popup("open");
+            //        return false;
+            //    });        
             $("#"+page+"RightPopup").on("vclick", function() {
                     $("#"+page+"RightMenu").popup("open");
                     return false;

@@ -15,7 +15,7 @@ var pgAudio = {
         else if(device.platform=="iOS")
             ext = "m4a"; // wav
         else if(device.platform=="Android")
-            ext = "m4a"; // amr
+            ext = "aac"; // amr
         else
             showLog("Error: unkonwn platform");
         return ext;
@@ -29,9 +29,15 @@ var pgAudio = {
     isRecordedFile: function(src) {
         var pre = src.substr(0,2);
         var ext = pgFile.getFileExt(src).toLowerCase();
-        if( pre=="pg" && (ext == "wav" || ext == "m4a" || ext == "mp3" || ext == "amr"))
+        if( pre=="pg" && (ext == "wav" || ext == "m4a" || ext == "aac"))
             return true;
         return false;
+    },
+    mkNiceDir: function(dir) {
+        // on Mac, the audio player wants absolute directories, not file:// URL's
+        if(device.platform == "iOS" && dir.slice(0,7)=="file://")
+            dir = dir.slice(7);
+        return dir;
     },
     eventInfoForFile: function(src) {
         var info = null;
@@ -45,10 +51,10 @@ var pgAudio = {
                 info.title    = event.data.hasOwnProperty("title") ? event.data.title : ""; 
                 info.text     = event.data.hasOwnProperty("text") ? event.data.text : "";
                 info.location = "";
-		if(event.data.hasOwnProperty("location")) {
-		    info.location = "Lat: " +event.data.location[0][1] + ", Lng: " + event.data.location[0][2];
+                if(event.data.hasOwnProperty("location")) {
+                    info.location = "Lat: " +event.data.location[0][1] + ", Lng: " + event.data.location[0][2];
                 }
-		info.id       = eid;
+                info.id = eid;
             }
         }
         return info;
@@ -86,7 +92,7 @@ var pgAudio = {
             }
         }
         else {
-            pgFile.existFile(fn, foundLocalFile.bind(this, id, fn), "persist");
+            pgFile.existFile(fn, foundLocalFile.bind(this, id, fn), "sound");
         }
         function foundLocalFile(id, fn, local) {
             if(local) { //the file was found locally
@@ -118,6 +124,7 @@ var pgAudio = {
                     $("#record")[0].onerror = null;
                 }
                 else {
+                    src = pgAudio.mkNiceDir(src);
                     pgAudio.play(pgAudio.IDX_RECORDED, src);
                 }
             }
@@ -216,7 +223,12 @@ var pgAudio = {
                 }
                 pgAudio.alarmer.volume = 0.9;
                 // Play audio
-                pgAudio.alarmer.play();
+                var promise = pgAudio.alarmer.play();
+                if (promise !== undefined) {
+                    promise.catch(error => {
+                            showLog("Cannot create alarm (audio autoplay disabled?)");
+                        });
+                }
             }
             return index;
         }
@@ -230,8 +242,11 @@ var pgAudio = {
     },
     playError: function(index, err) {
         // pgAudio.beep(); We are getting a weird non-error
-        if(!err.hasOwnProperty("message"))
+        if(!err.hasOwnProperty("message")) {
+            if(err.hasOwnProperty("code") && err.code)
+                showLog("Error playing recorded file");
             return;
+        }
         if(pgAudio.player[index]) {
             pgAudio.player[index].release();
             pgAudio.player[index] = null;
@@ -336,6 +351,7 @@ var pgAudio = {
                     showLog('Recording file error');
                 }
                 else {
+                    path = pgAudio.mkNiceDir(path);
                     showLog("Recording filename: " + path);
                     // Record audio
                     pgAudio.recorder = new Media(path, deviceSuccess.bind(this), deviceFail.bind(this));
@@ -379,13 +395,13 @@ var pgAudio = {
             callback(true);
         }
         function deviceFail(e){
-            showLog("Recording failed: "+JSON.stringify(e)); 
+            showError("Recording failed: "+JSON.stringify(e)); 
             callback(false);
         }
 	    // Periodically make callbacks with amplitude information.
 	    function recordCallback(callback, ms) {
 	        if(pgAudio.recorder) {
-		        pgAudio.recorder.getRecordingPower(success, error);
+		        pgAudio.recorder.getCurrentAmplitude(success, error);
 	        }
             function success(power) {
 		        callback(true, {'max': power, 'sec': ms/1000});
@@ -471,12 +487,14 @@ var pgRecorder = {
             for(var i=0; i<pgRecorder.numChannels; i++) {
                 pgRecorder.recBuffers[i].push(e.inputBuffer.getChannelData(i));
             }
-            var max = Math.max.apply(Math, e.inputBuffer.getChannelData(0));
-            pgRecorder.maxPower = Math.max(max*max, pgRecorder.maxPower);
+            var max = e.inputBuffer.getChannelData(0).reduce(function(a, b) {
+                    return Math.max(a, b);
+                });
+            pgRecorder.maxPower = Math.max(max, pgRecorder.maxPower);
         };
     },
     
-    getRecordingPower: function(callback) {
+    getCurrentAmplitude: function(callback) {
         callback(pgRecorder.maxPower);
         pgRecorder.maxPower = 0;
     },

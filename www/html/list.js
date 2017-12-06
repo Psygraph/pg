@@ -167,9 +167,9 @@ list.prototype.settings = function() {
 list.prototype.getPageData = function() {
     var data = pg.getPageData("list", pg.category());
     if(! ('pageFilter' in data))
-        data.pageFilter = ["stopwatch","note"];
+        data.pageFilter = ["stopwatch","timer","counter","note"];
     if(! ('showID' in data))
-        data.showID = false;
+        data.showID   = false;
     if(! ('showDate' in data))
         data.showDate = true;
     if(! ('showPage' in data))
@@ -180,14 +180,7 @@ list.prototype.getPageData = function() {
 };
 
 list.prototype.resize = function() {
-    var head    = $("#list_header").outerHeight(true);
-    var ctrls   = $("#list_controls").outerHeight(true);
-    var subHead = $("#subheader_list").outerHeight(true);
-    var win = getWindowDims();
-    var height  = win.height - (head+ctrls+subHead);
-    var width   = win.width;
-    $("#list_table").height(height);
-    $("#list_table").width(width);
+    page.prototype.resize.call(this, false);
 };
 
 list.prototype.eventSelected = function(e) {

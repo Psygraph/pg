@@ -2,77 +2,11 @@
 function help() {
     page.call(this, "help");
     this.intro    = true;
-    this.overview = true;
 }
 
 help.prototype = Object.create(page.prototype);
 help.prototype.constructor = help;
 
-help.prototype.setIntro = function(value) {
-    value = typeof(value)!="undefined" ? value : true;
-    this.intro = value;
-    if(!this.intro) { // we are being closed
-        $("#help .scrollable").scrollTop(0);
-        PGEN.writePsygraph({'accepted': true});
-        // get audio recording permissions
-        pgAudio.getRecordPermissions();
-        // go to the home page
-        gotoPage("home", true);
-        // In case they wanted to go to the help page first:
-        //UI.help.doOverview(true);      
-    }
-    return true;
-};
-
-help.prototype.pageHelp = function(page) {
-    var id = "#" +page +"Help";
-    //$(id +" > strong").remove();
-    if(!pgUtil.isWebBrowser())
-        $(id +" img").remove();
-    var s = $(id).html();
-    s += "<p><br/></p>";
-    return s;
-};
-
-help.prototype.setOverview = function(overview) {
-    this.overview = overview;
-};
-
-help.prototype.doOverview = function(overview) {
-    this.overview = overview;
-    resetPage();
-    return true;
-};
-
-help.prototype.updateMenus = function() { 
-    var header;
-    if(this.intro) {
-        $("#help_leftButton").hide();
-        $("#help_rightButton").hide();
-        $("#help_title").html("Psygraph");
-    }
-    else {
-        $("#help_leftButton").show();
-        $("#help_rightButton").show();
-        $("#help_title").html("help");
-        if(!this.overview) {
-            $("#help_rightButton").html("General");
-            $("#help_rightButton").attr("data-icon","arrow-u");
-            $("#help_rightButton").removeClass("ui-icon-arrow-d").addClass("ui-icon-arrow-u");
-            $("#help_rightButton").attr("onclick", "return UI.help.doOverview(true);");
-        }
-        else {
-            $("#help_rightButton").html("Specific");
-            $("#help_rightButton").attr("data-icon","arrow-d");
-            $("#help_rightButton").removeClass("ui-icon-arrow-u").addClass("ui-icon-arrow-d");
-            $("#help_rightButton").attr("onclick", "return UI.help.doOverview(false);");
-        }
-        $("#help_rightButton").trigger("refresh");
-    }
-    //$("#help").trigger("refresh");
-    return false;
-};
-    
 help.prototype.update = function(show, state) {
     if(!show) {
         return {'intro': this.intro};
@@ -88,18 +22,14 @@ help.prototype.update = function(show, state) {
             $("#helpPage").html(s);
         }
         else {
-            var s;
-            if(this.overview) {
-                s = this.pageHelp("introduction");
-            } else {
-                var page = pg.page();
-                var s = this.pageHelp(page);
-            }
-            $("#helpPage").html(s);
+            var page = pg.page(); // would be nice to scroll to this section...
+            var s = this.pageHelp("all");
         }
+        $("#helpPage").html(s);
         $("#helpPage").trigger("create");
         $("#help").trigger("refresh");
         this.resize();
+        setTimeout(this.resize.bind(this), 1000);
     }
 };
     
@@ -112,18 +42,62 @@ help.prototype.settings = function() {
 };
 
 help.prototype.resize = function() {
-    // our content is scollable, so dont resize it to the window size.
-    // But do disallow horizontal scroll.
-    var head    = $("#" + this.name + "_header").outerHeight(true);
-    var foot    = $("#" + this.name + "_footer").outerHeight(true);
-    var win     = getWindowDims();
-    var height  = win.height - (head);
-    var width   = win.width;
-    $("#helpDiv").css( {
-            'top': head-1,
-            'height': height
-            });
+    var head   = $("#" + this.name + "_header").outerHeight(true);
+    var win    = getWindowDims();
+    var width  = win.width;
+    $("#"+this.name+"_content").css({
+            'position': "absolute",
+                'top':    head+"px" ,
+                'width':  width+"px"
+                }
+    );
 };
+
+help.prototype.setIntro = function(value) {
+    value = typeof(value)!="undefined" ? value : true;
+    this.intro = value;
+    if(!this.intro) { // we are being closed
+        $("#help .scrollable").scrollTop(0);
+        PGEN.writePsygraph({'accepted': true});
+        // get audio recording permissions
+        pgAudio.getRecordPermissions();
+        // go to the home page
+        gotoPage("home", true);
+    }
+    return true;
+};
+
+help.prototype.pageHelp = function(page) {
+    if(page=="all") {
+        var s = this.pageHelp("introduction");
+        for(var i in pg.pages) {
+            s += this.pageHelp(pg.pages[i]);
+        }
+    }
+    else {
+        var id = "#" +page +"Help";
+        //$(id +" > strong").remove();
+        if(!pgUtil.isWebBrowser())
+            $(id +" img").remove();
+        var s = $(id)[0].outerHTML;
+        s += "<p><br/></p><hr/>";
+    }
+    return s;
+};
+
+help.prototype.updateMenus = function() { 
+    var header;
+    if(this.intro) {
+        $("#help_leftButton").hide();
+        $("#help_title").html("Psygraph");
+    }
+    else {
+        $("#help_leftButton").show();
+        $("#help_title").html("help");
+    }
+    return false;
+};
+    
 
 UI.help = new help();
 //# sourceURL=help.js

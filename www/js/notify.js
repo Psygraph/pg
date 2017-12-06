@@ -45,7 +45,7 @@ var pgNotify = {
             showLog("Error: pending notification in " + category);
             pgNotify.removeCategory(category);
         }
-        var sound = "";
+        var sound = null;
         if(hasSound) {
             pgAudio.getCategorySound(category, true, cb.bind(this));
         }
@@ -59,22 +59,15 @@ var pgNotify = {
             for(var i=numNotifications-1; i>=0; i--) {
                 if(hasText)
                     txt = pg.getCategoryText(category);
-                var opts = this.getOpts(category, atTime[i], txt, sound);
+                var notify = i==0;
+                var opts = this.getOpts(category, atTime[i], txt, sound, notify);
                 if(pgNotify.usePlugin) {
                     opts.id = pgNotify.nextID++;
-                    if(i==0) {
-                        opts.data.notify = true;
-                        //opts.data.nextID = id;
-                    }
-                    else {
-                        opts.data.notify = false;
-                        //opts.data.nextID = id;
-                    }
                     cordova.plugins.notification.local.schedule(opts);
                     id = opts.id;
                 }
                 else {
-                    var time = Math.abs(opts.at.getTime() - pgUtil.getCurrentTime());
+                    var time = Math.abs(atTime - pgUtil.getCurrentTime());
                     id = setTimeout(pgNotify.onTrigger.bind(this,opts), time);
                 }
             }
@@ -83,13 +76,15 @@ var pgNotify = {
         }
     },
     
-    getOpts: function(category, atTime, txt, sound) {
+    getOpts: function(category, atTime, txt, sound, notify) {
         //var catData  = pg.getCategoryData(category);
         var opts = {
-            "sound":    sound,
-            "at":       new Date(atTime),
-            "data":     {"category": category, "time": atTime}
-            //"nextID":   0
+            "sound":      sound,
+            "trigger":    { "at": new Date(atTime)},
+            "foreground": true,
+            "data":       {"category": category, 
+                           "time":     atTime,
+                           "notify":   notify}
         };
         // show the icon only on android
         if(!pgUtil.isWebBrowser() && device.platform=="Android")
@@ -116,16 +111,14 @@ var pgNotify = {
         if(pgNotify.usePlugin) {
             opts.text = $(opts.text).text(); // convert to plain text
         }
-        else {
-            opts.data = JSON.stringify(opts.data); // to be conformant with local notifications.
-        }
+        opts.data = JSON.stringify(opts.data);
         return opts;
     },
     
     // Call any missed callbacks that have elapsed.
     callElapsed: function(category, running, initializing) {
         if(pgNotify.usePlugin) {
-            cordova.plugins.notification.local.getAllTriggered(triggeredCB.bind(this, category, running, initializing));
+            cordova.plugins.notification.local.getTriggered(triggeredCB.bind(this, category, running, initializing));
         }
         else {
             if(initializing) {
@@ -144,7 +137,7 @@ var pgNotify = {
             delete(pgNotify.clicked);
             pgNotify.clicked = [];
             
-            var latestData = {};
+            var latestData      = {};
             latestData.alarm    = true;
             latestData.time     = 0;
             latestData.category = category;
@@ -170,7 +163,7 @@ var pgNotify = {
             }
             else { // no event
                 if(initializing)
-                    cordova.plugins.notification.local.getAllScheduled(scheduledCB.bind(this, category, running));
+                    cordova.plugins.notification.local.getScheduled(scheduledCB.bind(this, category, running));
             }
         }
         function scheduledCB(category, running, notifications) {
@@ -208,6 +201,11 @@ var pgNotify = {
     },
     
     removeCategory: function(category) {
+        if(!pgNotify.usePlugin) {
+            pgNotify.removeID(pgNotify.alertIndex[category]);
+            pgNotify.alertIndex[category] = null;
+            return;
+        }
         cordova.plugins.notification.local.getAll(cb);
         function cb(notifications) {
             if(!notifications)
@@ -222,21 +220,18 @@ var pgNotify = {
             function process(note) {
                 var id   = note.id;
                 var data = JSON.parse(note.data);
+                // xxx This is broken upstream: it should not be double-encoded.
+                data = JSON.parse(data);
                 if(data.category == category)
                     cordova.plugins.notification.local.cancel( id );
             }
         }
     },
     removeID: function(id) {
-        /*
-          for(var cat in pgNotify.alertIndex) {
-            var localID = pgNotify.alertIndex[cat];
-            if(localID && localID == id) {
-                pgNotify.removeCategory(cat);
-                return;
-            }
+        for(ndx in pgNotify.alertIndex) {
+            if(pgNotify.alertIndex[ndx] == id)
+                pgNotify.alertIndex[ndx] = 0;
         }
-        */
         if(pgNotify.usePlugin) {
             cordova.plugins.notification.local.cancel( id );
         }
@@ -283,7 +278,12 @@ var pgNotify = {
     },
     onTrigger: function(notification) {
         var data = JSON.parse(notification.data);
-        pgNotify.removeCategory(data.category);
+        for(ndx in pgNotify.alertIndex) {
+            if(pgNotify.alertIndex[ndx] == notification.id)
+                pgNotify.alertIndex[ndx] = 0;
+        }
+        // If we did this, the notification would dismiss immediately.
+        //pgNotify.removeCategory(data.category);
         data.alarm = true;
         data.elapsed = true;
         data.text  = notification.text;
@@ -295,7 +295,6 @@ var pgNotify = {
         pgNotify.alarm(data);
     },
     alarm: function(opts) {
-        // sound the alarm!
         if(!pgNotify.usePlugin) {
             if(opts.text) {
                 showAlert(opts.text, opts.title);
@@ -306,17 +305,16 @@ var pgNotify = {
             }
         }
         else {
-            //if(pg.background)
             if(device.platform=="Android" && pg.background)
                 return;
             // If our app is open, the system does not display a notification, so we do so here.
-            if(opts.text) {
-                showAlert(opts.text, opts.title);
-            }
-            if(opts.sound) {
-                var idx = pgAudio.alarm(opts.category);
-                setPageChangeCallback(function(){pgAudio.stopAlarm(idx)});
-            }
+            //if(opts.text) {
+            //    showAlert(opts.text, opts.title);
+            //}
+            //if(opts.sound) {
+            //    var idx = pgAudio.alarm(opts.category);
+            //    setPageChangeCallback(function(){pgAudio.stopAlarm(idx)});
+            //}
         }
     },
     setCallback: function(callback) { 
