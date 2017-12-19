@@ -3,6 +3,17 @@ var counter = function () {
     page.call(this, "counter");
     this.count = 0;
     this.initialized = false;
+    this.knobOpts = {min:      0,
+                     max:      100, 
+                     step:     0.1,
+                     readOnly: true,
+                     rotation: "clockwise",
+                     lineCap : "round",
+                     fgColor:  "rgba(0,0,0,1)",
+                     bgColor:  "rgba(0,0,0,0)"
+                    };
+    this.knobOptsAtTarget   = {fgColor:  "rgba(  0, 200, 0, 1)"};
+    this.knobOptsOverTarget = {fgColor:  "rgba(200,   0, 0, 1)"};
 }
 
 counter.prototype = Object.create(page.prototype);
@@ -15,16 +26,8 @@ counter.prototype.update = function(show, state) {
     }
     if(!this.initialized) {
         this.initialized = true;
-        var knobOpts = {min:  0,
-                        max:  100, 
-                        step: 0.1,
-                        readOnly: true,
-                        rotation: "clockwise",
-                        lineCap : "round",
-                        fgColor: "rgba(0,0,0,1)",
-                        bgColor: "rgba(0,0,0,0)"
-        };
-        $("#counter_enso").knob(knobOpts);
+        $("#counter_enso").knob(this.knobOpts);
+        $("#counter_enso").trigger('configure', this.knobOpts);
     }
     // nothing to do for state
     // show the last count in this category.
@@ -39,72 +42,53 @@ counter.prototype.update = function(show, state) {
         this.count = 0;
     }
     var data = this.getPageData();
+    this.setValue();
+    this.resize();
+    this.setMotionResponse(data.motionAlarm, data.motionVal);
+};
+
+counter.prototype.setValue = function() {
+    var data = this.getPageData();
     if(!data.showCount) {
         $("#counter_edit").val("");
         $("#counter_enso").trigger('configure', {fgColor: "rgba(0,0,0,0)"});
     }
     else {
         $("#counter_edit").val(this.count);
-        $("#counter_enso").trigger('configure', {fgColor: "rgba(0,0,0,1)"});
-        var frac = 100 * (this.count+1) / data.countTarget;
+        if(this.count < data.countTarget-1)
+            $("#counter_enso").trigger('configure', this.knobOpts);
+        else if(this.count == data.countTarget-1)
+            $("#counter_enso").trigger('configure', this.knobOptsAtTarget);
+        else
+            $("#counter_enso").trigger('configure', this.knobOptsOverTarget);
+        var frac = 100 * (this.count) / data.countTarget;
         $('#counter_enso').val(frac).trigger('change');
     }
-    this.resize();
-    this.setMotionResponse(data.motionAlarm, data.motionVal);
 };
 
 counter.prototype.settings = function() {
     var data = this.getPageData();
     if(arguments.length) {
-        s = "<div class='ui-field-contain no-field-separator' data-role='controlgroup'>";
-        if(!pgUtil.isWebBrowser()) {
-            s += "<fieldset>";
-            s += "<label for='motionSlider'>Motion threshold:</label>";
-            s += "<input type='range' name='motionSlider' id='motionSlider' value='" + data.motionVal + "' min='0' max='20' step='0.1'>";
-            s += "</fieldset>";
-            s += "<fieldset>";
-            s += "<div class='ui-field-contain no-field-separator'>";
-            s += "  <label for='motionAlarm'>Motion alarm:</label>";
-            s += "  <select id='motionAlarm' value='Motion alarm' title='Motion alarm' data-native-menu='false'>";
-            s += "    <option value='none'>none</option>";
-            s += "    <option value='silent'>silent</option>";
-            s += "    <option value='beep'>beep/buzz</option>";
-            s += "    <option value='sound'>sound</option>";
-            s += "  </select>";
-            s += "</div>";
-            s += "</fieldset>";
+        $("#counter_target").val(data.countTarget).change();
+        $("#counter_motionSlider").val(data.motionVal).change();
+        $("#counter_motionAlarm").val(data.motionAlarm).change();
+        $("#counter_showCount").prop("checked", data.showCount).checkboxradio('refresh');
+        $("#counter_targetBehavior").val(data.countTargetBehavior).change();
+        
+        if(pgUtil.isWebBrowser()) {
+            $("#counter_motion").hide();
         }
-        s += "<fieldset>";
-        s += "<label for='countTarget'>Count target:</label>";
-        s += "<input type='range' name='countTarget' id='countTarget' value='" + data.countTarget + "' min='0' max='20' step='1'>";
-        s += "</fieldset>";
-        s += "<fieldset>";
-        s += "<div class='ui-field-contain no-field-separator'>";
-        s += "  <label for='countTargetBehavior'>Count target behavior:</label>";
-        s += "  <select id='countTargetBehavior' value='Count target behavior' title='Count target behavior' data-native-menu='false'>";
-        s += "    <option value='none'>none</option>";
-        s += "    <option value='sound'>sound</option>";
-        s += "  </select>";
-        s += "</div>";
-        s += "</fieldset>";
-        s += printCheckbox("counter_showCount", "Show count", data.showCount);
 
-        s += "</div>";
-        UI.settings.setPageContent(s);
-
-        if(!pgUtil.isWebBrowser())
-            $("#motionAlarm").val(data.motionAlarm).change();
-        $("#countTargetBehavior").val(data.countTargetBehavior).change();
         UI.settings.pageCreate();
     }
     else {
         if(! pgUtil.isWebBrowser()) {
-            data.motionAlarm  = $("#motionAlarm").val();
-            data.motionVal    = parseFloat($("#motionSlider").val());
+            data.motionAlarm  = $("#counter_motionAlarm").val();
+            data.motionVal    = parseFloat($("#counter_motionSlider").val());
         }
         data.showCount           = $("#counter_showCount")[0].checked;
-        data.countTarget         = parseInt($("#countTarget").val());
-        data.countTargetBehavior = $("#countTargetBehavior").val();
+        data.countTarget         = parseInt($("#counter_target").val());
+        data.countTargetBehavior = $("#counter_targetBehavior").val();
         return data;
     }
 };
@@ -167,19 +151,13 @@ counter.prototype.lever = function(arg) {
 counter.prototype.startStop = function(trigger) {
     var data = this.getPageData();
     this.count += 1;
-    if(data.showCount) {
-        $("#counter_edit").val(this.count);
-        if(data.countTarget != 0) {
-            var frac = 100 * (this.count+1) / data.countTarget;
-            $('#counter_enso').val(frac).trigger('change');
-        }
-    }
     var time = pgUtil.getCurrentTime();
     var eventData = {count: this.count};
     if(trigger)
         data.trigger = trigger;
     pg.addNewEvents({page: "counter", type: "count", start: time, data: eventData}, true);
     syncSoon();
+    this.setValue();
     return false; // prevent click from being handled elsewhere
 };
 
@@ -199,16 +177,10 @@ counter.prototype.reset = function() {
         eventData.target = data.countTarget;
     this.count = 0;
     pg.addNewEvents({page: "counter", type: "reset", start: time, data: eventData}, true);
-    if(data.showCount) {
-        $("#counter_edit").val(this.count);
-        if(data.countTarget != 0) {
-            var frac = 100 * (this.count+1) / data.countTarget;
-            $('#counter_enso').val(frac).trigger('change');
-        }
-    }
     syncSoon();
     if(giveFeedback)
         pgAudio.giveFeedback(correct);
+    this.setValue();
     return false; // prevent click from being handled elsewhere
 };
 

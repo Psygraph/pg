@@ -6,7 +6,6 @@ var prefs = function () {
     this.localPG = null;
     this.initialized = false;
     var data = this.getPageData();
-    setSwipe(data.swipeVal);
 }
 
 prefs.prototype = Object.create(page.prototype);
@@ -23,13 +22,13 @@ prefs.prototype.update = function(show, state) {
         pgBluetooth.isConnected(function(foo){});
         var data = this.getPageData();
         // pages
-        var s = "";
-        var dispPages = pgUtil.deepCopy(pg.allPages);
-        dispPages.splice( dispPages.indexOf("home"), 1);
-        if(! pg.getUserDataValue("debug") )
-            dispPages.splice( dispPages.indexOf("map"), 1);
-        s += pgUtil.selectPages("new_pages", "Show tools:", dispPages, pg.pages);
-        $("#page_select").html(s).trigger("create");
+        //var s = "";
+        //var dispPages = pgUtil.deepCopy(pg.allPages);
+        //dispPages.splice( dispPages.indexOf("home"), 1);
+        //if(! pg.getUserDataValue("debug") )
+        //    dispPages.splice( dispPages.indexOf("map"), 1);
+        //s += pgUtil.selectPages("new_pages", "Show tools:", dispPages, pg.pages);
+        //$("#page_select").html(s).trigger("create");
         // categories
         dispCategories = pgUtil.deepCopy(pg.categories);
         //dispCategories.pop();   // remove "*"
@@ -90,11 +89,12 @@ prefs.prototype.update = function(show, state) {
         }
         cats.val(dispCategories).trigger("change");
 
-        // swipe
+        /* // swipe
         if(pgUtil.isWebBrowser())
             $("#swipeDiv").hide();
         else
             $("#swipeSlider").val(data.swipeVal).slider('refresh');
+        */
 
         // public access and debug
         $("#debug").prop('checked', data.debug).checkboxradio("refresh");
@@ -121,7 +121,7 @@ prefs.prototype.update = function(show, state) {
 };
 
 prefs.prototype.resize = function() {
-    page.prototype.resize.call(this, false);
+    page.prototype.resize.call(this, true);
 };
 
 prefs.prototype.btConnect = function() {
@@ -193,8 +193,6 @@ prefs.prototype.getPageData = function() {
 };
 prefs.prototype.submitSettings = function(doClose) {
     var data = this.getPageData();
-    var pages = $("#new_pages").val();
-    pages.unshift("home");
     var cat = $("#new_categories").val(); //.split(",");
     var categories = new Array("Uncategorized");
     for(var i=0; i<cat.length; i++) {
@@ -203,20 +201,32 @@ prefs.prototype.submitSettings = function(doClose) {
             categories.push(cat[i]);
     }
     //categories.push("*");
+    /*
     var swipeVal = data.swipeVal;
     if(! pgUtil.isWebBrowser()) {
         swipeVal = parseInt($("#swipeSlider")[0].value);
         setSwipe(swipeVal);
     }
-
+    */
     this.userData = {
-        'swipeVal'    : swipeVal,
+        //'swipeVal'    : swipeVal,
         'debug'       : $("#debug")[0].checked ? 1 : 0,
         //'publicAccess': $("#publicAccess")[0].checked ? 1 : 0,
         'wifiOnly'    : data.wifiOnly,
         'screenTaps'  : false //$("#screenTaps")[0].checked ? true : false,
         //'perCategorySettings': $("#perCategorySettings")[0].checked ? true : false
     };
+
+    //var pages = $("#new_pages").val();
+    //pages.unshift("home");
+    var pages = pg.pages;
+    var i = pages.indexOf("map");
+    if(i != -1) {
+        pages.splice(i, 1);
+    }
+    if(this.userData.debug) {
+        pages.push("map");
+    }
     if(!pgUtil.isWebBrowser())
         this.userData.wifiOnly = $("#wifiOnly")[0].checked ? true : false;
 
@@ -227,7 +237,7 @@ prefs.prototype.submitSettings = function(doClose) {
        pg.equal(pg.pages, pages)         &&
        pg.equal(pg.categories, cateogries)) {
         if(doClose)
-            gotoPage(pg.page(), true);
+            gotoPage(pg.page());
         return;
     }
     this.localPG = new PG();
@@ -252,11 +262,8 @@ prefs.prototype.settingsUpdateComplete = function(doClose, success) {
     var categoriesEqual = pgUtil.equal(this.localPG.categories, pg.categories);
     pg.copy(this.localPG, false);
     PGEN.writePG(pg);
-    if(!pagesEqual || !categoriesEqual) {
-        for(i=0; i<pg.pages.length; i++)
-            PGEN.generatePage(pg.pages[i]);
-    }
-    updateNavbar();
+    if(!pagesEqual)
+        updateNavbar();
     
     // show an alert if changing the server settings was not successful.
     if(! success) {
@@ -266,7 +273,7 @@ prefs.prototype.settingsUpdateComplete = function(doClose, success) {
         var pageIndex = pg.pages.indexOf(page);
         if(pageIndex < 0)
             pageIndex = 0;
-        gotoPage(pg.pages[pageIndex], true);        
+        gotoPage(pg.pages[pageIndex]);
     }
     var catIndex = pg.categories.indexOf(category);
     if(catIndex < 0)

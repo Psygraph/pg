@@ -1,32 +1,41 @@
+<div id="settings_page" class="page" data-role="page" data-fullscreen="true">
 
-<!--
-<div id="settingsPage" >
-  <div id="settingsDiv" class="scrollable">
--->
-    <form onsubmit="UI.settings.submitSettings(false); return false;">
-      
-      <div id="collapsibleSettings" data-role="collapsible-set">
-	<div id="pageSettings" data-role="collapsible" class="settings">
-	  <h3><div id="pageName">Page settings</div></h3>
-	  <div id="page_settings"></div>
-	</div>
-	<div id="categorySettings" data-role="collapsible" class="settings">
-	  <h3><div id="categoryName">Category settings</div></h3>
-      <div id="category_settings"></div>
-	</div>
-      </div>
-      
-      <div data-role="fieldcontain" id="settingButtons">
-	    <input type="button" id="applyAllSettings" onClick="UI.settings.submitSettings('applyAll'); return false;" class="btn fast" value="Apply All" title="applyAll" data-inline="true"></input>
-	    <input type="button" id="cancelSettings" onClick="gotoPage(pg.page(),true); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"></input>
-	    <input type="button" id="applySettings" onClick="UI.settings.submitSettings('apply'); return false;" class="btn fast" value="Apply" title="apply" data-inline="true"></input>
-	    <input type="button" id="OKSettings" onClick="UI.settings.submitSettings('OK'); return false;" class="btn fast" value="OK" title="OK" data-inline="true"/></input>
-      </div>
-      
-    </form>  
-<!--
+<div id="settings_main" class="main content">
+    
+  <div class="ui-field-contain no-field-separator">
+    <label for="settings_category">Category:</label>
+    <select id="settings_category" data-native-menu="false"></select>
   </div>
+
+  <div id="category_settings">
+    <div class="ui-field-contain no-field-separator">
+      <label for="descEdit">Description:</label>
+      <input class="settings" type="text" id="descEdit" name="desc" value=""></input>
+    </div>
+    
+    <div class="ui-field-contain no-field-separator">
+      <label for="styleEdit"><a href="" onclick="UI.settings.getFileURL('styleEdit');">Style</a>:</label>
+      <select id="styleEdit" data-native-menu="false"></select>
+    </div>
+    <div class="ui-field-contain no-field-separator">
+      <label for="soundEdit"><a href="" onclick="UI.settings.getFileURL('soundEdit');">Sound</a>:</label>
+      <select id="soundEdit" data-native-menu="false"></select>
+    </div>    
+    <div class="ui-field-contain no-field-separator">
+      <label for="textEdit"><a href="" onclick="UI.settings.getFileURL('textEdit');">Text</a>:</label>
+      <select id="textEdit" data-native-menu="false"></select>
+    </div>
+    
+  </div>
+  
+  <div data-role="fieldcontain" id="settingButtons">
+	<input type="button" id="applyAllSettings" onClick="UI.settings.submitSettings('applyAll'); return false;" class="btn fast" value="Apply All" title="applyAll" data-inline="true"></input>
+	<input type="button" id="cancelSettings" onClick="gotoPage(pg.page(),true); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"></input>
+	<input type="button" id="applySettings" onClick="UI.settings.submitSettings('apply'); return false;" class="btn fast" value="Apply" title="apply" data-inline="true"></input>
+	<input type="button" id="OKSettings" onClick="UI.settings.submitSettings('OK'); return false;" class="btn fast" value="OK" title="OK" data-inline="true"/></input>
+  </div>
+  
 </div>
--->
 
 <script src="html/settings.js"></script>
+</div>

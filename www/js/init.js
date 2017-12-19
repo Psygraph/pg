@@ -1,11 +1,16 @@
 
-var jqmReady = $.Deferred();
-var pgReady = $.Deferred();
-$.when(jqmReady, pgReady).then(finalInit);
+var jqmReady  = $.Deferred();
+var devReady  = $.Deferred();
+var pageReady = $.Deferred();
+var pagesRemaining = 0;
+
+// This call will happen after all frameworks and pages have loaded
+$.when(jqmReady, devReady, pageReady).then(finalInit);
 
 var app = {
     // Application Constructor
     initialize: function(callback) {
+
 	    this.bindEvents();
 
         var browser = document.URL.match(/^https?:/);
@@ -33,25 +38,55 @@ var app = {
     },
     onDeviceReady: function() {
 	    showLog("onDeviceReady");
-	    pgReady.resolve();
+	    devReady.resolve();
     },
     onMobileInit: function() {
 	    showLog("OnMobileInit");
 	    $.support.cors                   = true;
 	    $.support.mediaquery             = true;
 
-        if(!ONSEN) {
-            $.mobile.allowCrossDomainPages   = true;
-            $.mobile.defaultPageTransition   = "none";
-            $.mobile.defaultDialogTransition = "none";
-            //$.mobile.buttonMarkup.hoverDelay = 50
-            $.mobile.hashListeningEnabled    = false;
-            //$.mobile.autoInitializePage      = false;
-            //$.mobile.linkBindingEnabled      = false;
+        //if(!ONSEN) {
+        $.mobile.allowCrossDomainPages   = true;
+        $.mobile.defaultPageTransition   = "none";
+        $.mobile.defaultDialogTransition = "none";
+        $.mobile.hashListeningEnabled    = false;
+        $.mobile.page.prototype.options.domCache = true;
+        //$.mobile.linkBindingEnabled      = false; // necessary, but broken for images on firefox.
+        $.mobile.dynamicBaseEnabled      = false;
+        //$.mobile.buttonMarkup.hoverDelay = 50
+        //$.mobile.autoInitializePage    = false;
+        //}
+        if(ONSEN) {
+            document.addEventListener("init", function(event) {
+                    if (event.target.matches(".page")) {
+                        PGEN.initializePage(event);
+                    }
+                }, false);
+            jqmReady.resolve();
         }
-	    jqmReady.resolve();
+        else {
+            $("body").on( "pagecontainercreate", function( event, ui ) {
+                    $(":mobile-pagecontainer").pagecontainer({load: PGEN.initializePage});
+                    var pages = ["home", "stopwatch", "timer", "counter", "note", "list", "graph", 
+                                 "map", "dialog", "about", "settings", "prefs", "help"];
+                    pagesRemaining = pages.length;
+                    for(var i=0; i<pages.length; i++) {
+                        var page = pages[i]+".html";
+                        var opts = {'role': "page"};
+                        $(":mobile-pagecontainer").pagecontainer( "load", "html/"+page, opts );
+                    }
+                    
+                });
+        }
     }
 };
 
+function pageInitFinished(page) {
+    pagesRemaining--;
+    if(!pagesRemaining) {
+        showLog("Page init finished");
+        jqmReady.resolve();
+    }
+}
 
 app.initialize();

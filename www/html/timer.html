@@ -1,9 +1,9 @@
+<div id="timer_page" class="page" data-role="page" data-fullscreen="true">
 
-
+<div id="timer_main" class="main content">
 <div id="subheader_timer" data-role="control-group">
   <div class="category">Loading...</div>
 </div>
-
 <div data-role="control-group" class="inset">
   <div class="ui-field-contain no-field-separator" id="timer_div">
     <input id="countdown_timer" class="clock_widget" type="text" value="00:00.00" readonly></input>
@@ -13,16 +13,15 @@
   <div class="ui-grid-a">
     <div class="ui-block-a">
       <label for="countdown_set_duration">Coundown duration:</label>
-      <input id="countdown_set_duration" class="half_clock_widget" type="text" value="00:00.00" onchange="return UI.timer.changeCountdownValue()"></input>
+      <input id="countdown_set_duration" class="half_clock_widget" type="text" value="00:00.00" onchange="return UI.timer.changedCountdownValue()"></input>
     </div>
     <div class= "ui-block-b">
       <label for="countdown_set_random">Random increment:</label>
-      <input id="countdown_set_random"   class="half_clock_widget" type="text" value="00:00.00" onchange="return UI.timer.changeRandomValue()"></input>
+      <input id="countdown_set_random"   class="half_clock_widget" type="text" value="00:00.00" onchange="return UI.timer.changedRandomValue()"></input>
     </div>
   </div>
   
   <div>
-
     <input type="image" class="button fast" id="timer_reset" title="Reset" 
            onClick="return UI.timer.reset(pg.category(),false);" src="img/reset.png" alt="reset"/>
     <input type="image" class="button fast" id="timer_start" title="Start/Stop" 
@@ -32,5 +31,59 @@
   </div>
 </div>
 
+</div>
+
+<div id="timer_settings" class="settings content">
+
+  <div class="ui-field-contain no-field-separator">
+    <label for="timer_category">Category:</label>
+    <select id="timer_category" data-native-menu="false"></select>
+  </div>
+
+  <div class='ui-field-contain no-field-separator'>
+    <label for='timerAlarm'>Timer alarm:</label>
+    <select id='timerAlarm' value='Timer alarm' title='Timer alarm' data-native-menu='false'>
+      <option value='none'>none</option>
+      <option value='text'>text</option>
+      <option value='sound'>sound</option>
+      <option value='both'>both</option>
+    </select>
+  </div>
+  <div class='ui-field-contain no-field-separator' data-role='controlgroup'>
+    <legend></legend>
+    <label for="timer_loop">Loop</label>
+    <input type="checkbox" id="timer_loop" />
+  </div>
+        
+  <div id="timer_extraAlarmsDiv" class="ui-field-contain no-field-separator">
+    <label for="timer_extraAlarms:">Additional alarms:</label>
+    <input class="settings" type="text" id="timer_extraAlarms" value=""/>
+  </div>
+  
+  <div data-role="fieldcontain">
+	<input type="button" onClick="gotoPageMain(); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"></input>
+	<input type="button" onClick="UI.settings.submitSettings('apply'); return false;" class="btn fast" value="Apply" title="apply" data-inline="true"></input>
+	<input type="button" onClick="UI.settings.submitSettings('OK'); return false;" class="btn fast" value="OK" title="OK" data-inline="true"/></input>
+  </div>
+</div>
+
+<div id="timer_help" class="help content">
+  <strong>Timer</strong>
+  <p>The <strong>Timer</strong> tool is a countdown alarm: the top widget shows time remaining and the bottom widget shows total time.  The can start/stop the timer with the right button and reset the timer with the left button.  The two widgets on the lower portion of the screen let you set the countdown duration and a random amount of time that should be added to the timer interval every time the countdown resets.  When the timer goes off, an alarm displays a category text notification and plays the category alarm sound.</p>
+  <p>The settings let you:
+  <ul>
+    <li>Specify what happens when the timer elapses.</li>
+    <li>Run the timer in a loop.</li>
+    <li>Schedule additional alarms (useful if the app is closed).</li>
+  </ul>
+  <p>The alarm sound and text message are specific to each category, and are changed in the category preferences.</p>
+  <br/>
+  <template>
+    <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/timer.png" alt="timer" width="300" />  
+    <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/timer_settings.png" alt="timer_settings" width="300" />
+  </template>
+  
+</div>
 
 <script src="html/timer.js"></script>
+</div>

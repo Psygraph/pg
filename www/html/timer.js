@@ -90,71 +90,29 @@ timer.prototype.refreshTimer = function(category) {
 timer.prototype.settings = function() {
     if(arguments.length) {
         var data = this.getPageData();
-        var s = "";
-        s += "<div class='ui-field-contain no-field-separator'>";
-        s += "  <label for='timerAlarm'>Timer alarm:</label>";
-        s += "  <select id='timerAlarm' value='Timer alarm' title='Timer alarm' data-native-menu='false'>";
-        s += "    <option value='none'>none</option>";
-        s += "    <option value='text'>text</option>";
-        s += "    <option value='sound'>sound</option>";
-        s += "    <option value='both'>both</option>";
-        s += "  </select>";
-        s += "</div>";
-        s += "<div class='ui-field-contain no-field-separator' data-role='controlgroup'>";
-        s += "<legend>Loop:</legend>";
-        s += printCheckbox("loop", "Loop", data.loop);
-        s += "</div>";
         
-        if(pg.getUserDataValue("debug")) {
-            s += "<div class='ui-field-contain no-field-separator'>";
-            s += "  <label for='extraAlarms:'>Additional alarms:</label>";
-            var alarmVal = data.extraAlarms.toString();
-            s += "  <input class='settings' type='text' id='extraAlarms' value='"+alarmVal+"'/>";
-            s += "</div>";
+        if(!pg.getUserDataValue("debug")) {
+            $("#timer_extraAlarmsDiv").hide();
         }
-        /*
-        s += "<div class='ui-field-contain no-field-separator'>";
-        s += "  <label for='countdownTime'>Countdown Time (h:m:s):</label>";
-        var timeVal = pgUtil.getStringFromMS(data.countdownTime);
-        s += "  <input class='settings' type='text' id='countdownTime' value='"+timeVal+"'/>";
-        s += "</div>";
-        s += "<div class='ui-field-contain no-field-separator'>";
-        s += "  <label for='randomInterval'>Random interval (h:m:s):</label>";
-        var randVal = pgUtil.getStringFromMS(data.randomInterval);
-        s += "  <input class='settings' type='text' id='randomInterval' value='"+randVal+"'/>";
-        s += "</div>";
-        */
+        else {
+            $("#timer_extraAlarmsDiv").show();
+            var alarmVal = data.extraAlarms.toString();
+            $("#timer_extraAlarms").val(alarmVal);
+        }
 
-        UI.settings.setPageContent(s);
-        $("#timerAlarm").val(data.timerAlarm).change();
-        $("#loop").attr('checked', data.loop);
-
-        //var dbOpts = {
-        //    mode: "durationflipbox",
-        //    //useInline: false,
-        //    useButton: true,
-        //    lockInput: false,
-        //    showInitialValue: true
-        //};
-        //$('#countdownTime').datebox(dbOpts);
-        //$('#randomInterval').datebox(dbOpts);
-        // the following are necessary to get dateBox to display the icon within the input element.
-        //$('#countdownTime').parent().parent().css('display','flex');
-        //$('#randomInterval').parent().parent().css('display','flex');
-        //var initDate = $("#countdownTime").data('jtsage-datebox').initDate;
-        //$('#countdownTime').datebox('setTheDate', new Date(initDate.getTime() + Math.round(data.countdownTime,1000) ));
-        //$('#randomInterval').datebox('setTheDate', new Date(initDate.getTime() + Math.round(data.randomInterval,1000) ));
+        $("#timer_alarm").val(data.timerAlarm).change();
+        $("#timer_loop").prop('checked', data.loop);
         UI.settings.pageCreate();
     }
     else {
         this.refreshTimer();
         var data = this.getPageData();
-        data.timerAlarm = $("#timerAlarm").val();
-        data.loop =       $("#loop")[0].checked;
+        data.timerAlarm = $("#timer_alarm").val();
+        data.loop =       $("#timer_loop")[0].checked;
         //data.countdownTime = pgUtil.getMSFromString($("#countdownTime").val());
         //data.randomInterval = pgUtil.getMSFromString($("#randomInterval").val());
         if(pg.getUserDataValue("debug"))
-            data.extraAlarms = parseInt($("#extraAlarms").val());
+            data.extraAlarms = parseInt($("#timer_extraAlarms").val());
         this.changedCountdownTime(data);
         return data;
     }
@@ -164,7 +122,7 @@ timer.prototype.resize = function() {
     page.prototype.resize.call(this, false);
 };
 
-timer.prototype.changeCountdownValue = function() {
+timer.prototype.changedCountdownValue = function() {
     var value = pgUtil.getMSFromString($("#countdown_set_duration").val());
     var data = this.getPageData();
     data.countdownTime = value;
@@ -172,7 +130,7 @@ timer.prototype.changeCountdownValue = function() {
     UI.timer.changedCountdownTime(data);
     return false;
 }
-timer.prototype.changeRandomValue = function(value) {
+timer.prototype.changedRandomValue = function(value) {
     var value = pgUtil.getMSFromString($("#countdown_set_random").val());
     var data = this.getPageData();
     data.randomInterval = value;
@@ -188,19 +146,6 @@ timer.prototype.changedCountdownTime = function(data) {
     UI.timer.countdownDuration[category] = countdownTime;
     UI.timer.refreshTimer(category);
 }
-
-timer.prototype.setPageData = function(newPageData) {
-    var pageData = this.getPageData();
-    if(!pgUtil.equal(pageData, newPageData)) {
-    }
-};
-
-timer.prototype.setPageDataField = function(name, value) {
-    var data = this.getPageData();
-    data[name] = value;
-    this.setPageData(data);
-};
-
 
 timer.prototype.running = function(cat) {
     return this.startTime.hasOwnProperty(cat) && (this.startTime[cat] > 0);
@@ -324,7 +269,7 @@ timer.prototype.startStop = function(category, time, isNotification) {
         this.refreshTimer(category);
         //this.unsetNotification(category);
     }
-    syncSoon(true);
+    syncSoon();
     return false;
 };
 

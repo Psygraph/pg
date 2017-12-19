@@ -48,24 +48,20 @@ stopwatch.prototype.update = function(show, state) {
 stopwatch.prototype.settings = function() {
     var data = this.getPageData();
     if(arguments.length) {
-        s = "<div class='ui-field-contain no-field-separator' data-role='controlgroup'>";
-        s += "<legend>Data to Monitor:</legend>";
-        s += printCheckbox("stopwatch_location", "GPS Location", data['watchLocation']);
-        if(!pgUtil.isWebBrowser()) {
-            s += printCheckbox("stopwatch_acceleration", "Acceleration", data['watchAcceleration']);
-            s += printCheckbox("stopwatch_orientation", "Orientation", data['watchOrientation']);
-            if(pg.getUserDataValue("debug"))
-                s += printCheckbox("stopwatch_bluetooth", "Bluetooth", data['watchBluetooth']);
+        $("#stopwatch_location").prop("checked", data['watchLocation']).checkboxradio('refresh');
+        if(pgUtil.isWebBrowser()) {
+            $("#stopwatch_acceleration").hide();
+            $("#stopwatch_orientation").hide();
+            $("#stopwatch_bluetooth").hide();
+        }
+        else {
+            $("#stopwatch_acceleration").prop("checked", data['watchAcceleration']).checkboxradio('refresh');;
+            $("#stopwatch_orientation").prop("checked", data['watchOrientation']).checkboxradio('refresh');;
+            $("#stopwatch_bluetooth").prop("checked", data['watchBluetooth']).checkboxradio('refresh');;
             pgAccel.hasCompass(showOrientation);
         }
-        s += "</div>";
-        s += "<div class='ui-field-contain no-field-separator'>";
-        s += "<label for='stopwatch_updateInterval'>Update interval (s):</label>";
-        s += "<input type='text' class='settings' id='stopwatch_updateInterval' value='";
-        s += pgUtil.getStringFromMS(data.updateInterval) + "' />";
-        s += "</div>";
-        s += printCheckbox("stopwatch_showGraph", "Show graph", data['showGraph']);
-        UI.settings.setPageContent(s);
+        $("#stopwatch_updateInterval").val( pgUtil.getStringFromMS(data.updateInterval) );
+        $("#stopwatch_showGraph").prop("checked", data['showGraph']).checkboxradio('refresh');;
         UI.settings.pageCreate();
     }
     else {
@@ -105,11 +101,12 @@ stopwatch.prototype.getPageData = function() {
 
 stopwatch.prototype.resize = function() {
     page.prototype.resize.call(this, false);
-    var content = $("#stopwatch_content").outerHeight(true);
-    var controls= $("#stopwatch_controls").outerHeight(true);
+    var header   = this.headerHeight();
+    var controls = $("#stopwatch_controls").outerHeight(true);
+    var win     = getWindowDims();
+    var height  = win.height - (header+controls);
+    var width   = win.width;
 
-    var height  = content-controls;
-    var width   = $(window).width();
     $("#stopwatch_graphContainer").height(height);
     $("#stopwatch_graphContainer").width(width);
     $("#stopwatch_graph").css("height", "100%");
@@ -178,7 +175,7 @@ stopwatch.prototype.startStop = function() {
             posCB.call(this, e, []);
         }
     }
-    syncSoon(true);
+    syncSoon();
     return false;
 
     function posCB(e, path) {
@@ -216,6 +213,8 @@ stopwatch.prototype.createGraph = function(show) {
         height:          '100%',
         style:           'line',
         orientation:     'bottom',
+        clickToUse:      true,
+        sort:            true,
         autoResize:      true,
         interpolation:   false,
         start: vis.moment().add(-10, 'seconds'),
@@ -237,9 +236,9 @@ stopwatch.prototype.createGraph = function(show) {
                 'style': "stroke:black; fill:grey; stroke-width:2",
                 'options': {
                 'drawPoints': {
-                    size: 6,
+                    size: 2,
                     style: "circle",
-                    styles: "stroke: black; fill: black; stroke-width:3"
+                    styles: "stroke: black; fill: black; stroke-width:2"
                 },
                 'shaded': false
             }

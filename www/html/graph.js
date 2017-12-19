@@ -9,7 +9,9 @@ function graph() {
         height:        '100%',
         style:         'line',
         orientation:   'top',
-        autoResize:    false,
+        clickToUse:    true,
+        sort:          true,
+        //autoResize:    true,
         interpolation: false, //{enabled: false, parametrization: 'linear'},
         min:           new Date(0),
         max:           new Date(pgUtil.getCurrentTime() +2*365*24*60*60*1000),
@@ -60,38 +62,6 @@ graph.prototype.resize = function() {
 graph.prototype.settings = function() {
     var data = this.getPageData();
     if(arguments.length) {
-        var s = "";
-        //s += "<div class='ui-field-contain no-field-separator' data-role='controlgroup'>";
-        //s += "<legend>Data to display:</legend>";
-        //s += printCheckbox("graph_showAccel", "acceleration", data['showAcceleration']);
-        //s += printCheckbox("graph_showRotate", "rotation", data['showRotation']);
-        //s += "</div>";
-        s += "<div class='ui-field-contain no-field-separator'>";
-        s += '<label for="signal">Signal to analyse:</label>';
-        s += '<select name="signal" id="graph_signal" data-native-menu="false">';
-        //s += '  <option value="events">events</option>'; 
-        //s += '  <option value="acceleration">acceleration</option>'; 
-        //s += '  <option value="rotation">rotation</option>'; 
-        s += '  <option value="accelerationNorm">acceleration norm</option>';
-        if(pg.getUserDataValue("debug"))
-            s += '  <option value="bluetooth">bluetooth</option>'; 
-        s += '  <option value="correctCount">correct/incorrect count</option>'; 
-        s += '  <option value="count">count</option>'; 
-        s += '  <option value="orientation">orientation</option>'; 
-        s += '  <option value="totalTime">total time</option>'; 
-        //s += '  <option value="eventCount">number of events</option>'; 
-        s += '</select></div>';
-
-        s += '<div class="ui-field-contain no-field-separator">';
-        s += '<label for="interval">Data aggregation interval:</label>';
-        s += '<select name="interval" id="graph_interval" data-native-menu="false">';
-        s += '  <option value="none">none</option>';
-        s += '  <option value="day">day</option>';
-        s += '  <option value="week">week</option>';
-        s += '  <option value="month">month</option>';
-        s += '</select></div>';
-        
-        UI.settings.setPageContent(s);
         $("#graph_signal").val(data.signal).change();
         $("#graph_interval").val(data.interval).change();
         UI.settings.pageCreate();
@@ -183,7 +153,7 @@ graph.prototype.updateGraph = function() {
         }
     }
     // bluetooth
-    if(data.signal == "bluetooth") {
+    else if(data.signal == "bluetooth") {
         var events = pg.getSelectedEvents(pg.category());
         var pts = [];
         for (var i=0; i<events.length; i++) {
@@ -311,9 +281,9 @@ graph.prototype.addPoints = function(index, points, interval, intervalMethod) {
                      'style': "stroke:black; fill:grey; stroke-width:2",
                      'options': {
             'drawPoints': {
-                size: 6,
+                size: 2,
                 style: "circle",
-                styles: "stroke: black; fill: black; stroke-width:3"
+                styles: "stroke: black; fill: black; stroke-width:2"
             },
             'shaded': false
         }
