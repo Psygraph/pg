@@ -5,6 +5,7 @@ var pgAudio = {
     recorder:     null,
     alarmer:      null,
     feedback:     null,
+    permCheck:    false,
 
     IDX_RECORDED: 0,
     IDX_RESERVED: 1,
@@ -309,13 +310,15 @@ var pgAudio = {
         }
     },
     getRecordPermissions: function() {
-        if(!pgUtil.isWebBrowser() && 
-           device.platform=="Android") {
+        if(!pgUtil.isWebBrowser()     && 
+           device.platform=="Android" &&
+           !pgAudio.permCheck) {
             var permissions = cordova.plugins.permissions;
-            permissions.hasPermission(permissions.RECORD_AUDIO, 
+            permissions.checkPermission(permissions.RECORD_AUDIO, 
                                       checkPermissionCallback.bind(this,permissions.RECORD_AUDIO), null);
-            permissions.hasPermission(permissions.WRITE_EXTERNAL_STORAGE, 
-                                      checkPermissionCallback.bind(this,permissions.WRITE_EXTERNAL_STORAGE), null);
+            permissions.checkPermission(permissions.WRITE_EXTERNAL_STORAGE, 
+                                        checkPermissionCallback.bind(this,permissions.WRITE_EXTERNAL_STORAGE), null);
+            pgAudio.permCheck = true;
         }
         return true;
         

@@ -49,33 +49,11 @@ map.prototype.update = function(show, state) {
 map.prototype.settings = function() {
     var data = this.getPageData();
     if(arguments.length) {
-        s  = "<div class='ui-field-contain no-field-separator'>";
-        s += "  <label for='map_provider'>Data provider:</label>";
-        s += "  <select id='map_provider' value='Data provider' title='Data provider' data-native-menu='false'>";
-        s += "    <option value='OSM'>Open Street Map</option>";
-        if( pg.getUserDataValue("debug") )
-            s += "    <option value='MapBox'>MapBox</option>";
-        s += "    <option value='ArcGIS'>ArcGIS</option>";
-        s += "  </select>";
-        s += "</div>";
-
-        s += "<div class='ui-field-contain no-field-separator' data-role='controlgroup'>";
-        s += "<legend>Display all:</legend>";
-        s += printCheckbox("map_showMarkers", "markers", data['showMarkers']);
-        s += printCheckbox("map_showPaths", "paths", data['showPaths']);
-        s += "</div>";
-        s += "<div class='ui-field-contain no-field-separator' data-role='controlgroup'>";
-        s += "<legend>Power saving:</legend>";
-        s += printCheckbox("map_powerSaving", "powerSaving", data['powerSaving']);
-        s += "</div>";
-        s += "<div class='ui-field-contain no-field-separator'>";
-        s += "  <label for='map_accuracy'>Accuracy:</label>";
-        s += "  <input type='range' name='map_accuracy' id='map_accuracy' value='"+data.accuracy+"' min='0' max='10' step='1'>";
-        s += "</div>";
-        UI.settings.setPageContent(s);
-        //$("#map_powerSaving").click(setPowerSaving);
-        //setPowerSaving();
-        $("#map_provider").val(data.provider);
+        $("#map_showMarkers").prop("checked", data.showMarkers).checkboxradio();
+        $("#map_showPaths").prop("checked", data.showPaths).checkboxradio();
+        $("#map_powerSaving").prop("checked", data.powerSaving).checkboxradio();
+        $("#map_accuracy").val(data.accuracy).trigger("change");
+        $("#map_provider").val(data.provider).trigger("change");
         UI.settings.pageCreate();
     }
     else {
@@ -96,16 +74,6 @@ map.prototype.settings = function() {
         this.addLines(data);
         return data;
     }
-    /*
-    function setPowerSaving() {
-        $("#map_stationaryRadius").textinput();
-        var ps = $("#map_powerSaving")[0].checked;
-        if(ps)
-            $("#map_stationaryRadius").textinput("enable");
-        else
-            $("#map_stationaryRadius").textinput("disable");
-    }
-    */
 };
 
 map.prototype.getPageData = function() {
@@ -127,14 +95,10 @@ map.prototype.getPageData = function() {
 
 map.prototype.resize = function() {
     page.prototype.resize.call(this, false);
-    
-    var head    = $("#map_header").outerHeight(true);
-    var subHead = $("#subheader_map").outerHeight(true);
-    var foot    = $("#map_footer").outerHeight(true);
-    var cnt     = $("#map_content").outerHeight(true);
+    var win    = getWindowDims();
+    var height = win.height - this.headerHeight();
+    var width  = $(window).width;
 
-    var height = $(window).height() -(head+subHead);
-    var width = $(window).width();
     var ctrlHeight = $("#mapControls").height();
     var mapid = document.getElementById("mapid");
     if(mapid) {

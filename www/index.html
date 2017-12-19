@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<!--html manifest="offline.appcache"-->
 <html>
-    <head>
+  <head>
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -17,16 +16,14 @@
         <link rel="stylesheet" type="text/css" href="css/pg-theme.min.css" />
         <link rel="stylesheet" type="text/css" href="css/jquery.mobile.icons.min.css" />
         <link rel="stylesheet" type="text/css" href="css/jquery.mobile.structure-1.4.5.min.css" />
-
+                
         <!--
         <link rel="stylesheet" type="text/css" href="css/onsenui.css" />
         <link rel="stylesheet" type="text/css" href="css/onsen-css-components.css" />
         -->
-
         <link rel="stylesheet" type="text/css" href="css/vis.min.css" />
         <link rel="stylesheet" type="text/css" href="css/leaflet.css" />
         <link rel="stylesheet" type="text/css" href="css/select2.min.css" />
-        <!--link rel="stylesheet" type="text/css" href="css/jtsage-datebox.css" / -->
   
         <link rel="stylesheet" type="text/css" id="base_style"  href="css/psygraph.css" />
         <link rel="stylesheet" type="text/css" id="user_style"  href="media/default.css" />
@@ -34,11 +31,13 @@
 
         <!-- robust 3P libraries -->
         <!--
-            <script type="text/javascript" src="js/onsenui.js"></script>
+        <script type="text/javascript" src="js/onsenui.js"></script>
         -->
         <script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
         <script type="text/javascript" src="js/vis.min.js"></script>
+        <!--
         <script type="text/javascript" src="js/hammer.js"></script>
+        -->
 
         <!-- PG files -->
         <script type="text/javascript" src="js/URI.js"></script>
@@ -62,56 +61,81 @@
       <audio id="alarm" preload="none"><source id="alarmSrc" src="default.mp3" type="audio/mp3"/></audio>
       <audio id="record" preload="none"><source id="recordSrc" src="default.mp3" type="audio/mp3"/></audio>
 
-      <!--
-          <ons-navigator id="onsNavigator">
-            <ons-page>
-              <ons-toolbar>
-                <div class=”center”>Toolbar</div>
-              </ons-toolbar>
-            </ons-page>
-            
-      </ons-navigator
-         -->
-        <div id="home_page"      class="page"  data-role="page" data-fullscreen="true"></div>
-        <div id="stopwatch_page" class="page"  data-role="page" data-fullscreen="true"></div>
-        <div id="timer_page"     class="page"  data-role="page" data-fullscreen="true"></div>
-        <div id="counter_page"   class="page"  data-role="page" data-fullscreen="true"></div>
-        <div id="note_page"      class="page"  data-role="page" data-fullscreen="true"></div>
-        <div id="list_page"      class="page"  data-role="page" data-fullscreen="true"></div>
-        <div id="graph_page"     class="page"  data-role="page" data-fullscreen="true"></div>
-        <div id="chart_page"     class="page"  data-role="page" data-fullscreen="true"></div>
-        <div id="map_page"       class="page"  data-role="page" data-fullscreen="true"></div>
-        <div id="about_page"     class="page"  data-role="page" data-fullscreen="true"></div>
-        <div id="prefs_page"     class="page"  data-role="page" data-fullscreen="true"></div>
-        <div id="settings_page"  class="page"  data-role="page" data-fullscreen="true"></div>
-        <div id="help_page"      class="page"  data-role="page" data-fullscreen="true"></div>
-        <div id="dialog_page"    class="page"  data-role="page" data-fullscreen="true" data-dialog="true"></div>
+      <div data-role="page"></div>
+      
 
-        <!-- Psygraph.js needs access to the head element -->
-        <script type="text/javascript" src="js/psygraph.js"></script>
-        <script type="text/javascript" src="html/page.js"></script>
-        <!-- init code must occur between jq and jqm -->
-        <script type="text/javascript" src="js/init.js"></script>
-        <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
-        <!-- widgets that depend on jquery mobile -->
-        <script type="text/javascript" src="js/select2.full.min.js"></script>
-        <script type="text/javascript" src="js/jquery.knob.js"></script>
-        <!--script type="text/javascript" src="js/jtsage-datebox.js"></script-->
-        <script type="text/javascript" src="js/pgUI.js"></script>
-        <script type="text/javascript" src="cordova.js"></script>
+      <!--
+      <ons-navigator id="onsNavigator">
+        <ons-page>
+          <p>BLANK!</p>
+        </ons-page>
+      </ons-navigator>
+      -->
+
+      <!-- Psygraph.js needs access to the head element -->
+      <script type="text/javascript" src="js/psygraph.js"></script>
+      <script type="text/javascript" src="html/page.js"></script>
+      <!-- init code must occur between jq and jqm -->
+      <script type="text/javascript" src="js/init.js"></script>
+      <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
+      <!-- widgets that depend on jquery mobile -->
+      <script type="text/javascript" src="js/select2.full.min.js"></script>
+      <script type="text/javascript" src="js/jquery.knob.js"></script>
+      <script type="text/javascript" src="js/pgUI.js"></script>
+      <script type="text/javascript" src="cordova.js"></script>
+
+      <template id="simple_header_template">
+        <div class="header" data-role="header" data-theme="b" data-position="fixed" data-tap-toggle="false">
+          <a data-role="button" data-position="fixed" onclick="return menu_leftButton();" data-icon="arrow-l" data-iconpos="left" class="ui-btn-left leftMenuButton">Back</a>
+          <h2 class="banner"><b class="pg_page_title"></b></h2>
+          <a data-role="button" data-position="fixed" data-icon="arrow-u" data-iconpos="right" onclick="return menu_rightButton();" class="rightMenuButton ui-btn-right">Forward</a>
+        </div>
+      </template>
+      
+      <template id="header_template">
+        <div class="header" data-role="header" data-theme="b" data-position="fixed" data-tap-toggle="false">
+          
+          <a href="" onclick="return menu_leftButton();" class="leftMenuButton ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-bars ui-btn-icon-left">View</a>          
+          <h1><img class="banner" src="css/images/logo.png"/>&nbsp;<b>Psygraph</b></h1>
+          <a href="" onclick="return menu_rightButton();" class="rightMenuButton ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-action ui-btn-icon-left">Action</a>
+          
+          <div data-role="popup" class="rightMenu">
+            <ul data-role="listview" data-inset="true" class="ui-listview-outer" id="ActionSet">
+              <li data-role="list-divider"><i>Action...</i></li>
+              <li data-icon="comment"><a href="" onclick="return menu_action('about');" class="aboutButton" >About</a></li>
+              <li data-icon="gear"><a href="" onclick="return menu_action('prefs');" class="prefsButton" >Prefs</a></li>
+              <li data-icon="home"><a href="" class="loginButton" onclick="return menu_action('login');">Login</a></li>
+              <li data-icon="alert"><a href="" class="eventButton" onclick="return menu_action('event');">Files</a></li>
+              <li data-icon="info"><a href="" onclick="return menu_action('help');" id="HelpButton">Help</a></li>
+            </ul>
+          </div>
+
+          <div data-role="popup" class="eventPopupMenu" data-theme="a">
+            <ul data-role="listview" data-inset="true" class="ui-listview-outer" >
+              <li data-role="list-divider"><i>Manage Files...</i></li>
+              <li data-icon="false"><a href="" onclick="return PGEN.selectAction('downloadEvents');">Download events</a></li>
+              <li data-icon="false"><a href="" onclick="return PGEN.selectAction('uploadFiles');">Upload files</a></li>
+              <li data-icon="false"><a href="" onclick="return PGEN.selectAction('deleteEvents');">Delete events</a></li>
+              <li data-icon="false"><a href="" onclick="return PGEN.selectAction('deleteSettings');">Delete settings</a></li>
+              <li data-icon="false"><a href="" onclick="return PGEN.selectAction('deleteEverything');">Delete everything</a></li>
+            </ul>
+          </div>
+          
+          <div id="navbar" class="navbar" data-role="navbar" data-position="fixed" data-tap-toggle="false" data-theme="b">
+            <ul>
+              <li class="navbar_button"><a class="pg_page_title navbar_link_left navbar_link" data-role="button" data-theme="b" href="" onclick="gotoPageMain()" data-icon="home" data-iconpos="left" >PAGE</a></li>
+              <li class="navbar_button"><a class="navbar_link_middle navbar_link fast" data-role="button" data-iconpos="notext" data-theme="b" href="" onclick="gotoPageSettings()"  data-icon="gear">Settings</a></li>
+              <li class="navbar_button"><a class="navbar_link_right navbar_link fast" data-role="button" data-iconpos="notext" data-theme="b" href="" onclick="gotoPageHelp()" data-icon="info">Info</a></li>
+            </ul>
+          </div>
+          
+        </div>
+      </template>
 
 <script>
 // The next line should not be altered, it is subject to string replacement.
 var WORDPRESS=false;
-
-// final JS loading command
-if(pgInitialized.state()=="resolved") {
-    gotoLoadedPage("home");
-}
-else { 
-    $.when(pgInitialized).then(gotoLoadedPage.bind(this,"home"));
-}
+pageReady.resolve();
 </script>
-
     </body>
 </html>

@@ -133,15 +133,16 @@ list.prototype.settings = function() {
         var eventPages = pgUtil.deepCopy(pg.allEventPages);
         if(pg.getUserDataValue("debug"))
             eventPages.push("home","map");
+
         var s = pgUtil.selectPages("list_pages", "Show events from:", eventPages, data.pageFilter);
-        s += "<div class='ui-field-contain no-field-separator' data-role='controlgroup'>";
-        s += "<legend>Columns to display:</legend>";
-        s += printCheckbox("list_showID",   "ID",   data.showID);
-        s += printCheckbox("list_showDate", "Time", data.showDate);
-        s += printCheckbox("list_showPage", "Tool,type", data.showPage);
-        s += printCheckbox("list_showData", "Data", data.showData);
-        s += "</div>";
-        UI.settings.setPageContent(s);
+        $("#list_pageSelect").html(s);
+        $("#list_pageSelect").trigger("create");
+
+        $("#list_showID"  ).prop("checked", data.showID  ).checkboxradio("refresh");
+        $("#list_showDate").prop("checked", data.showDate).checkboxradio("refresh");
+        $("#list_showPage").prop("checked", data.showPage).checkboxradio("refresh");
+        $("#list_showData").prop("checked", data.showData).checkboxradio("refresh");
+
         UI.settings.pageCreate();
     }
     else {
@@ -180,7 +181,7 @@ list.prototype.getPageData = function() {
 };
 
 list.prototype.resize = function() {
-    page.prototype.resize.call(this, false);
+    page.prototype.resize.call(this, true, $("#list_table"));
 };
 
 list.prototype.eventSelected = function(e) {
@@ -320,12 +321,12 @@ list.prototype.selectAction = function(selection) {
     }
     else if(selection == "delete") {
         pg.deleteEventIDs(id);
-        syncSoon(true);
+        syncSoon();
         this.update(true);
     }
     else if(selection == "clearCache") {
         pg.deleteEventIDs(id, false);
-        syncSoon(true);
+        syncSoon();
         this.update(true);
     }
     else {

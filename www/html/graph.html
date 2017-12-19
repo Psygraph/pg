@@ -1,11 +1,71 @@
+<div id="graph_page" class="page" data-role="page" data-fullscreen="true">
 
+  <div id="graph_main" class="main content">
+    
+    <div id="subheader_graph" data-role="control-group">
+      <div class="category">Loading...</div>
+    </div>
+    
+    <div id="graphContainer">
+      <div id="graph"></div>
+    </div>
+    
+  </div>
+  
+  <div id="graph_settings" class="settings content">
+    
+    <div class="ui-field-contain no-field-separator">
+      <label for="graph_category">Category:</label>
+      <select id="graph_category" data-native-menu="false"></select>
+    </div>
+    
+    <div class="ui-field-contain no-field-separator">
+      <label for="signal">Signal to analyse:</label>
+      <select name="signal" id="graph_signal" data-native-menu="false">
+        <option value="accelerationNorm">acceleration norm</option>
+        <option value="bluetooth">bluetooth</option>
+        <option value="correctCount">correct/incorrect count</option>
+        <option value="count">count</option>
+        <option value="orientation">orientation</option>
+        <option value="totalTime">total time</option>
+      </select>
+    </div>
+    
+    <div class="ui-field-contain no-field-separator">
+      <label for="interval">Data aggregation interval:</label>
+      <select name="interval" id="graph_interval" data-native-menu="false">
+        <option value="none">none</option>
+        <option value="day">day</option>
+        <option value="week">week</option>
+        <option value="month">month</option>
+      </select>
+    </div>
+    
+    <div data-role="fieldcontain">
+	  <input type="button" onClick="gotoPageMain(); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"></input>
+	  <input type="button" onClick="UI.settings.submitSettings('apply'); return false;" class="btn fast" value="Apply" title="apply" data-inline="true"></input>
+	  <input type="button" onClick="UI.settings.submitSettings('OK'); return false;" class="btn fast" value="OK" title="OK" data-inline="true"/></input>
+    </div>
+  </div>
+  
+  <div id="graph_help" class="help content">
 
-<div id="subheader_graph" data-role="control-group">
-  <div class="category">Loading...</div>
+    <strong>Graph</strong>
+    <p>The <strong>Graph</strong> tool displays several signals as a function of time.  You can use it to drag and zoom the display of selected events (events can be selected or unselected with the <strong>List</strong> tool).  Triple-clicks zoom the graph to fit the data.  By changing the type of signal, you can view the amount of movement over time or breath-counting accuracy.</p>
+    <p>The settings control display of selected events:
+    <ul>
+      <li>Graph signals such as accelerometer, time measured by the stopwatch and timer, or correct/incorrect breath count.</li>
+      <li>Specify the width of the bars in the bar chart.</li>
+    </ul>
+    </p>
+    <br/>
+    
+    <template>    
+      <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/graph.png" alt="graph" width="300" />
+      <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/graph_settings.png" alt="graph_settings" width="300" />
+    </template>
+
+  </div>
+  
+  <script src="html/graph.js"></script>
 </div>
-
-<div id="graphContainer">
-  <div id="graph"></div>
-</div>
-
-<script src="html/graph.js"></script>

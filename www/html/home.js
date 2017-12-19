@@ -65,45 +65,28 @@ home.prototype.resize = function() {
 home.prototype.settings = function(data) {
     if(arguments.length) {
         var data = this.getPageData(); // this line clears any state (when login button is pressed).
-        var s = "";
-        
-        //s += printCheckbox("home_stayOffline", "Stay offline", data['stayOffline']);
-        s += '<div class="ui-field-contain no-field-separator" id="userDiv">';
-        s += '  <label for="user">User:</label>';
-        s += '  <input type="text" id="username" name="username" value=""/>';
-        s += '</div>';
-        s += '<div class="ui-field-contain no-field-separator" id="serverDiv">';
-        s += '  <label for="server">Server:</label>';
-        s += '  <input type="text" id="server" name="server" value="localhost" data-clear-btn="true" />';
-        s += '</div>';
-        s += '<div class="ui-field-contain no-field-separator" id="loginDiv">';
-        s += '  <input type="button" id="login" name="login" value="Login" onClick="UI.home.loginUser(true);"/>';
-        s += '</div>';
+
+        $("#home_username").val(data.username);
+        $('#home_username').prop('readonly', pg.loggedIn);
 
         if(pg.getUserDataValue("debug"))
-            s += printCheckbox("home_createLoginEvents", "Create login events", data['createLoginEvents']);
-
-        UI.settings.setPageContent(s);
-
-        $("#username").val(data.username);
-        $('#username').prop('readonly', pg.loggedIn);
-
-        $("#server").val(data.server);
-        $('#server').prop('readonly', pg.loggedIn);
-
+            $("#serverDiv").show();
+        else
+            $("#serverDiv").hide();
+        $("#home_server").val(data.server);
+        $('#home_server').prop('readonly', pg.loggedIn);
+        
         var loginString = pg.loggedIn ? "Logout" : "Login";
         $('#login').val(loginString).button("refresh");
 
-        UI.settings.pageCreate(s);
+        UI.settings.pageCreate();
     }
     else {
         var data = this.getPageData();
         if(!pg.loggedIn) {
-            data.server = $("#server").val();
-            data.username = $("#username").val();
+            data.server = $("#home_server").val();
+            data.username = $("#home_username").val();
         }
-        if(pg.getUserDataValue("debug"))
-            data.createLoginEvents = $("#home_createLoginEvents")[0].checked;
         this.setPageData(data, "home", "Uncategorized"); // make sure we write to the "Uncategorized" section.
         return data;
     }
@@ -111,7 +94,7 @@ home.prototype.settings = function(data) {
 
 home.prototype.beginLogin = function(callback) {
     if(navigator.splashscreen) {
-        //navigator.splashscreen.show();
+        navigator.splashscreen.show();
         navigator.splashscreen.hide();
     }
     showBusy();
@@ -195,15 +178,25 @@ home.prototype.loginUser = function(onSettingsPage) {
     var username = data.username;
     var server   = data.server;
     if(onSettingsPage) {
-        username = $('#username').val();
-        server   = $('#server').val();
+        username = $('#home_username').val();
+        server   = $('#home_server').val();
         //this.setPageDataField("username", username, "home", "Uncategorized");
         //this.setPageDataField("server", server, "home", "Uncategorized");
         //data = this.getPageData();
     }
     showBusy();
-    var f = function(){UI.home.loggingIn=false; hideBusy();};
-    var nextPage = onSettingsPage ? "settings" : pg.page();
+    var f = function(){ 
+        UI.home.loggingIn=false; 
+        hideBusy(); 
+        gotoPage(pg.page());
+    };
+    if(!onSettingsPage)
+        f = function() { 
+            UI.home.loggingIn=false; 
+            hideBusy(); 
+            gotoPage("home");
+            gotoPageSettings();
+        };
     if(pg.loggedIn) {
         PGEN.logout(this.logoutCB.bind(this));
         return
@@ -211,20 +204,20 @@ home.prototype.loginUser = function(onSettingsPage) {
     if(!pg.online) {
         showDialog({title: "Not online", true: "OK"},
                    "<p>This device is not currently online, please either connect or work in offline mode.</p>",
-                   f, nextPage);
+                   f);
         return;
     }
     if(onSettingsPage) {
         if(username=="") {
             showDialog({title: "Invalid username", true: "OK"},
                        "<p>Please provide a username with an existing server account.</p>",
-                       f, nextPage);
+                       f);
         }
     }
     else {
         if(username=="") {
-            gotoPage("home",true);
-            gotoPage("settings",true);
+            gotoPage("home");
+            gotoPageSettings();
             f();
             return;
         }   
@@ -243,14 +236,14 @@ home.prototype.loginUser = function(onSettingsPage) {
                            "<p>No account (username: "+username+") at server: "+
                            server+".<br/>"+
                            "You may need to "+UI.home.getRegisterLink(server, "create an account")+".</p>",
-                           f, nextPage
+                           f
                 );
             }
             else if(err=="server") {
                 showDialog({'title': "Server failure", 'true': "OK"},
                            "<p>There was a problem contacting the server: "+server+"<br/>"+
                            "Please check your internet connection.</p>",
-                           f, nextPage
+                           f
                 );
             }
             else {
@@ -340,10 +333,12 @@ home.prototype.getPassword = function(server, username, callback) {
         gotoPage(pg.page());
         showDialog({title: "Enter your password", true: "OK", false: "Cancel"},
                    "<p>"+serverLink+"</p><input type='password' id='passw' name='password' value=''/>", 
-                   pwcb, "settings"
+                   pwcb
         );
     }
     function pwcb(clickedOK) {
+        gotoPage("home");
+        gotoPageSettings();
         if(!clickedOK) {
             callback();
         }
@@ -403,8 +398,6 @@ home.prototype.logoutAndErase = function(callback) {
 
 home.prototype.getPageData = function() {
     var data = pg.getPageData("home", "Uncategorized");
-    if(! ('createLoginEvents' in data))
-        data.createLoginEvents = false;
     if(! ('server' in data))
         data.server = UI.home.getDefaultServerURL();
     if(! ('username' in data))
@@ -430,7 +423,7 @@ home.prototype.logoutCB = function(success) {
 
 home.prototype.logEvent = function(type) {
     var data = this.getPageData();
-    if(data.createLoginEvents) {
+    if(pg.getUserDataValue("debug")) {
         var event = {page: "home",
                      type: type,
                      start: pgUtil.getCurrentTime(),

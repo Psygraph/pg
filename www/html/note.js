@@ -44,37 +44,30 @@ note.prototype.update = function(show, state) {
 };
 
 note.prototype.resize = function() {
-    var head   = $("#" + this.name + "_header").outerHeight(true);
-    var foot   = 0;//$("#" + this.name + "_footer").outerHeight(true);
+    page.prototype.resize.call(this, false);
+    var header = this.headerHeight();
     var win    = getWindowDims();
-    var height = win.height - (head+foot);
+    var height = win.height - (header);
     var titleHeight  = $("#noteTitleDiv").outerHeight(true);
     var buttonHeight = $("#note_submit").outerHeight(true);
-    $("#noteTextContainer").outerHeight(height - (titleHeight+buttonHeight+24));
+    var magic = 32;
+    $("#noteTextContainer").outerHeight(height - (titleHeight+buttonHeight+magic));
     var width  = win.width;
-    $("#"+this.name+"_content").css({
-            top:    head, 
-                height: height,
-                width: "100%",
-                position: "absolute"
+
+    $("#"+this.name+"_page .content").css({
+            position: "absolute",
+                'top':    header, 
+                'height': height,
+                'width':  width+"px"
                 });
 };
 
 note.prototype.settings = function() {
     if(arguments.length) {
         var data = this.getPageData();
-        s = "<div class='ui-field-contain no-field-separator' data-role='controlgroup'>";
-        s += "<legend>Add data:</legend>";
-        //s += printCheckbox("note_addPicture",  "Picture",  data['addPicture']);
-        s += printCheckbox("note_addLocation", "GPS Location", data['addLocation']);
-        s += "</div>";
-
-        s += "<div class='ui-field-contain no-field-separator' data-role='controlgroup'>";
-        s += printCheckbox("note_showConfirmation", "Show note confirmation dialogs", data['showConfirmation']);
-        s += printCheckbox("note_enhancedEditor", "Use enhanced editor", data['enhancedEditor']);
-        s += "</div>";
-        
-        UI.settings.setPageContent(s);
+        $("#note_addLocation").prop("checked", data['addLocation']).checkboxradio("refresh");
+        $("#note_showConfirmation").prop("checked", data['showConfirmation']).checkboxradio("refresh");
+        $("#note_enhancedEditor").prop("checked", data['enhancedEditor']).checkboxradio("refresh");
         UI.settings.pageCreate();
     }
     else {
@@ -174,6 +167,9 @@ note.prototype.audioFileUploaded = function(filename) {
 };
 
 note.prototype.annotate = function() {
+    // get audio recording permissions
+    pgAudio.getRecordPermissions();
+
     if(this.recording) {
         pgAudio.stopRecord();
         // hide the stop button
@@ -223,7 +219,7 @@ note.prototype.deleteAudio = function() {
 note.prototype.updateAudio = function() {
     var txt = "";
     if(UI.note.eid!=0) {
-        var fn  = pgAudio.getRecordFilename(UI.note.eid, "m4a");
+        var fn  = pgAudio.getRecordFilename(UI.note.eid);
         txt += '<div class="ui-grid-b">';
         txt += ' <div class = "ui-hide-label ui-block-a">';
         txt += '   <p>Audio:</p>';

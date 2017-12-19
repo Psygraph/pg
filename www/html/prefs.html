@@ -1,12 +1,10 @@
-
-<!--
-<div id="prefsPage" >
-  <div id="prefsDiv" class="scrollable">
--->
-
+<div id="prefs_page" class="page" data-role="page" data-fullscreen="true">
+  
+  <div id="prefs_main" class="main content">
+        
     <div data-role="control-group" class="inset">
       
-      <div  id="prefsSettings">
+      <div id="prefsSettings">
         
         <div id="page_select" class="ui-field-contain no-field-separator needsclick">
         </div>
@@ -14,14 +12,18 @@
         <div>
           <label for="new_categories">Categories (separate with a space):</label>
           <select id="new_categories" data-tags="true" data-placeholder="Displayed Categories" multiple="multiple" data-role="none"></select>
+          <fieldcontain>
+          <input type="button" class="ui-input-btn ui-button-inline fast" onclick="gotoPage('settings');" value="Category Prefs"></input>
+          </fieldcontain>
           <!--input type="text" id="new_categories" name="categories" value=""/ -->
         </div>
         
-        <div id="swipeDiv" class="ui-field-contain no-field-separator">
-          <label for="swipeSlider">Swipe sensitivity:</label>
-          <input type="range" name="swipeSlider" id="swipeSlider" value="20" min="5" max="100">
-        </div>
-
+    <!--
+    <div id="swipeDiv" class="ui-field-contain no-field-separator">
+      <label for="swipeSlider">Swipe sensitivity:</label>
+      <input type="range" name="swipeSlider" id="swipeSlider" value="20" min="5" max="100">
+    </div>
+    -->
         <div id="BTDiv" class="ui-field-contain no-field-separator"> 
           <div class="leftFloat">
             <input type="button" id="BTConnect" onClick="UI.prefs.btConnect()" class="btn fast" value="Connect to Device" title="Connect" data-inline="true"/></input>                      
@@ -36,11 +38,6 @@
         <label for="debug">Turn on debugging and error reporting.</label>
         <input type="checkbox" name="debug" id="debug"></input>
 
-        <!--
-        <label for="publicAccess">Allow public, read-only access to generated files.</label>
-        <input type="checkbox" name="publicAccess" id="publicAccess"></input>
-        -->
-
         <label for="wifiOnly">Upload files using WIFI only.</label>
         <input type="checkbox" name="wifiOnly" id="wifiOnly"></input>
         
@@ -52,25 +49,15 @@
         <input type="checkbox" name="perCategorySettings" id="perCategorySettings"></input>
         -->
         
-        <!--
-            <label for="createPosts">Create posts from notes.</label>
-            <input type="checkbox" name="createPosts" id="createPosts"></input>
-            <input type="checkbox" name="importCategories" id="importCategories" $importCategories > Import categories from WordPress</input>
-            -->
-        
         <br/>
       </div>
       
       <div data-role="fieldcontain" id="settingButtons">
-	    <input type="button" id="cancelPrefs" onClick="gotoPage(pg.page(),true); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"></input>
+	    <input type="button" id="cancelPrefs" onClick="gotoPage(pg.page()); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"></input>
 	    <!--input type="button" id="applyPrefs" onClick="UI.prefs.submitSettings(false); return false;" class="btn fast" value="Apply" title="apply" data-inline="true"></input-->
 	    <input type="button" id="OKPrefs" onClick="UI.prefs.submitSettings(true); return false;" class="btn fast" value="OK" title="OK" data-inline="true"/></input>
       </div>
     </div>
 
-<!--
-  </div>
-</div>
--->
-
 <script src="html/prefs.js"></script>
+</div>

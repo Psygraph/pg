@@ -43,7 +43,7 @@ function PG() {
         this.categoryIndex  = 0;
         this.pageIndex      = 0;
         this.categories     = ["Uncategorized","Meditate","Exercise","Study"];
-        this.pages          = ["home","stopwatch","timer","counter","note","list"];
+        this.pages          = ["home","stopwatch","timer","counter","note","list","graph"];
         this.categoryData   = {"Uncategorized": nd()};
         this.pageData       = {"home": nd(), "stopwatch": nd(),"timer": nd(),"counter": nd(),"note": nd(),"list": nd(),"map": nd(),"graph": nd() };
         this.userData       = {};
@@ -272,8 +272,8 @@ function PG() {
             data.debug = 0;
         if(typeof(data.publicAccess)=="undefined")
             data.publicAccess = 0;
-        if(typeof(data.swipeVal)=="undefined")
-            data.swipeVal = 64;
+        //if(typeof(data.swipeVal)=="undefined")
+        //    data.swipeVal = 64;
         if(typeof(data.wifiOnly)=="undefined")
             data.wifiOnly = true;
         //if(typeof(data.perCategorySettings)=="undefined")
@@ -664,6 +664,9 @@ var pgUtil = {
                 date.getMilliseconds();
         }
         return dateString;
+    },
+    titleCase: function (txt) {
+        return txt[0].toUpperCase() + txt.substring(1);
     },
     getCurrentTime: function () {
         var date = new Date();
@@ -1155,7 +1158,7 @@ var pgUtil = {
     },
     
     selectPages: function(id, title, allPages, selectedPages) {
-        var s = "<div class='ui-field-contain no-field-separator' data-role='controlgroup'>";
+        var s = "";
         s += "<legend>"+title+"</legend>";
         s += '<select id="'+id+'" class="needsclick" data-native-menu="false" multiple="multiple">\n';
         s += '<option data-placeholder="true">'+title+'</option>\n';
@@ -1165,7 +1168,7 @@ var pgUtil = {
                 s += 'selected="selected" ';
             s += ">"+ allPages[i] +"</option>\n";            
         }
-        s += "</select></div>\n";
+        s += "</select>\n";
         return s;
     },
 

@@ -26,8 +26,6 @@ var UI = {
     window:     {t: null, onPageChange: null, currentPage: null, alertCallback: null}
 };
 
-var pgInitialized = $.Deferred();
-
 function UIinitialize() {
     if(UI.window.t)
         clearTimeout(UI.window.t);
@@ -43,7 +41,9 @@ function finalInit() {
     window.addEventListener("keydown",  onKeyDown,  false);
     //window.addEventListener("keyup",    onKeyPress, false);
     window.addEventListener("error",    onError,    false);
-
+    $("body").on( "click", onSingleTap );
+    $("body").on( "dblclick", onDoubleTap );
+    
     // set the online status
     if(navigator.connection) {
         var networkState = navigator.connection.type;
@@ -55,89 +55,44 @@ function finalInit() {
         document.addEventListener("offline", onOffline, false);
     }
     
-    // try replacing 'onclick' with 'tap'
-    $(document).bind("pagechange", function( event, ui ) {
-            $('input.fast,a.fast').each(function(index, element) {
-                    if (element.onclick) {
-                        $(element).on('vclick', element.onclick).removeAttr('onclick');
-                    }
-                });
-        });
     // load Bluetooth
     pgBluetooth.init();
-    // Load all of the pages.
-    PGEN.initialize();
     
-    // we use the hammer.js library
-    UI.mc = new Hammer.Manager($('body')[0], {domEvents: false});
-    // singletap and doubletap logic
-    UI.mc.add( new Hammer.Tap({ event: 'doubletap', taps: 2, threshold: 10, posThreshold: 100 }) );
-    UI.mc.add( new Hammer.Tap({ event: 'singletap', taps: 1, threshold: 10, posThreshold: 100 }) );
-    UI.mc.get('doubletap').recognizeWith('singletap');
-    UI.mc.get('singletap').requireFailure('doubletap');
-    UI.mc.on("singletap", onSingleTap);
-    UI.mc.on("doubletap", onDoubleTap);
-    //$(window).on('click', onSingleTap);
-    //$(window).on('dblclick', onDoubleTap);
-    if(!pgUtil.isWebBrowser()) {
-        // set up the swipe behavior
-        UI.mc.add(new Hammer.Swipe({direction: Hammer.DIRECTION_ALL}));
-        UI.mc.on("swipeleft", goRight);
-        UI.mc.on("swiperight", goLeft);
-        UI.mc.on("swipeup", goDown);
-        UI.mc.on("swipedown", goUp);
-        setSwipe(64);
-    }
     // synchronize every N seconds
-    setInterval(syncCheck, 40*1000);
-    pgInitialized.resolve(); //gotoPage("home"); this line now lives in index.html
+    setInterval(syncCheck, 20*1000);
+    gotoLoadedPage("home"); 
 }
-
-function setSwipe(swipeVal) {
-    if(!pgUtil.isWebBrowser()) {
-        var width = $(window).width(); //pixels
-        var tLen  = 250.0; // ms
-        UI.mc.get('swipe').set({
-                threshold: (swipeVal/100.0) * width,     // default = 1/5 screen
-                    velocity:  (swipeVal/100.0) * width/tLen // default = complete movement in under tLen
-                    });
-    }
-};
 
 
 // UI things =============================================
 
 function onOnline() {
     pg.online = true;
-    syncSoon(true);
+    syncSoon();
 }
 function onOffline() {
     pg.online = false;
-    syncSoon(false);
+    syncSoon();
 }
 function onPause() {
     // stay awake in the background until all files are written
     //cordova.plugins.backgroundMode.enable();
-    syncSoon(true, cb);
+    syncSoon();
     pg.background = true;
     showLog("Entering pause state...");
     showPage(false);
     //UI.home.logEvent("pause");
-    return;
-    
-    function cb() {
-        showLog("Finished Syncing before pause completion.");
-        //cordova.plugins.backgroundMode.disable();
-    }
+    return;    
 }
 function onResume() {
     pg.background = false;
     showLog("Resuming...");
     showPage(true);
+    syncSoon();
     //UI.home.logEvent("resume");
 }
 function onBackKeyDown() {
-    gotoPage(pg.page(), true);
+    gotoPage(pg.page());
 }
 
 function onError(err) {
@@ -152,7 +107,7 @@ function onError(err) {
     }
     if(pg.getUserDataValue("debug")) {
         pg.addNewEvents(event, true);
-        syncSoon(true);
+        syncSoon();
         showAlert(event.data.text, event.data.title);
     }
     // returning true overrides the default window behaviour (i.e. we handled the error).
@@ -160,6 +115,10 @@ function onError(err) {
 }
 
 function onSingleTap(ev) {
+    if(! $(ev.target).hasClass("leftMenuButton") && isSlideNavOpen()) {
+        slideNav(false);
+        return;
+    }
     if(! pg.getUserDataValue('screenTaps'))
         return;
     var ca = $(ev.target).closest(".clickarea");
@@ -209,22 +168,22 @@ function onKeyDown(e) {
             goDown(e);
             break;
         case 27: // "ESC"
-            gotoPage(pg.page(), true);
+            gotoPage(pg.page());
             break;
         case 83: // "s"
-            gotoPage("settings", true);
+            gotoPageSettings();
             break;
         case 72: // "h"
-            gotoPage("help", true);
+            gotoPageHelp();
             break;
         case 80: // "p"
-            gotoPage("prefs", true);
+            gotoPage("prefs");
             break;
-        case 16: // shift
+        //case 16: // shift
         case 188: // ",", hopefully less than without shift
             lever("left");
             break;
-        case 32: // space
+        //case 32: // space
         case 190: // ".", hopefully greater than without shift
             lever("right");
             break;
@@ -275,23 +234,18 @@ function onResize() {
 // syncronize by calling this function periodically
 function syncCheck() {
     if(pg.dirty())
-        syncSoon(false);
+        syncSoon();
 }
-// Synchronize explicitly, possibly after four seconds of inactivity.
+// Synchronize after four seconds of inactivity.
 // Pages that modify events or state should call this,
 // but it is also called when navigating away from pages.
-function syncSoon(now, callback) {
-    now = (typeof(now)=="undefined") ? false : now;
+function syncSoon() {
     callback = (typeof(callback)=="undefined") ? (function fx(){}) : callback;
-    if(now) {
-        PGEN.synchronize(false, callback);
-        return;
-    }
     clearTimeout(UI.window.t);
     UI.window.t = setTimeout(timeout, 4000);
     function timeout() {
         if(UI.home && UI.home.hasFinishedLogin())
-            PGEN.synchronize(true);
+            PGEN.synchronize();
     }
 }
 
@@ -299,7 +253,7 @@ function syncSoon(now, callback) {
 
 function showDialog(s, message, callback, nextPage) {
     nextPage = (typeof(nextPage)=="undefined") ? pg.page() : nextPage;
-    $("#dialog_header").html("<h4>" + s.title + "</h4>");
+    $("#dialog_page .pg_page_title").text(s.title);
     $("#dialogText").html(message);
     $("#dialogText select").trigger("refresh");
     $(".default").removeClass('default');
@@ -353,7 +307,7 @@ function showDialog(s, message, callback, nextPage) {
             return true;
         });
     
-    gotoPage("dialog", true);
+    gotoPage("dialog");
     $("#dialog_page").trigger("create");
     //$("#dialog").trigger("create").trigger("refresh");
     var input = $("#dialogText").find("input");
@@ -465,51 +419,77 @@ function getValidPage(page) {
     }
     return page;
 }
-function gotoLoadedPage(page, back) {
-    back = back!=undefined ? back : false;
-    page = getValidPage(page);
-    if(page=="home")
-        PGEN.generateHome(callback);
-    else if(page=="about" || page=="prefs" || page=="settings" || page=="help")
-        PGEN.generateMetaPage(page, callback);
-    else
-        PGEN.generatePage(page, callback);
-    function callback() {
-        gotoPage(page, back);
+function gotoLoadedPage(page) {
+    if(! UI[page]) {
+        setTimeout(gotoLoadedPage.bind(this,page), 200);
+    }
+    else {
+        gotoPage(page);
         gotoCategory(pg.category());
     }
 }
-function gotoPage(newPage, back) {
-    back = back!=undefined ? back : false;
+function gotoPageMain() {
+    var page = pg.page();
+    $("#"+page+"_main").show();
+    $("#"+page+"_settings").hide();
+    $("#"+page+"_help").hide();
+    $(".navbar_link").removeClass("ui-btn-active");
+    $("#"+page+"_page .navbar_link_left").addClass("ui-btn-active");
+}
+function gotoPageSettings() {
+    var page = pg.page();
+    $("#"+page+"_main").hide();
+    $("#"+page+"_settings").show();
+    $("#"+page+"_help").hide();
+    UI.settings.showPageSettings();
+}
+function gotoPageHelp() {
+    var page = pg.page();
+    $("#"+page+"_main").hide();
+    $("#"+page+"_settings").hide();
+    $("#"+page+"_help").show();
+}
+function gotoPage(newPage) {
     newPage = getValidPage(newPage);
     var oldPage = getPage();
     UI.lastPage = oldPage;
-    var opts = {'changeHash': false }
+    var opts = {'changeHash': false,
+                'role': "page"
+    };
     // update old state
     if(oldPage && UI[oldPage]) {
         UI.state[oldPage] = UI[oldPage].update();
     }
     // change the PG page
     var index = pg.pages.indexOf(newPage);
+    if(index==-1) {
+        // this is a compatibility issue.  Users used to be able to hide pages
+        if(pg.allPages.indexOf(newPage) != -1)
+            pg.pages.push(newPage);
+        index = pg.pages.indexOf(newPage);
+    }
     if(index!=-1) {
         pg.pageIndex = index;
     }
     // remove the loading dialog, if present
     hideBusy();
     // change the display page
-    if((oldPage=="about" || oldPage=="settings" || oldPage=="prefs" || oldPage=="help")
-       && !back) {
-        // these pages use page transitions to change their contents
-        resetPage();
+    if(oldPage == null)
+        opts.allowSamePageTransition = true;
+    UI.window.currentPage = newPage;
+    if(ONSEN) {
+        //$(".page").hide();
+        //$("#"+newPage+"_page").show();
+        
+        var opts = {
+            'animation' : "slide"
+        };
+        //$("#onsNavigator")[0].replacePage("ons_"+newPage+"_page");
+        $("#onsNavigator")[0].replacePage("html/"+newPage+".html", opts);
     }
     else {
-        if(oldPage == null)
-            opts.allowSamePageTransition = true;
-        UI.window.currentPage = newPage;
-        if(ONSEN)
-            $("#onsNavigator")[0].replacePage(newPage+"_page");
-        else
-            $(":mobile-pagecontainer").pagecontainer("change", "#"+newPage+"_page", opts );
+        //$(":mobile-pagecontainer").pagecontainer("change", newPage+"_page", opts);
+        $(":mobile-pagecontainer").pagecontainer("change", $("#"+newPage+"_page"), opts);
     }
     // update new state
     if(newPage && UI[newPage]) {
@@ -521,6 +501,8 @@ function gotoPage(newPage, back) {
     }
     syncSoon();
     updateSubheader();
+    gotoPageMain();
+    slideNav(false);
 }
 function showPage(update) {
     var page = getPage();
@@ -582,9 +564,14 @@ function updateSubheader(force) {
     $("#"+id).trigger("create");
 }
 
+function openCatMenu() {
+    var page = pg.page();
+    $("#"+page+"CatMenu").popup().popup("open");
+}
+
 function gotoCategory(num) {
     if(typeof(num)=="string") {
-        var index = pg.pages.indexOf(num);
+        var index = pg.categories.indexOf(num);
         if(index != -1)
             num = index;
         else
@@ -595,8 +582,8 @@ function gotoCategory(num) {
     num = num > pg.numCategories()-1 ? pg.numCategories()-1 : num;
     // update the stylesheet URL
     var page = getPage();
-    if(page=="prefs" || page=="help")
-        return;
+    //if(page=="prefs" || page=="help")
+    //    return;
     UI.state[page] = UI[page].update(false);
     pg.categoryIndex = num; //the category change has to happen between the state updates
     if(pg.pages.indexOf(page) != -1) // make sure it is not the settings page
@@ -670,20 +657,8 @@ function postData(data, callback, isAsync) {
 }
 
 var PGEN = {
-    hrefRoot: "",
-    async: false,
-    success: false,
     servers: [],
 
-    initialize: function() {
-        PGEN.hrefRoot = "";
-        PGEN.generateDialog();
-        PGEN.generateHome();
-        PGEN.generateMetaPage("about");
-        PGEN.generateMetaPage("prefs");
-        PGEN.generateMetaPage("settings");
-        PGEN.generateMetaPage("help");
-    },
     augmentServerURL: function(server) {
         if(PGEN.servers.indexOf(server) == -1) {
             if(server.indexOf("plugins")==-1) {// xxx this is not a great test for the plugins directory
@@ -740,8 +715,8 @@ var PGEN = {
                 else
                     pg.copySettings(newPG);
             }
-            PGEN.generateAllPages();
             PGEN.readEvents(callback);
+            updateNavbar();
         }
     },
     // post the login event, get a new certificate
@@ -757,7 +732,6 @@ var PGEN = {
             if(success) {
                 PGEN.updateSettings(pg, function(success){PGEN.writePG(pg)});
             }
-            PGEN.generateAllPages();
             loadEvents(success);
             callback(success);
         }
@@ -876,7 +850,6 @@ var PGEN = {
         }
         function writeEvents() {
             PGEN.writeEvents(pg.events, pg.deletedEvents, finish);
-            //PGEN.generateAllPages();
         }
         function finish(tf) {
             //pg.init();
@@ -886,17 +859,13 @@ var PGEN = {
             gotoPage(pg.page());
         }
     },
-    synchronize: function (quick, callback) {
-        quick = typeof(quick)!="undefined" ? quick : false;
+    synchronize: function (callback) {
         callback = (typeof(callback)=="undefined") ? (function fx(){}) : callback;
         // update page, accel and location state
         //var page = getPage();
         //if(UI[page]) {
         //    UI.state[page] = UI[page].update(false);
         //}
-
-        if(!quick) // Doing this on the settings pages will blow away any of the user's changes.
-            resetPage();
 
         UI.state.accel    = pgAccel.update(false);
         UI.state.location = pgLocation.update(false);
@@ -905,6 +874,8 @@ var PGEN = {
         
         if(pg.dirty()) {
             PGEN.writeEvents(pg.events, pg.deletedEvents, moreSync);  // write the events locally
+            //if(!quick) // Doing this on the settings pages will blow away any of the user's changes.
+            //    resetPage();
         }
         // Update the pg, do the callback
         PGEN.writePG(pg, cb);
@@ -915,11 +886,9 @@ var PGEN = {
         function moreSync(success) {
             if(success) {
                 if(pg.loggedIn) {
-                    if(!quick) {
-                        PGEN.uploadEvents(); // synchonize all events with the server
-                        PGEN.uploadFiles(false);
-                        pg.dirty(false);
-                    }
+                    PGEN.uploadEvents(); // synchonize all events with the server
+                    PGEN.uploadFiles(false);
+                    pg.dirty(false);
                 }
                 else {
                     pg.dirty(false);
@@ -1164,7 +1133,7 @@ var PGEN = {
             if(!success) {
                 showAlert("Command failed.");
             }
-            gotoPage(pg.page(), true);
+            gotoPage(pg.page());
             //resetPage();
         }
         function deleteEventsCB(success) {
@@ -1175,17 +1144,17 @@ var PGEN = {
                 }
             }
             else
-                gotoPage(pg.page(), true);
+                gotoPage(pg.page());
             function deleteCB(success) {
                 if(!success) {
                     showAlert("Events could not be erased.");
                 }
-                gotoPage(pg.page(), true);
+                gotoPage(pg.page());
             }
         }
         function deleteEverythingCB(success) {
             if(success) {
-                gotoPage(pg.page(), true);
+                gotoPage(pg.page());
                 PGEN.deleteEverything(deleteCB.bind(this));
             }
             else
@@ -1204,7 +1173,7 @@ var PGEN = {
                 showAlert("Could not update settings on the server.", "Error");
             pg.copy(localPG, false);
             PGEN.writePG(pg);
-            gotoPage(pg.page(), true);
+            gotoPage(pg.page());
             resetPage();
         }
         return false;
@@ -1225,274 +1194,138 @@ var PGEN = {
         else
             callback(true);
     },
-    generateAllPages: function() {
-        for(var i=pg.numPages()-1; i>=0; i--) {
-            var page = pg.pages[i];
-            PGEN.generatePage(page);
+
+    initializePage: function(event, ui) {
+        var target = event.target;
+        var page;
+        var node;
+        if(ONSEN) {
+            var pageName = target.children[1].children[0].id; // e.g. "home_page"
+            page = pageName.substring(0, pageName.length-5);
+            node = $("#"+page+"_page");
         }
-    },
-    generateDialog: function() {
-        PGEN.ajax("html/dialog.html", "dialog", false);
-        var header = '<h4>Psygraph</h4>';
-        $("#dialog_header").html(header);
-        $("#dialog_page").trigger('create');
-        updateNavbar(["dialog"]);
-    },
-    // generate home
-    generateHome: function(callback) {
-        callback = (typeof(callback)!="undefined") ? callback : function(){};
-        // only make the ajax call if the page never existed
-        if( $("#home_page").children().length ) {
-            callback(true);
-            return;
+        else {
+            var pageName = ui.content[0].id; // e.g. "home_page"
+            page = pageName.substring(0, pageName.length-5);
+            node = ui.toPage[0];
         }
-        PGEN.ajax("html/home.html", "home", false); // syncronous, since its the first page.
-        PGEN.generateMenus("home");
-        updateNavbar(["home"]);
-        $("#home_page").trigger('create');
-        callback(true);
-    },
-    // generate about, user, settings, and help pages
-    generateMetaPage: function(page, callback) {
-        callback = (typeof(callback)!="undefined") ? callback : function(){};
-        // only make the ajax call if the page never existed
-        if( $("#"+page+"_page").children().length ) {
-            callback(true);
-            return;
+        var title = pgUtil.titleCase(page);
+        // get the header from the template
+        if(page == "settings" || 
+           page == "about"    ||
+           page == "help"     ||
+           page == "dialog"   ||
+           page == "prefs"
+        ) {
+            var headerT  = $("#simple_header_template");
+            var n        = headerT.prop('content');
+            var head     = $(n.children[0]).clone();
+            node.prepend(head[0]);
+            $(node).find(".rightMenuButton").hide();
+            if(title=="Settings")
+                title = "Category Prefs";
         }
-        PGEN.ajax("html/"+page+".html", page, true, cb.bind(this));
-        function cb() {
-            var header = '<a id="'+page+'_leftButton" data-role="button" data-position="fixed" onclick="gotoPage(pg.page(), true); return true;" data-icon="arrow-l" data-iconpos="left" class="ui-btn-left leftTitlePopup">Back</a>';
-            header += '<h2><img class="banner" src="css/images/logo.png">&nbsp;<b id="'+page+'_title">'+page+'</b></h2>';
-            header += '<a id="'+page+'_rightButton" data-role="button" data-position="fixed" data-icon="arrow-u" data-iconpos="right" class="ui-btn-right rightTitlePopup">Forward</a>';
-            $("#"+page+"_header").html(header);
-            $("#"+page+"_rightButton").hide();
-            $("#"+page+"_page").trigger('create');
-            callback(true);
+        else {
+            // Add the sidenav
+            var nav      = getNavbar(page);
+            node.prepend(nav[0]);
+            var headerT  = $("#header_template");
+            var n        = headerT.prop('content');
+            var head         = $(n.children[0]).clone();
+            node.prepend(head[0]);
         }
-    },
-    // generate a page
-    generatePage: function(page, callback) {
-        callback = typeof(callback)!="undefined" ? callback : function(){};
-        // only make the ajax call if the page never existed
-        if( $("#"+page+"_page").children().length ) {
-            callback(true);
-            return;
-        }
-        var filename = "html/" +page +".html"
-        PGEN.ajax(filename, page, false, cb.bind(this, page));
 
-        function cb(page, success) {
-            updateNavbar([page]);
-            $("#"+page+"_page").trigger('create');
-            PGEN.generateMenus(page);
-            //updateNavbar([page]);
-            callback(success);
-        }
-    },
-    generateMenus: function(page) {
-        var txt = '';
-        var click = '';
-
-        createPopupMenus(page);
-
-        // create the ACTION menu on the right
-        txt = '<ul data-role="listview" data-inset="true" class="ui-listview-outer" id="'+page+'ActionSet">';
-        txt += '<li data-role="list-divider"><i>Action...</i></li>';
-        click = 'onclick="gotoPage(\'about\',true); return true;"';
-        txt += '<li data-icon="comment"><a data-role="button" href="" '+click+' id="'+page+'AboutButton" >About</a></li>';
-        click = 'onclick="gotoPage(\'prefs\',true); return true;"';
-        txt += '<li data-icon="gear"><a data-role="button" href="" '+click+' id="'+page+'PrefsButton" >Prefs</a></li>';
-        click = 'onclick="pgUtil.closePopup($(\'#'+page+'RightMenu\'),UI.home.loginUser.bind(UI.home,false)); return true;"';
-        var loginString = pg.loggedIn ? "Logout" : "Login";
-        txt += '<li data-icon="home"><a data-role="button" href="" class="loginButton" '+click+' id="'+page+'LoginButton" >'+loginString+'</a></li>';
-        if(pg.getUserDataValue("debug")) {
-            // show options for file handling
-            click = 'onclick=\"pgUtil.switchPopup($(\'#'+page+'RightMenu\'),$(\'#EventPopupMenu\')); return true;\"';
-            txt += '<li data-icon="alert"><a href="" id="'+page+'EventPopup" ' +click+ ' >Files</a></li>';
-        }
-        click = 'onclick="gotoPage(\'help\',true); return true;"';
-        txt += '<li data-icon="info"><a data-role="button" href="" '+click+' id="'+page+'HelpButton" >Help</a></li>';
-        txt += '</ul>';
-        $("#"+page+"RightMenu").html(txt).trigger("refresh");
-        $("#"+page+"ActionSet").listview().listview("refresh");
-
-        function createPopupMenus(page) {
-            var node = $("#EventPopupMenu");
-            if(node.length)
-                node.remove();
-            txt  = '';
-            txt += '<div data-role="popup" id="EventPopupMenu" data-theme="a">';
-            txt += '<ul data-role="listview" data-inset="true" class="ui-listview-outer" >';
-            txt += '<li data-role="list-divider"><i>Manage Files...</i></li>';
-            if(pg.loggedIn && pg.online) {
-                click = "return PGEN.selectAction('downloadEvents');";
-                txt += '<li data-icon="false"><a href="" onclick="'+click+'">Download events</a></li>';
-                click = "return PGEN.selectAction('uploadFiles');";
-                txt += '<li data-icon="false"><a href="" onclick="'+click+'">Upload files</a></li>';
-            }
-            click = "return PGEN.selectAction('deleteEvents');";
-            txt += '<li data-icon="false"><a href="" onclick="'+click+'">Delete events</a></li>';
-            click = "return PGEN.selectAction('deleteSettings');";
-            txt += '<li data-icon="false"><a href="" onclick="'+click+'">Delete settings</a></li>';
-            click = "return PGEN.selectAction('deleteEverything');";
-            txt += '<li data-icon="false"><a href="" onclick="'+click+'">Delete everything</a></li>';
-            txt += '</ul></div>';
-            node = $.parseHTML(txt)[0];
-            $("body")[0].insertBefore(node, null);
-            $("#EventPopupMenu").popup();
-            
-            // page navigation
-            /*
-            var node = $("#PageNavPopupMenu");
-            if(node.length)
-                node.remove();
-            txt  = '';
-            txt += '<div data-role="popup" id="PageNavPopupMenu" data-theme="a">';
-            txt += '<ul data-role="listview" data-inset="true" class="ui-listview-outer" >';
-            txt += '<li data-role="list-divider"><i>Change tool...</i></li>';
-            for(var i=0; i<pg.numPages(); i++) {
-                txt += '<li data-icon="false"><a href="" data-rel="popup" onclick="gotoPage(\''+pg.pages[i]+'\');return true;">' +pg.pages[i] +'</a></li>';
-            }
-            txt += '</ul></div>';
-            node = $.parseHTML(txt)[0];
-            $("body")[0].insertBefore(node, null);
-            $("#PageNavPopupMenu").popup();
-            */
-        }
-    },
-    
-    // generate header
-    getHeader: function(page) {
-        var id = page+"_header";
-        var txt  = '<div id="' +id+ '" data-role="header" data-theme="b" data-position="fixed" data-tap-toggle="false">';
-
-        // Left Menu
-        click = 'onclick="gotoPage(\'settings\',true); return true;"';
-        txt += '<a id="'+page+'LeftPopup" href="" '+click+' ';
-        txt += ' class="leftTitlePopup ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-gear ui-btn-icon-left">Settings</a>';
-
-        // Center graphic
-        var label = page;
-        if(label=="home")
-            label = "Psygraph";
-        txt += '<h1 id="banner"><img class="banner" src="css/images/logo.png">&nbsp;<b>'+label+'</b></h1>';
-
-        // Right Menu
-        txt += '<a id="'+page+'RightPopup" href="" ';
-        txt += ' class="rightTitlePopup ui-btn ui-corner-all ui-shadow ui-btn-inline ui-icon-action ui-btn-icon-left">Action</a>';
-        txt += '<div data-role="popup" id="'+page+'RightMenu" class="RightMenu"></div>';
-
-        // Navbar
-        txt += '<div id="'+page+'_navbar" class="navbar" data-role="navbar" data-position="fixed" data-tap-toggle="false" data-theme="b"></div>';
-        
-        txt += '</div>';
-        return txt;
-    },
-
-    // transform the page
-    ajax: function(filename, page, is_async, cb) {
-        var formdata = URI("?");
-        //formdata.addQuery("username",     pg.username);
-        //formdata.addQuery("password",     pg.cert);
-        formdata.addQuery("page", page);
-        //var dat = formdata.query();
-        var dat = URI.decodeQuery(formdata.query());
-        var loc = ""+document.location;
-        var path = loc.substring(0, loc.lastIndexOf('/') + 1);
-        $.ajax({    url:      path + filename,
-                    type:     "GET",
-                    async:    is_async,
-                    timeout:  8000,
-                    dataType: "text",
-                    crossDomain: true,
-                    contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-                    data:     dat,
-                    cache:    false,
-                    success:  function(data){PGEN.ajaxCallback(true, data, page, cb)},
-                    failure:  function(data){PGEN.ajaxCallback(false, filename, page, cb)}
+        $(node).find(".pg_page_title").html(title);
+        var id = "#"+page+"_page";
+        $(id).trigger("create");
+        //$("#"+page+"_page rightMenu").popup().trigger("refresh");
+        //$("#"+page+"_page eventPopupMenu").popup().trigger("refresh");
+        $( id+' input.fast, ' +id+' a.fast').each(function(index, element) {
+                if (element.onclick) {
+                    $(element).on('vclick', element.onclick).removeAttr('onclick');
+                }
             });
-    },
-
-    ajaxCallback: function(success, data, page, callback) {
-        callback = (typeof(callback)!="undefined") ? callback : function(){};
-        if(!success) {
-            callback(success);
-            return;
-        }
-
-        // insert the node
-        var node    = $("#"+page+"_page");
-        var head    = $.parseHTML( PGEN.getHeader(page) );
-        var content = $.parseHTML('<div id="' +page+ '_content" data-role="content">' +data+ '</div>', document, true);
-
-        node.append(head[0]);
-        node.append(content[0]);
-        //if(ONSEN) {
-        //    $("#onsNavigator").append(node[0]);
-        //}
-        //else {
-        //    if(page=="home")
-        //        $("body").prepend(node[0]);
-        //    else
-        //        $("body").append(node[0]);
-        //}
-
-        callback(success);
+        // turn off the help images
+        updateNavbar();
+        pageInitFinished(page);
     }
 };
 
-function getNavbar(page) {
-    var txt = "";
-    var id = page+"_navbar";
-    var btnAtts = '" class="navbar_link fast" data-role="button" data-iconpos="notext" data-theme="b" href="" ';
-    txt += "<ul>";
-    txt += '<li class="navbar_button left_navbar_button"><a id="button_left_'  +id +btnAtts +' onclick="return false"  data-icon="arrow-l">.</a></li>';
-    //txt += '<li class="navbar_button cat_button"><a id="button_down_'  +id +btnAtts +' data-icon="arrow-d"></a></li>';
-    //txt += '<li class="navbar_button cat_button"><a id="button_up_'    +id +btnAtts +' data-icon="arrow-u"></a></li>';
-    txt += '<li class="navbar_button cat_button"><a id="button_cat_' +id +'" class="navbar_link cat_link" data-role="button" data-theme="b" href="" onclick="return false;" data-icon="tag" data-iconpos="left" >Uncategorized</a></li>';
-    txt += '<li class="navbar_button right_navbar_button"><a id="button_right_' +id +btnAtts +' onclick="return true" data-icon="arrow-r">.</a></li>';
-    txt += '</ul>';
-    return txt;
-}
-
-function updateNavbar(pages) {
-    pages = pgUtil.deepCopy( typeof(pages)!="undefined" ? pages : pg.pages);
-    for(var i=0; i<pages.length; i++) {
-        var page = pages[i];
-        if($("#"+page+"_page .navbar_button").length) {
-        }
-        else {
-            var txt = getNavbar(page, false);
-            var footid = page + "_navbar";
-            $("#"+page+"_navbar").html(txt).trigger("create").trigger("refresh");
-            $('#button_left_'+footid).on("vclick", goLeft);
-            //$('#button_down_'+footid).tap(goDown);
-            //$('#button_up_'+footid).tap(goUp);
-            $('#button_right_'+footid).on("vclick", goRight);
-            $('#button_left_'+footid).html("&nbsp;");
-            $('#button_right_'+footid).html("&nbsp;");
-
-            $("#button_cat_"+page +"_navbar").on("vclick", 
-                                                 function () {
-                                                     updateSubheader();
-                                                     $("#"+page+"CatMenu").popup().popup("open");
-                                                     return false;
-                                                 });
-
-            //$("#"+page+"LeftPopup").on("vclick", function() {
-            //        $("#"+page+"LeftMenu").popup("open");
-            //        return false;
-            //    });        
-            $("#"+page+"RightPopup").on("vclick", function() {
-                    $("#"+page+"RightMenu").popup("open");
-                    return false;
-                });
-        }
+function menu_leftButton() {
+    var page   = getPage();
+    var pgPage = pg.page();
+    if(page=="settings") { // return to prefs
+        gotoPage("prefs");
     }
-    // disable inoperable nav buttons.
-    $(".navbar_button").removeClass("ui-disabled");
-    $("#home_page .left_navbar_button").addClass("ui-disabled");
-    var lastPage = pg.pages[pg.pages.length-1];
-    $("#"+lastPage+"_page .right_navbar_button").addClass("ui-disabled");
+    else if (page=="help"   || 
+             page=="about"  || 
+             page=="dialog" || 
+             page=="prefs") {
+        gotoPage(pgPage);
+    }
+    else {
+        slideNav(!isSlideNavOpen());
+    }
 }
+function menu_rightButton() {
+    var page = pg.page();
+    $("#"+page+"_page .rightMenu").popup("open");
+}
+function isSlideNavOpen() {
+    return $(".sidenav").css("width") != "0px";
+}
+function slideNav(open) {
+    var page = pg.page();
+    if(open) {
+        $(".sidenav").css("width", "250px");
+    }
+    else {
+        $(".sidenav").css("width", "0px");
+    }
+}
+function menu_action(action) {
+    var page = pg.page();
+    if(action=="about") {
+        gotoPage("about");
+    }
+    else if(action=="prefs") {
+        gotoPage("prefs");
+    }
+    else if(action=="login") {
+        pgUtil.closePopup($('#'+page+'_page .rightMenu'), UI.home.loginUser.bind(UI.home,false)); 
+    }
+    else if(action=="event") {
+        pgUtil.switchPopup($('#'+page+'_page .rightMenu'), $('#'+page+'_page .eventPopupMenu')); 
+    }
+    else if(action=="help") {
+        gotoPage("help");
+    }
+    else {
+        showError("Unknown menu command");
+    }
+    return true;
+}
+
+function getNavbar(page) {
+    var txt = "<div id='" +page+ "_sidenav' class='sidenav' style='width:0px'>";
+    txt += "<a href='' class='closebtn' onclick='slideNav(false)'>&times;</a>";
+    for(var i = 0; i< pg.allPages.length; i++){
+        var page = pg.allPages[i];
+        var title = pgUtil.titleCase(page);
+        txt += '<a class="'+page+'_navlink navlink" onclick="gotoPage(\''+page+'\');" >'+title+'</a>';
+    }
+    txt += "</div>";
+    var node = $.parseHTML(txt);
+    return node;
+}
+
+function updateNavbar() {
+    var mapnav = $(".sidenav .map_navlink");
+    if(pg.getUserDataValue("debug")) {
+        mapnav.show();
+    }
+    else {
+        mapnav.hide();
+    }
+}
+

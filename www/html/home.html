@@ -1,27 +1,52 @@
-
-<div id="subheader_home" data-role="control-group">
-  <div class="category"><i></i></div>
-</div>
-<!--p><b><i>Graph your mind</i></b></p-->
-
-<div data-role="control-group" class="inset">
+<div id="home_page" class="page" data-role="page" data-fullscreen="true">
   
-  <div style="height: 100px;" />
-  <!--
-      <input type="image" class="button fast" id="login"  title="Login"  onClick="UI.home.loginUser(); return false;" src="img/login.png"   alt="login" style="display: none;" />
-  <input type="image" class="button fast" id="logout" title="Logout" onClick="UI.home.loginUser(); return false;" src="img/logout.png"  alt="logout" style="display: none;" />
-  -->
+  <div id="home_main" class="main content">
+    <div id="subheader_home" data-role="control-group">
+      <div class="category"><i></i></div>
+    </div>
+    
+    <div data-role="control-group" class="inset"></div>
+    
+    <div style="height: 100px;"></div>
+    
+    <div id="home_status" style="height:10px">
+      <p class="banner"><img src="img/logo.png" height="108" width="108"></img></p>
+    </div>
+  </div>
+  
+  <div id="home_settings" class="settings content">
+        
+    <div class="ui-field-contain no-field-separator" id="userDiv">
+      <label for="user">Email:</label>
+      <input type="text" id="home_username" name="username" value=""/>
+    </div>
+    <div class="ui-field-contain no-field-separator" id="serverDiv">
+      <label for="server">Server:</label>
+      <input type="text" id="home_server" name="server" value="localhost" data-clear-btn="true" />
+    </div>
+    <div class="ui-field-contain no-field-separator" id="loginDiv">
+      <input type="button" id="login" name="login" value="Login" onClick="UI.home.loginUser(true);"/>
+    </div>
+
+    <div data-role="fieldcontain">
+	  <input type="button" onClick="gotoPageMain(); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"></input>
+	  <input type="button" onClick="UI.settings.submitSettings('apply'); return false;" class="btn fast" value="Apply" title="apply" data-inline="true"></input>
+	  <input type="button" onClick="UI.settings.submitSettings('OK'); return false;" class="btn fast" value="OK" title="OK" data-inline="true"/></input>
+    </div>
+
+  </div>
+  
+  <div id="home_help" class="help content">
+    <strong>Home</strong>
+    <p>The <strong>Home</strong> page displays a summary of your data.  It also display information about the server connection if you are logged in to a server. If you use Psygraph without connecting to a server, all data remains on your phone.</p>
+    <p>The settings display your username and the WordPress server URL, which you can edit if you are not logged in.  Once the information has been set here, you can login and logout using the Action menu.</p>
+    
+    <template>
+      <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/home.png" alt="home" width="300" />
+      <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/home_settings.png" alt="home_settings" width="300" />
+    </template>
+    
+  </div>
+  
+  <script src="html/home.js"></script>
 </div>
-
-<div id="home_status" style="height:10px">
-  <p class="banner"><img src="img/logo.png" height="108" width="108"></img></p>
-  <!-- 
-       <p>Psygraph, the digital mala.</p>
-  <p><b>status:</b>   offline</p>
-  <p><b>username:</b> unknown</p>
-  <p><b>server:</b>   https://psygraph.com</p>
-  -->
-</div>
-
-<script src="html/home.js">
-
