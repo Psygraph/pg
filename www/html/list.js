@@ -181,7 +181,28 @@ list.prototype.getPageData = function() {
 };
 
 list.prototype.resize = function() {
-    page.prototype.resize.call(this, true, $("#list_table"));
+    page.prototype.resize.call(this, false);
+    var header   = this.headerHeight();
+    var subheader = $("#list_page div.category").outerHeight(true);
+    var controls = $("#list_controls").outerHeight(true);
+    var win    = getWindowDims();
+    var width  = win.width;
+    var scrollDiv  = $("#eventlist");
+    var listHeight = 0;
+    scrollDiv.children().each(function(){
+            listHeight += $(this).outerHeight(true);
+        });
+    containerHeight = win.height - (header+subheader+controls);
+    $("#list_table").css({
+                'height':   containerHeight+"px",
+                'width':    width+"px"
+                });
+    $("#eventList").css({
+            'height':   listHeight+"px",
+                'width':    width+"px",
+                'overflow': "scroll"
+                });
+    $("#"+this.name+"_page div.main.content").css({'overflow': "hidden"});
 };
 
 list.prototype.eventSelected = function(e) {

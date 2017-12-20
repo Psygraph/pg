@@ -97,7 +97,7 @@ map.prototype.resize = function() {
     page.prototype.resize.call(this, false);
     var win    = getWindowDims();
     var height = win.height - this.headerHeight();
-    var width  = $(window).width;
+    var width  = win.width;
 
     var ctrlHeight = $("#mapControls").height();
     var mapid = document.getElementById("mapid");

@@ -65,10 +65,10 @@ timer.prototype.refreshTimer = function(category) {
     this.clock.setCountdown(this.countdownDuration[category]);
 
     // update the screen widgets
-    $("#countdown_set_duration").val(pgUtil.getStringFromMS(data.countdownTime));
-    $("#countdown_set_random").val(pgUtil.getStringFromMS(data.randomInterval));
-    $("#countdown_set_duration").prop("disabled", e.running);
-    $("#countdown_set_random").prop("disabled", e.running);
+    //$("#countdown_setDuration").val(pgUtil.getStringFromMS(data.countdownTime));
+    //$("#countdown_setRandom").val(pgUtil.getStringFromMS(data.randomInterval));
+    //$("#countdown_setDuration").prop("disabled", e.running);
+    //$("#countdown_setRandom").prop("disabled", e.running);
     
     if(e.running == 1) {
         this.clock.startFromTime(e.startTime);
@@ -89,8 +89,11 @@ timer.prototype.refreshTimer = function(category) {
 
 timer.prototype.settings = function() {
     if(arguments.length) {
-        var data = this.getPageData();
-        
+        var data = this.getPageData();        
+        $("#timer_alarm").val(data.timerAlarm).change();
+        $("#timer_loop").prop('checked', data.loop).checkboxradio("refresh");
+        $("#countdown_setDuration").val(pgUtil.getStringFromMS(data.countdownTime));
+        $("#countdown_setRandom").val(pgUtil.getStringFromMS(data.randomInterval));
         if(!pg.getUserDataValue("debug")) {
             $("#timer_extraAlarmsDiv").hide();
         }
@@ -99,9 +102,6 @@ timer.prototype.settings = function() {
             var alarmVal = data.extraAlarms.toString();
             $("#timer_extraAlarms").val(alarmVal);
         }
-
-        $("#timer_alarm").val(data.timerAlarm).change();
-        $("#timer_loop").prop('checked', data.loop);
         UI.settings.pageCreate();
     }
     else {
@@ -109,8 +109,8 @@ timer.prototype.settings = function() {
         var data = this.getPageData();
         data.timerAlarm = $("#timer_alarm").val();
         data.loop =       $("#timer_loop")[0].checked;
-        //data.countdownTime = pgUtil.getMSFromString($("#countdownTime").val());
-        //data.randomInterval = pgUtil.getMSFromString($("#randomInterval").val());
+        data.countdownTime = pgUtil.getMSFromString($("#countdown_setDuration").val());
+        data.randomInterval = pgUtil.getMSFromString($("#countdown_setRandom").val());
         if(pg.getUserDataValue("debug"))
             data.extraAlarms = parseInt($("#timer_extraAlarms").val());
         this.changedCountdownTime(data);
@@ -123,19 +123,19 @@ timer.prototype.resize = function() {
 };
 
 timer.prototype.changedCountdownValue = function() {
-    var value = pgUtil.getMSFromString($("#countdown_set_duration").val());
-    var data = this.getPageData();
-    data.countdownTime = value;
-    this.setPageData(data);
-    UI.timer.changedCountdownTime(data);
+    //var value = pgUtil.getMSFromString($("#countdown_setDuration").val());
+    //var data = this.getPageData();
+    //data.countdownTime = value;
+    //this.setPageData(data);
+    //UI.timer.changedCountdownTime(data);
     return false;
 }
 timer.prototype.changedRandomValue = function(value) {
-    var value = pgUtil.getMSFromString($("#countdown_set_random").val());
-    var data = this.getPageData();
-    data.randomInterval = value;
-    this.setPageData(data);
-    UI.timer.changedCountdownTime(data);
+    //var value = pgUtil.getMSFromString($("#countdown_setRandom").val());
+    //var data = this.getPageData();
+    //data.randomInterval = value;
+    //this.setPageData(data);
+    //UI.timer.changedCountdownTime(data);
     return false;
 }
 

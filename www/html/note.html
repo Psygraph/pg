@@ -6,7 +6,6 @@
       <div class="category">Loading...</div>
     </div>
     <div data-role="control-group" class="inset">
-      <div class="ui-field-contain no-field-separator" id="noteDiv">
         <div id="noteTitleDiv">
           <input id="noteTitle" class="note inset" type="text" data-clear-btn="true" value="Title"></input>
         </div>
@@ -20,7 +19,6 @@
                onClick="return UI.note.annotate();" src="img/note.png" alt="Annotate"></input>
         <input type="image" class="button fast" id="note_stop"  title="Start/Stop" 
                onClick="return UI.note.annotate();" src="img/stop.png" alt="Stop annotation"></input>
-      </div>
     </div>
   </div>
   
@@ -52,12 +50,12 @@
   
   <div id="note_help" class="help content">
     <strong>Note</strong>
-    <p>The <strong>Note</strong> tool allows you create text notes and voice memos.  Two text fields are displayed, one for the note title and one for the text of the note.  The right button records audio: the button turns red while recording, which you stop by pressing the button a second time. Notes are saved by pressing the left button.  If you are online, the notes and audio data are saved to a blog post.</p>
+    <p>The <strong>Note</strong> tool allows you create text notes and voice memos.  Two text fields are displayed: one for the note title, and one for the note text.  The right button records audio: the button turns red while recording, which you stop by pressing the button a second time. Notes are saved by pressing the left button.  If you are online, notes and audio data are saved as a blog post.</p>
     <p>The settings allow you to:
     <ul>
-      <li>Attach a location data to the note.</li>
+      <li>Attach a location to the note.</li>
       <li>Turn on/off the submit confirmation dialog.</li>
-      <li>Use the enhanced editor.</li>
+      <li>Use the enhanced editor to create text notes.</li>
     </ul>
     </p>
     <br/>
