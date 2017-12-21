@@ -12,8 +12,8 @@ var counter = function () {
                      fgColor:  "rgba(0,0,0,1)",
                      bgColor:  "rgba(0,0,0,0)"
                     };
-    this.knobOptsAtTarget   = {fgColor:  "rgba(  0, 200, 0, 1)"};
-    this.knobOptsOverTarget = {fgColor:  "rgba(200,   0, 0, 1)"};
+    this.knobOptsAtTarget   = {fgColor:  "rgba(  0, 215, 0, 1)"};
+    this.knobOptsOverTarget = {fgColor:  "rgba(215,   0, 0, 1)"};
 }
 
 counter.prototype = Object.create(page.prototype);

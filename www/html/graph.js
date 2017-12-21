@@ -48,15 +48,14 @@ graph.prototype.onDoubleClick = function(e) {
 
 graph.prototype.resize = function() {
     page.prototype.resize.call(this, false);
-    var head    = $("#graph_header").outerHeight(true);
-    var subHead = $("#subheader_graph").outerHeight(true);
-    var foot    = $("#graph_footer").outerHeight(true);
+    var header   = this.headerHeight();
+    var subheader = $("#graph_page div.category").outerHeight(true);
+    var win    = getWindowDims();
 
-    var height = $(window).height() -(head+subHead+foot);
-    var width = $(window).width();
+    var height = win.height -(header+subheader);
+    var width = win.width;
     $("#graphContainer").height(height);
     $("#graphContainer").width(width);
-    $("#graph").css("height", "100%");
 };
 
 graph.prototype.settings = function() {

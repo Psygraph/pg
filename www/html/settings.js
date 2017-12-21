@@ -208,7 +208,7 @@ settings.prototype.showPageSettings = function() {
     
     //$("#pageName").html("tool: <b>" +page +"</b>");
     //UI[page].update(true);
-    UI.state[page] = UI[page].update(false);
+    //UI.state[page] = UI[page].update(false);
     var data = pg.getPageData(page, category);
     UI[page].settings(data);
     //var ps = $("#"+page+"_settings");
@@ -287,8 +287,7 @@ settings.prototype.submitSettings = function(doClose) {
     }
     var newPageData = UI[page].settings();
     var pmtime      = pg.getPageMtime(page);
-    if(!pg.getUserDataValue('perCategorySettings') || 
-       doClose=="applyAll") {
+    if(doClose=="applyAll") {
         for(var i=0; i<pg.categories.length; i++)
             setPageDataForCategory(this.localPG, newPageData, page, pg.categories[i]);
     }

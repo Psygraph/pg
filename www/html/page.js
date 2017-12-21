@@ -26,13 +26,14 @@ page.prototype.contentWidth = function() {
     return win.width;
 }
 
-page.prototype.resize = function(scrollable, scrollDiv) {
+page.prototype.resize = function(scrollable) {
     scrollable = (typeof(scrollable)!="undefined") ? scrollable : true;
     if(scrollable) {
-        var head   = this.headerHeight();
+        var header = this.headerHeight();
         var win    = getWindowDims();
         var width  = this.contentWidth();
-        var totalHeight = head;
+        var totalHeight = header;
+        scrollDiv  = $("#"+this.name+"_page div.main.content");
         scrollDiv = (typeof(scrollDiv)!="undefined") ? scrollDiv : $("#"+this.name+"_main");
         scrollDiv.children().each(function(){
                 totalHeight = totalHeight + $(this).outerHeight(true);
@@ -40,7 +41,7 @@ page.prototype.resize = function(scrollable, scrollDiv) {
         totHeight = Math.max(totalHeight, win.height);
         $("#"+this.name+"_page div.content").css({
                 'position':     "absolute",
-                    'top':      head+"px",
+                    'top':      header+"px",
                     'height':   totHeight+"px",
                     'width':    width+"px",
                     'overflow': "scroll"

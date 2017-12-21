@@ -435,6 +435,7 @@ function gotoPageMain() {
     $("#"+page+"_help").hide();
     $(".navbar_link").removeClass("ui-btn-active");
     $("#"+page+"_page .navbar_link_left").addClass("ui-btn-active");
+    UI[page].resize();
 }
 function gotoPageSettings() {
     var page = pg.page();
@@ -442,12 +443,25 @@ function gotoPageSettings() {
     $("#"+page+"_settings").show();
     $("#"+page+"_help").hide();
     UI.settings.showPageSettings();
+    UI[page].resize();
 }
 function gotoPageHelp() {
     var page = pg.page();
     $("#"+page+"_main").hide();
     $("#"+page+"_settings").hide();
     $("#"+page+"_help").show();
+    UI[page].resize();
+}
+function getSubPage() {
+    var page = pg.page();
+    if($("#"+page+"_main").is(':visible'))
+        return "main";
+    else if($("#"+page+"_settings").is(':visible'))
+        return "settings";
+    else if($("#"+page+"_help").is(':visible'))
+        return "help";
+    else
+        return "";
 }
 function gotoPage(newPage) {
     newPage = getValidPage(newPage);
@@ -500,7 +514,7 @@ function gotoPage(newPage) {
         UI.onPageChange = null;
     }
     syncSoon();
-    updateSubheader();
+    //updateSubheader(); // updating the page does not change the header, which currently has only category info
     gotoPageMain();
     slideNav(false);
 }
@@ -522,51 +536,24 @@ function resetPage() {
         UI[page].update(true, UI.state[page]);
     }
 }
-function updateSubheader(force) {
-    force = force!=undefined ? force : false;
-    var page = pg.page();
-    if(force) {
-        $('.catmenu').remove();
-    }
-    // Update the category name (string)
-    var menu = $(".cat_link");
-    menu.text(pg.category());
+function updateSubheader() {
+    menus = $(".categoryChooser");
     // if there is only one category, disable changes
     if(pg.numCategories()<2)
-        menu.addClass("ui-disabled");
+        menus.addClass("ui-disabled");
     else
-        menu.removeClass("ui-disabled");
- 
-    // create the popup text
-    var txt = '';
-    var id = page+"CatMenu";
-    txt += '<div class="catmenu" data-role="popup" id="'+id+'">';
-    txt += '<ul class="sortable" data-role="listview" data-inset="true" id="'+page+'CatList">';
-    txt += '<li data-role="list-divider"><i>Category...</i></li>';
-    var close = "return false;";
+        menus.removeClass("ui-disabled");
+    // Update the category name (string)
+    var catName = pg.category();
+    //if(catName == "Uncategorized")
+    //    catName = " ";
+    $(".category").text(catName);    
+    menus.empty();
     for(var i=pg.numCategories()-1; i>=0; i--) {
-        if(pg.category()==pg.categories[i])
-            txt += '<li data-icon="false"><a data-role="button" href="" data-rel="back" onclick="gotoCategory('+i+');'+close+'" selected>' +pg.categories[i] +'</a></li>';
-        else
-            txt += '<li data-icon="false"><a data-role="button" href="" data-rel="back" onclick="gotoCategory('+i+');'+close+'">' +pg.categories[i] +'</a></li>';
+        var cat = pg.categories[i];
+        menus.append(new Option(cat, cat));
     }
-    txt += '</ul></div>';
-    
-    $("#"+id).remove();
-    // Add the popup to the page and create()
-    var subheader = $("#subheader_"+page);
-    subheader.empty();
-    subheader.html(txt);
-    if($('#'+page+'CatMenu-popup').is(".ui-popup-container"))
-        subheader.trigger("refresh");
-    else
-        subheader.trigger("create");
-    $("#"+id).trigger("create");
-}
-
-function openCatMenu() {
-    var page = pg.page();
-    $("#"+page+"CatMenu").popup().popup("open");
+    menus.val(pg.category()).trigger("change");
 }
 
 function gotoCategory(num) {
@@ -582,16 +569,17 @@ function gotoCategory(num) {
     num = num > pg.numCategories()-1 ? pg.numCategories()-1 : num;
     // update the stylesheet URL
     var page = getPage();
-    //if(page=="prefs" || page=="help")
-    //    return;
     UI.state[page] = UI[page].update(false);
-    pg.categoryIndex = num; //the category change has to happen between the state updates
+    pg.categoryIndex = num; // the category change has to happen between the state updates
     if(pg.pages.indexOf(page) != -1) // make sure it is not the settings page
         UI[page].update(true, UI.state[page]);
     var cd = pg.getCategoryData(pg.category());
     var style = "media/" + cd.style;
     $("#user_style").attr("href", style);
     updateSubheader();
+    // reload the settings if the cateogry has changed
+    if(getSubPage()=="settings")
+        gotoPageSettings();
 }
 
 function setPageChangeCallback(cb) {
@@ -1217,9 +1205,8 @@ var PGEN = {
            page == "dialog"   ||
            page == "prefs"
         ) {
-            var headerT  = $("#simple_header_template");
-            var n        = headerT.prop('content');
-            var head     = $(n.children[0]).clone();
+            var headT  = $("#simple_header_template").prop('content');
+            var head   = $(headT.children[0]).clone();
             node.prepend(head[0]);
             $(node).find(".rightMenuButton").hide();
             if(title=="Settings")
@@ -1227,20 +1214,27 @@ var PGEN = {
         }
         else {
             // Add the sidenav
-            var nav      = getNavbar(page);
+            var nav    = getNavbar(page);
             node.prepend(nav[0]);
-            var headerT  = $("#header_template");
-            var n        = headerT.prop('content');
-            var head         = $(n.children[0]).clone();
+            var headT  = $("#header_template").prop('content');
+            var head   = $(headT.children[0]).clone();
             node.prepend(head[0]);
         }
 
+        // Add the subheader
+        var catT = $("#category_template").prop('content');
+        var cat  = $(catT.children[0]).clone();
+        var subheader = $("#subheader_"+page);
+        subheader.empty();
+        subheader.prepend(cat[0]);
+        subheader.trigger("create");
+        
         $(node).find(".pg_page_title").html(title);
         var id = "#"+page+"_page";
-        $(id).trigger("create");
+        $(node).trigger("create");
         //$("#"+page+"_page rightMenu").popup().trigger("refresh");
         //$("#"+page+"_page eventPopupMenu").popup().trigger("refresh");
-        $( id+' input.fast, ' +id+' a.fast').each(function(index, element) {
+        $(node).find('input.fast, a.fast').each(function(index, element) {
                 if (element.onclick) {
                     $(element).on('vclick', element.onclick).removeAttr('onclick');
                 }

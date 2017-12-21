@@ -50,9 +50,9 @@ stopwatch.prototype.settings = function() {
     if(arguments.length) {
         $("#stopwatch_location").prop("checked", data['watchLocation']).checkboxradio('refresh');
         if(pgUtil.isWebBrowser()) {
-            $("#stopwatch_acceleration").hide();
-            $("#stopwatch_orientation").hide();
-            $("#stopwatch_bluetooth").hide();
+            $("#stopwatch_acceleration").parent().hide();
+            $("#stopwatch_orientation").parent().hide();
+            $("#stopwatch_bluetooth").parent().hide();
         }
         else {
             $("#stopwatch_acceleration").prop("checked", data['watchAcceleration']).checkboxradio('refresh');;
@@ -102,12 +102,13 @@ stopwatch.prototype.getPageData = function() {
 stopwatch.prototype.resize = function() {
     page.prototype.resize.call(this, false);
     var header   = this.headerHeight();
+    var subheader = $("#stopwatch_page div.category").outerHeight(true);
     var controls = $("#stopwatch_controls").outerHeight(true);
     var win     = getWindowDims();
-    var height  = win.height - (header+controls);
+    var graphHeight  = win.height - (header+subheader+controls);
     var width   = win.width;
 
-    $("#stopwatch_graphContainer").height(height);
+    $("#stopwatch_graphContainer").outerHeight(graphHeight);
     $("#stopwatch_graphContainer").width(width);
     $("#stopwatch_graph").css("height", "100%");
 };

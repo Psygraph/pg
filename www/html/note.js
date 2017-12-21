@@ -46,18 +46,19 @@ note.prototype.update = function(show, state) {
 note.prototype.resize = function() {
     page.prototype.resize.call(this, false);
     var header = this.headerHeight();
+    var subheader = $("#note_page div.category").outerHeight(true);
     var win    = getWindowDims();
-    var height = win.height - (header);
     var titleHeight  = $("#noteTitleDiv").outerHeight(true);
     var buttonHeight = $("#note_submit").outerHeight(true);
-    var magic = 32;
-    $("#noteTextContainer").outerHeight(height - (titleHeight+buttonHeight+magic));
+    var textContainerHeight = win.height - (header+subheader+titleHeight+buttonHeight+12);
+    $("#noteTextContainer").outerHeight(textContainerHeight);
+    $("#noteText").outerHeight(textContainerHeight-12);
     var width  = win.width;
 
     $("#"+this.name+"_page .content").css({
             position: "absolute",
                 'top':    header, 
-                'height': height,
+                'height': win.height - (header),
                 'width':  width+"px"
                 });
 };
@@ -71,37 +72,40 @@ note.prototype.settings = function() {
         UI.settings.pageCreate();
     }
     else {
-        return { 
+        var data = { 
             addLocation:      $("#note_addLocation")[0].checked,
             showConfirmation: $("#note_showConfirmation")[0].checked,
             enhancedEditor:   $("#note_enhancedEditor")[0].checked
         };
+        this.createEnhancedEditor(data.enhancedEditor);
+        return data;
     }
 };
 
 note.prototype.createEnhancedEditor = function(show) {
     if(show) {
-        if(tinyMCE.activeEditor)
-            return; // already created
-        var win = getWindowDims();
-        var height = 320; // win.height/2,
-        var mce_opts = {
-            selector: 'textarea',
-            menubar: false,
-            resize: false,
-            min_height: height,
-            max_height: height,
-            height: height,
-            autoresize_min_height: height,
-            autoresize_max_height: height,
-            plugins: [
-                'advlist autoresize charmap colorpicker hr link', //fullscreen 
-                'lists spellchecker wordcount'
-            ],
-            toolbar: 'undo redo | insert | styleselect', // fullscreen | cut copy paste
-            content_css: 'css/content.css'
-        };
-        tinymce.init(mce_opts);
+        if(!tinyMCE.activeEditor) {
+            this.resize();
+            var height = $("#noteTextContainer").height()*2/3;
+            var mce_opts = {
+                selector: 'textarea',
+                menubar: false,
+                resize: false,
+                min_height: height,
+                max_height: height,
+                height: height,
+                plugins: [
+                    'advlist charmap colorpicker hr link', //fullscreen 
+                    'lists spellchecker wordcount'
+                ],
+                toolbar: 'undo redo | insert | styleselect', // fullscreen | cut copy paste
+                content_css: 'css/content.css'
+            };
+            try {
+                tinymce.init(mce_opts);
+            }
+            catch(e){}
+        }
         //tinymce.activeEditor.on('ObjectResizeStart', function(e) {
         //            // Prevent resize
         //            //e.preventDefault();
@@ -121,10 +125,12 @@ note.prototype.createEnhancedEditor = function(show) {
         //            });
     }
     else {
-        if(! tinyMCE.activeEditor)
-            return; // already destroyed
-        tinymce.remove(tinyMCE.activeEditor);
+        if(tinyMCE.activeEditor) {
+            tinymce.remove(tinyMCE.activeEditor);
+            //tinyMCE.activeEditor = null;
+        }
     }
+    this.resize();
 };
 
 note.prototype.updateText = function() {

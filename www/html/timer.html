@@ -10,17 +10,6 @@
     <input id="countdown_duration" class="clock_widget" type="text" value="00:00.00" readonly></input>
   </div>
   
-  <div class="ui-grid-a">
-    <div class="ui-block-a">
-      <label for="countdown_set_duration">Coundown duration:</label>
-      <input id="countdown_set_duration" class="half_clock_widget" type="text" value="00:00.00" onchange="return UI.timer.changedCountdownValue()"></input>
-    </div>
-    <div class= "ui-block-b">
-      <label for="countdown_set_random">Random increment:</label>
-      <input id="countdown_set_random"   class="half_clock_widget" type="text" value="00:00.00" onchange="return UI.timer.changedRandomValue()"></input>
-    </div>
-  </div>
-  
   <div>
     <input type="image" class="button fast" id="timer_reset" title="Reset" 
            onClick="return UI.timer.reset(pg.category(),false);" src="img/reset.png" alt="reset"/>
@@ -41,8 +30,8 @@
   </div>
 
   <div class='ui-field-contain no-field-separator'>
-    <label for='timerAlarm'>Timer alarm:</label>
-    <select id='timerAlarm' value='Timer alarm' title='Timer alarm' data-native-menu='false'>
+    <label for='timer_alarm'>Timer alarm:</label>
+    <select id='timer_alarm' value='Timer alarm' title='Timer alarm' data-native-menu='false'>
       <option value='none'>none</option>
       <option value='text'>text</option>
       <option value='sound'>sound</option>
@@ -54,7 +43,18 @@
     <label for="timer_loop">Loop</label>
     <input type="checkbox" id="timer_loop" />
   </div>
-        
+
+  <div class="ui-grid-a">
+    <div class="ui-block-a">
+      <label for="countdown_setDuration">Coundown duration:</label>
+      <input id="countdown_setDuration" class="half_clock_widget" type="text" value="00:00.00" onchange="return UI.timer.changedCountdownValue()"></input>
+    </div>
+    <div class= "ui-block-b">
+      <label for="countdown_setRandom">Random increment:</label>
+      <input id="countdown_setRandom"   class="half_clock_widget" type="text" value="00:00.00" onchange="return UI.timer.changedRandomValue()"></input>
+    </div>
+  </div>
+          
   <div id="timer_extraAlarmsDiv" class="ui-field-contain no-field-separator">
     <label for="timer_extraAlarms:">Additional alarms:</label>
     <input class="settings" type="text" id="timer_extraAlarms" value=""/>
@@ -69,20 +69,20 @@
 
 <div id="timer_help" class="help content">
   <strong>Timer</strong>
-  <p>The <strong>Timer</strong> tool is a countdown alarm: the top widget shows time remaining and the bottom widget shows total time.  The can start/stop the timer with the right button and reset the timer with the left button.  The two widgets on the lower portion of the screen let you set the countdown duration and a random amount of time that should be added to the timer interval every time the countdown resets.  When the timer goes off, an alarm displays a category text notification and plays the category alarm sound.</p>
+  <p>The <strong>Timer</strong> tool is a countdown alarm: the top widget shows time remaining and the bottom widget shows total time.  You start/stop the timer with the right button and reset the timer with the left button.  When the timer goes off, an alarm (notification) displays a randomly selected message and plays a sound.  The alarm sound and text are specific to each category, and are changed in the category preferences.</p>
   <p>The settings let you:
-  <ul>
-    <li>Specify what happens when the timer elapses.</li>
-    <li>Run the timer in a loop.</li>
-    <li>Schedule additional alarms (useful if the app is closed).</li>
-  </ul>
-  <p>The alarm sound and text message are specific to each category, and are changed in the category preferences.</p>
-  <br/>
-  <template>
-    <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/timer.png" alt="timer" width="300" />  
-    <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/timer_settings.png" alt="timer_settings" width="300" />
-  </template>
-  
+    <ul>
+      <li>Specify what happens when the timer elapses.</li>
+      <li>Run the timer in a loop.</li>
+      <li>The two widgets on the lower portion of the screen let you set the countdown duration and a random amount of time that should be added to that duration.</li>  
+      <li>Schedule additional alarms (which may occur even when the app is closed).</li>
+    </ul>
+    <br/>
+    <template>
+      <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/timer.png" alt="timer" width="300" />  
+      <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/timer_settings.png" alt="timer_settings" width="300" />
+    </template>
+    
 </div>
 
 <script src="html/timer.js"></script>
