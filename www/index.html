@@ -141,6 +141,35 @@
         </div>
       </template>
 
+      <template id="subheader_template">
+        <div class="subheader" data-role="control-group">
+          <div class="category">Loading...</div>
+        </div>
+      </template>
+      
+      <template id="busy_template">
+        <div id="modal_page"><div id="loading_div">
+            <img src="img/loading.gif"></img>
+            <div>loading...</div>
+        </div></div>
+      </template>
+
+      <template id="buttons_template">
+        <div id="modal_page">
+          <div id="buttons_page">
+            <div id="lever_left" class="lever_container fast" onclick="lever('left'); return false;" >
+              <input type="image"  class="button lever_button fast" title="Left" 
+                     onclick="lever('left'); return false;" src="img/reset.png" alt="left"></input>
+            </div>
+            <button id="buttons_close" class="fast ui-btn-inline ui-icon-delete ui-btn-icon-notext" onclick="showButtons(false); return false;"></button>
+            <div id="lever_right" class="lever_container fast" onclick="lever('right'); return false;" >
+              <input type="image"  class="button lever_button fast" title="Right" 
+                     onclick="lever('right'); return false;" src="img/start.png" alt="right"></input>
+            </div>
+          </div>
+        </div>
+      </template>
+      
 <script>
 // The next line should not be altered, it is subject to string replacement.
 var WORDPRESS=false;

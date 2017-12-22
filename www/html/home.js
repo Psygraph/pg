@@ -97,7 +97,7 @@ home.prototype.beginLogin = function(callback) {
         navigator.splashscreen.show();
         navigator.splashscreen.hide();
     }
-    showBusy();
+    showBusy(true);
     showLog("LOGIN_BEGIN");
     this.loggingIn = true;
     // If we find one of these files sitting around, we encountered a login error.
@@ -148,7 +148,7 @@ home.prototype.hasFinishedLogin = function() {
 };
 
 home.prototype.endLogin = function() {
-    hideBusy();
+    showBusy(false);
     showLog("LOGIN_END");
     this.loggingIn = false;
     //pgFile.deleteFile("com.psygraph.lastError");
@@ -184,16 +184,16 @@ home.prototype.loginUser = function(onSettingsPage) {
         //this.setPageDataField("server", server, "home", "Uncategorized");
         //data = this.getPageData();
     }
-    showBusy();
+    showBusy(true);
     var f = function(){ 
         UI.home.loggingIn=false; 
-        hideBusy(); 
+        showBusy(false); 
         gotoPage(pg.page());
     };
     if(!onSettingsPage)
         f = function() { 
             UI.home.loggingIn=false; 
-            hideBusy(); 
+            showBusy(false); 
             gotoPage("home");
             gotoPageSettings();
         };
@@ -418,7 +418,7 @@ home.prototype.logoutCB = function(success) {
         showAlert("Logout failure");
     }
     this.status(false);
-    hideBusy();
+    showBusy(false);
 };
 
 home.prototype.logEvent = function(type) {

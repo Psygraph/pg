@@ -92,7 +92,7 @@ var pgAccel = {
         if(!starting) {
             var state = {running:     pgAccel.running,
                          opts:        pgAccel.opts,
-                         prevAccel:   navigator.cyclometer.getPreviousAcceleration(),//pgAccel.previousAcceleration,
+                         prevAccel:   pgAccel.getAccelerationData(),//pgAccel.previousAcceleration,
                          prevRot:     pgAccel.previousRotation,
                          prevOrient:  pgAccel.previousOrientation
                         };
@@ -100,7 +100,7 @@ var pgAccel = {
         }
         if(typeof(state)!="undefined") { //starting
             pgAccel.opts                 = state.opts;
-            navigator.cyclometer.setPreviousAcceleration(state.prevAccel);
+            pgAccel.setAccelerationData(state.prevAccel);
             pgAccel.previousRotation     = state.prevRot;
             pgAccel.previousOrientation  = state.prevOrient;
             if(state.running)
@@ -123,7 +123,13 @@ var pgAccel = {
     },
     // get the accumulated accel data
     getAccelerationData: function() {
+        if(typeof(navigator.cyclometer)=="undefined")
+            return [];
         return navigator.cyclometer.getPreviousAcceleration();
+    },
+    setAccelerationData: function(data) {
+        if(typeof(navigator.cyclometer)!="undefined")
+            return navigator.cyclometer.setPreviousAcceleration(data);
     },
     // get the accumulated rotation data
     getRotationData: function() {
@@ -138,5 +144,6 @@ var pgAccel = {
         //navigator.cyclometer.offShake(shakeCB);
         navigator.cyclometer.offShake("all");
         navigator.cyclometer.onShake(shakeCB, threshold);
-    }
+    },
+    
 };

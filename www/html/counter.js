@@ -49,12 +49,11 @@ counter.prototype.update = function(show, state) {
 
 counter.prototype.setValue = function() {
     var data = this.getPageData();
-    if(!data.showCount) {
-        $("#counter_edit").val("");
+    $("#counter_edit").val(this.count);
+    if(!data.showEnso) {
         $("#counter_enso").trigger('configure', {fgColor: "rgba(0,0,0,0)"});
     }
     else {
-        $("#counter_edit").val(this.count);
         if(this.count < data.countTarget-1)
             $("#counter_enso").trigger('configure', this.knobOpts);
         else if(this.count == data.countTarget-1)
@@ -72,7 +71,7 @@ counter.prototype.settings = function() {
         $("#counter_target").val(data.countTarget).change();
         $("#counter_motionSlider").val(data.motionVal).change();
         $("#counter_motionAlarm").val(data.motionAlarm).change();
-        $("#counter_showCount").prop("checked", data.showCount).checkboxradio('refresh');
+        $("#counter_showEnso").prop("checked", data.showEnso).checkboxradio('refresh');
         $("#counter_targetBehavior").val(data.countTargetBehavior).change();
         if(pgUtil.isWebBrowser()) {
             $("#counter_motion").hide();
@@ -84,7 +83,7 @@ counter.prototype.settings = function() {
             data.motionAlarm  = $("#counter_motionAlarm").val();
             data.motionVal    = parseFloat($("#counter_motionSlider").val());
         }
-        data.showCount           = $("#counter_showCount")[0].checked;
+        data.showEnso           = $("#counter_showEnso")[0].checked;
         data.countTarget         = parseInt($("#counter_target").val());
         data.countTargetBehavior = $("#counter_targetBehavior").val();
         return data;
@@ -125,8 +124,8 @@ counter.prototype.getPageData = function() {
         data.motionAlarm = "none";
     if(! ('motionVal' in data))
         data.motionVal = 6;
-    if(! ('showCount' in data))
-        data.showCount = true;
+    if(! ('showEnso' in data))
+        data.showEnso = true;
     if(! ('countTarget' in data))
         data.countTarget = 10;
     if(! ('countTargetBehavior' in data))

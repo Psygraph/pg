@@ -119,18 +119,30 @@ function singleClick(ev) {
         ev.preventDefault();
         return;
     }
+    if($('div#modal_page').length) {
+        return true;
+    }
     var DELAY = 500;
     mouse_clicks++;
-    if(mouse_clicks === 1) {
+    if(mouse_clicks == 1) {
         mouse_timer = setTimeout(function() {
-                onSingleTap(ev);  //perform single-click action
-                mouse_clicks = 0; //after action performed, reset counter
+                onSingleTap(ev);
+                mouse_clicks = 0;
+            }, DELAY);
+    } 
+    else if(mouse_clicks == 2) {
+        clearTimeout(mouse_timer);
+        mouse_timer = setTimeout(function() {
+                onDoubleTap(ev);
+                mouse_clicks = 0;
             }, DELAY);
     } 
     else {       
         clearTimeout(mouse_timer);
-        onDoubleTap(ev);          //perform double-click action
-        mouse_clicks = 0;         //after action performed, reset counter
+        showButtons(true);
+        mouse_clicks = 0;
+        ev.preventDefault();
+        ev.stopPropagation();
     }
 }
 function onSingleTap(ev) {
@@ -235,8 +247,8 @@ function onKeyPress(e) {
 
 function lever(arg) {
     var page = getPage();
-    if(page != "" && 
-       pg.allPages.indexOf(page) != -1)
+    if( page != "" &&
+        (pg.allPages.indexOf(page) != -1 || page=="about"))
         UI[page].lever(arg);
 }
 
@@ -329,17 +341,31 @@ function showDialog(s, message, callback, nextPage) {
     }
 }
 
-function showBusy() {
-    if(! $('div#loading_page').length) {
-        var text  = 'loading...';
-        var img   = $('<div id="loading_div"><img src="img/loading.gif"><div>' + text + '</div></div>');
-        var block = $('<div id="loading_page"></div>');
-        block.appendTo('body');
-        img.appendTo(block);
+function showBusy(show) {
+    $('div#modal_page').remove();
+    if(show) {
+        var T  = $("#busy_template").prop('content');
+        var n   = $(T.children[0]).clone();
+        $('body').prepend(n[0]);
     }
 }
-function hideBusy() {
-    $('div#loading_page').remove();
+function showButtons(show) {
+    $('div#modal_page').remove();
+    if(show) {
+        var T   = $("#buttons_template").prop('content');
+        var n   = $(T.children[0]).clone();
+        $('body').prepend(n[0]);
+        $("#buttons_page .fast").each(function(index, element) {
+                if (element.onclick) {
+                    $(element).on('vclick', element.onclick).prop('onclick', "return false");
+                }
+            });
+        var win = getWindowDims();
+        $("#buttons_page .lever_container").css({
+                'height':       win.height/2+"px",
+                    'width':    win.width+"px"
+                    });
+    }
 }
 function showLog(msg) {
     console.log(msg);
@@ -496,7 +522,7 @@ function gotoPage(newPage) {
         pg.pageIndex = index;
     }
     // remove the loading dialog, if present
-    hideBusy();
+    showBusy(false);
     // change the display page
     if(oldPage == null)
         opts.allowSamePageTransition = true;
@@ -853,7 +879,7 @@ var PGEN = {
             //pg.init();
             if(callback)
                 callback(tf);
-            hideBusy();
+            showBusy(false);
             gotoPage(pg.page());
         }
     },
@@ -947,7 +973,7 @@ var PGEN = {
     },
     updateSettings: function(newPG, callback) {
         if(pg.useServer) {
-            showBusy();
+            showBusy(true);
             showLog("Writing settings to the server");
             postData({'action': "settings", 'pg': pgUtil.encode(newPG, true) },
                      function(success, request){getDataURL(success, request, newPG, callback)});
@@ -985,7 +1011,7 @@ var PGEN = {
             }
             else
                 callback(success);
-            hideBusy();
+            showBusy(false);
         }
     },
     // download events from the server
@@ -1090,11 +1116,11 @@ var PGEN = {
             // no-op.
         }
         else if(selection == "downloadEvents") {
-            showBusy();
+            showBusy(true);
             PGEN.downloadEvents(cb);
         }
         else if(selection == "uploadFiles") {
-            showBusy();
+            showBusy(true);
             PGEN.uploadEvents();
             PGEN.uploadFiles(true, cb);
         }
@@ -1128,7 +1154,7 @@ var PGEN = {
             showLog ("Unknown selection: " + selection);
         }
         function cb(success) {
-            hideBusy();
+            showBusy(false);
             if(!success) {
                 showAlert("Command failed.");
             }
@@ -1242,8 +1268,6 @@ var PGEN = {
         subheader.trigger("create");
         
         $(node).find(".pg_page_title").html(title);
-        //$("#"+page+"_page rightMenu").popup().trigger("refresh");
-        //$("#"+page+"_page eventPopupMenu").popup().trigger("refresh");
         $(node).find('input.fast, a.fast, button.fast').each(function(index, element) {
                 if (element.onclick) {
                     //$(element).on('vclick', element.onclick).removeAttr('onclick');
