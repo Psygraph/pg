@@ -53,15 +53,16 @@ stopwatch.prototype.settings = function() {
             $("#stopwatch_acceleration").parent().hide();
             $("#stopwatch_orientation").parent().hide();
             $("#stopwatch_bluetooth").parent().hide();
+            $("#stopwatch_showGraph").parent().hide();
         }
         else {
-            $("#stopwatch_acceleration").prop("checked", data['watchAcceleration']).checkboxradio('refresh');;
-            $("#stopwatch_orientation").prop("checked", data['watchOrientation']).checkboxradio('refresh');;
-            $("#stopwatch_bluetooth").prop("checked", data['watchBluetooth']).checkboxradio('refresh');;
+            $("#stopwatch_acceleration").prop("checked", data['watchAcceleration']).checkboxradio('refresh');
+            $("#stopwatch_orientation").prop("checked", data['watchOrientation']).checkboxradio('refresh');
+            $("#stopwatch_bluetooth").prop("checked", data['watchBluetooth']).checkboxradio('refresh');
             pgAccel.hasCompass(showOrientation);
         }
         $("#stopwatch_updateInterval").val( pgUtil.getStringFromMS(data.updateInterval) );
-        $("#stopwatch_showGraph").prop("checked", data['showGraph']).checkboxradio('refresh');;
+        $("#stopwatch_showGraph").prop("checked", data['showGraph']).checkboxradio('refresh');
         UI.settings.pageCreate();
     }
     else {
@@ -205,7 +206,7 @@ stopwatch.prototype.createGraph = function(show) {
         return;
     }
     else {
-        if(this.graph)
+        if(this.graph || pgUtil.isWebBrowser())
             return;
     }
     this.data = new vis.DataSet();

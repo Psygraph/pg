@@ -21,8 +21,8 @@ note.prototype.update = function(show, state) {
                                         'text':  noteText};
         if(this.recording)
             this.annotate(); // stop recording if we leave the page.
-        if(tinyMCE.activeEditor)
-            tinyMCE.activeEditor.selection.collapse();
+        //if(tinyMCE.activeEditor)
+        //    tinyMCE.activeEditor.selection.collapse();
         return {lastText: this.lastText};
     }
     if(typeof(state)!="undefined") {
@@ -37,7 +37,7 @@ note.prototype.update = function(show, state) {
         $('#note_start').show().prop('disabled', false);
         this.initialized = true;
     }
-    this.createEnhancedEditor(data.enhancedEditor);
+    //this.createEnhancedEditor(data.enhancedEditor);
     this.updateText();
     this.updateAudio();
     this.resize();
@@ -68,20 +68,21 @@ note.prototype.settings = function() {
         var data = this.getPageData();
         $("#note_addLocation").prop("checked", data['addLocation']).checkboxradio("refresh");
         $("#note_showConfirmation").prop("checked", data['showConfirmation']).checkboxradio("refresh");
-        $("#note_enhancedEditor").prop("checked", data['enhancedEditor']).checkboxradio("refresh");
+        $("#note_enhancedEditor").hide();
+        //$("#note_enhancedEditor").prop("checked", data['enhancedEditor']).checkboxradio("refresh");
         UI.settings.pageCreate();
     }
     else {
         var data = { 
             addLocation:      $("#note_addLocation")[0].checked,
             showConfirmation: $("#note_showConfirmation")[0].checked,
-            enhancedEditor:   $("#note_enhancedEditor")[0].checked
+            //enhancedEditor:   $("#note_enhancedEditor")[0].checked
         };
-        this.createEnhancedEditor(data.enhancedEditor);
+        //this.createEnhancedEditor(data.enhancedEditor);
         return data;
     }
 };
-
+/*
 note.prototype.createEnhancedEditor = function(show) {
     if(show) {
         if(!tinyMCE.activeEditor) {
@@ -132,7 +133,7 @@ note.prototype.createEnhancedEditor = function(show) {
     }
     this.resize();
 };
-
+*/
 note.prototype.updateText = function() {
     var s = {'title':"", 'text':""};
     if(typeof(this.lastText[pg.category()])!="undefined") {
@@ -140,9 +141,9 @@ note.prototype.updateText = function() {
     }
     $("#noteTitle").val(s.title);
     var data = this.getPageData();
-    if(data.enhancedEditor)
-        tinyMCE.activeEditor.setContent(s.text, {format : 'raw'});
-    else
+    //if(data.enhancedEditor)
+    //    tinyMCE.activeEditor.setContent(s.text, {format : 'raw'});
+    //else
         $("#noteText").val(s.text);
 };
 
@@ -152,8 +153,8 @@ note.prototype.getPageData = function() {
         data.showConfirmation = true;
     if(! ('addLocation' in data))
         data.addLocation      = false;
-    if(! ('enhancedEditor' in data))
-        data.enhancedEditor   = false;
+    //if(! ('enhancedEditor' in data))
+    //    data.enhancedEditor   = false;
     return data;
 };
 
@@ -243,14 +244,14 @@ note.prototype.updateAudio = function() {
 note.prototype.getNoteText = function() {
     var data = this.getPageData();
     var noteText = "";
-    if(! data.enhancedEditor) {
+    //if(! data.enhancedEditor) {
         noteText = $("#noteText").val();
-    }
-    else {
-        this.createEnhancedEditor(true);
-        if(tinyMCE.activeEditor.getContent({format : 'text'}) != "")
-            noteText = tinyMCE.activeEditor.getContent({format : 'raw'});
-    }
+    //}
+    //else {
+    //    this.createEnhancedEditor(true);
+    //    if(tinyMCE.activeEditor.getContent({format : 'text'}) != "")
+    //        noteText = tinyMCE.activeEditor.getContent({format : 'raw'});
+    //}
     return noteText;
 };
 

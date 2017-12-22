@@ -110,11 +110,16 @@ JQuery elements
     xxxheight: 36px;
 }
 .ui-header .ui-title {
+    min-height:   1em;
+    max-height:   1em;
+    margin-top:    0px;
+    margin-bottom: 0px;
     margin-left:  10%;
     margin-right: 10%;
 }
 div.ui-header, div.ui-content, div.ui-footer {
     border-top-width: 0em;
+    xxxfont-size: 0.8em;
     overflow: hidden;
     overflow-x: hidden;
     overflow-y: hidden

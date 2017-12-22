@@ -103,8 +103,7 @@ prefs.prototype.update = function(show, state) {
             $("#wifiOnly").parent().hide();
         else
             $("#wifiOnly").prop('checked', data.wifiOnly).checkboxradio("refresh");
-        //$("#screenTaps").prop('checked', data.screenTaps).checkboxradio("refresh");
-        //$("#perCategorySettings").prop('checked', data.perCategorySettings).checkboxradio("refresh");
+        $("#screenTaps").prop('checked', data.screenTaps).checkboxradio("refresh");
 	    this.resize();
         // start bluetooth scanning
         if(pg.getUserDataValue("debug") ) {
@@ -211,10 +210,8 @@ prefs.prototype.submitSettings = function(doClose) {
     this.userData = {
         //'swipeVal'    : swipeVal,
         'debug'       : $("#debug")[0].checked ? 1 : 0,
-        //'publicAccess': $("#publicAccess")[0].checked ? 1 : 0,
         'wifiOnly'    : data.wifiOnly,
-        'screenTaps'  : false //$("#screenTaps")[0].checked ? true : false,
-        //'perCategorySettings': $("#perCategorySettings")[0].checked ? true : false
+        'screenTaps'  : $("#screenTaps")[0].checked ? true : false,
     };
 
     //var pages = $("#new_pages").val();
