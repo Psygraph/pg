@@ -198,7 +198,7 @@ var pgAudio = {
                 // enable shake-to-stop
                 if(shakeToStop) {
                     pgAccel.start();
-                    pgAccel.shake( pgAudio.stop.bind(this,-1) );
+                    pgAccel.onShake( pgAudio.stop(-1) );
                 }
             }
             // next try using HTML5
@@ -278,7 +278,7 @@ var pgAudio = {
                 return 0.9 * Math.sin( i *(2*Math.PI) /sampleRate *hz);
             };
             var noise = function(i){
-                return 0.28 * (Math.random()*2-1);
+                return 0.22 * (Math.random()*2-1);
             };
             var env   = function(i) {
                 return (1+Math.sin( i /len *(2*Math.PI) - Math.PI/2))/2;

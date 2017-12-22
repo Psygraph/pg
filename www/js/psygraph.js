@@ -41,8 +41,8 @@ function finalInit() {
     window.addEventListener("keydown",  onKeyDown,  false);
     //window.addEventListener("keyup",    onKeyPress, false);
     window.addEventListener("error",    onError,    false);
-    $("body").on( "click", onSingleTap );
-    $("body").on( "dblclick", onDoubleTap );
+    $("body").on("vclick", singleClick );
+    //$("body").on( "dblclick", onDoubleTap );
     
     // set the online status
     if(navigator.connection) {
@@ -58,8 +58,6 @@ function finalInit() {
     // load Bluetooth
     pgBluetooth.init();
     
-    // synchronize every N seconds
-    setInterval(syncCheck, 20*1000);
     gotoLoadedPage("home"); 
 }
 
@@ -114,11 +112,28 @@ function onError(err) {
     return true;
 }
 
-function onSingleTap(ev) {
+var mouse_clicks = 0, mouse_timer = null;
+function singleClick(ev) {
     if(! $(ev.target).hasClass("leftMenuButton") && isSlideNavOpen()) {
         slideNav(false);
+        ev.preventDefault();
         return;
     }
+    var DELAY = 500;
+    mouse_clicks++;
+    if(mouse_clicks === 1) {
+        mouse_timer = setTimeout(function() {
+                onSingleTap(ev);  //perform single-click action
+                mouse_clicks = 0; //after action performed, reset counter
+            }, DELAY);
+    } 
+    else {       
+        clearTimeout(mouse_timer);
+        onDoubleTap(ev);          //perform double-click action
+        mouse_clicks = 0;         //after action performed, reset counter
+    }
+}
+function onSingleTap(ev) {
     if(! pg.getUserDataValue('screenTaps'))
         return;
     var ca = $(ev.target).closest(".clickarea");
@@ -231,11 +246,6 @@ function onResize() {
         UI[id].resize();
 }
 
-// syncronize by calling this function periodically
-function syncCheck() {
-    if(pg.dirty())
-        syncSoon();
-}
 // Synchronize after four seconds of inactivity.
 // Pages that modify events or state should call this,
 // but it is also called when navigating away from pages.
@@ -545,9 +555,9 @@ function updateSubheader() {
         menus.removeClass("ui-disabled");
     // Update the category name (string)
     var catName = pg.category();
-    //if(catName == "Uncategorized")
-    //    catName = " ";
-    $(".category").text(catName);    
+    if(catName == "Uncategorized")
+        catName = "&nbsp;";
+    $(".category").html(catName);    
     menus.empty();
     for(var i=pg.numCategories()-1; i>=0; i--) {
         var cat = pg.categories[i];
@@ -849,22 +859,23 @@ var PGEN = {
     },
     synchronize: function (callback) {
         callback = (typeof(callback)=="undefined") ? (function fx(){}) : callback;
+
+        if(!pg.dirty())
+            return;
         // update page, accel and location state
         //var page = getPage();
         //if(UI[page]) {
         //    UI.state[page] = UI[page].update(false);
         //}
-
         UI.state.accel    = pgAccel.update(false);
         UI.state.location = pgLocation.update(false);
         //UI.state.help     = UI['help'].update;
         pgFile.writeFile("com.psygraph.state", UI.state);
         
-        if(pg.dirty()) {
-            PGEN.writeEvents(pg.events, pg.deletedEvents, moreSync);  // write the events locally
-            //if(!quick) // Doing this on the settings pages will blow away any of the user's changes.
-            //    resetPage();
-        }
+        PGEN.writeEvents(pg.events, pg.deletedEvents, moreSync);  // write the events locally
+        //if(!quick) // Doing this on the settings pages will blow away any of the user's changes.
+        //    resetPage();
+
         // Update the pg, do the callback
         PGEN.writePG(pg, cb);
         function cb() {
@@ -1224,23 +1235,23 @@ var PGEN = {
         // Add the subheader
         var catT = $("#category_template").prop('content');
         var cat  = $(catT.children[0]).clone();
+        //node.prepend(cat[0]);
         var subheader = $("#subheader_"+page);
         subheader.empty();
         subheader.prepend(cat[0]);
         subheader.trigger("create");
         
         $(node).find(".pg_page_title").html(title);
-        var id = "#"+page+"_page";
-        $(node).trigger("create");
         //$("#"+page+"_page rightMenu").popup().trigger("refresh");
         //$("#"+page+"_page eventPopupMenu").popup().trigger("refresh");
-        $(node).find('input.fast, a.fast').each(function(index, element) {
+        $(node).find('input.fast, a.fast, button.fast').each(function(index, element) {
                 if (element.onclick) {
-                    $(element).on('vclick', element.onclick).removeAttr('onclick');
+                    //$(element).on('vclick', element.onclick).removeAttr('onclick');
+                    $(element).on('vclick', element.onclick).prop('onclick', "return false");
                 }
             });
-        // turn off the help images
         updateNavbar();
+        $(node).trigger("create");
         pageInitFinished(page);
     }
 };
@@ -1260,10 +1271,12 @@ function menu_leftButton() {
     else {
         slideNav(!isSlideNavOpen());
     }
+    return false;
 }
 function menu_rightButton() {
     var page = pg.page();
     $("#"+page+"_page .rightMenu").popup("open");
+    return false;
 }
 function isSlideNavOpen() {
     return $(".sidenav").css("width") != "0px";
@@ -1302,11 +1315,11 @@ function menu_action(action) {
 
 function getNavbar(page) {
     var txt = "<div id='" +page+ "_sidenav' class='sidenav' style='width:0px'>";
-    txt += "<a href='' class='closebtn' onclick='slideNav(false)'>&times;</a>";
+    txt += "<a href='' class='fast closebtn' onclick='slideNav(false)'>&times;</a>";
     for(var i = 0; i< pg.allPages.length; i++){
         var page = pg.allPages[i];
         var title = pgUtil.titleCase(page);
-        txt += '<a class="'+page+'_navlink navlink" onclick="gotoPage(\''+page+'\');" >'+title+'</a>';
+        txt += '<a class="fast '+page+'_navlink navlink" onclick="gotoPage(\''+page+'\');" >'+title+'</a>';
     }
     txt += "</div>";
     var node = $.parseHTML(txt);

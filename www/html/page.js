@@ -85,7 +85,7 @@ page.prototype.setPageDataField = function(name, value, page, cat) {
     var cat  = (typeof(cat) != "undefined") ? cat: pg.category();
     var data = this.getPageData(page, cat);
     data[name] = value;
-    this.setPageData(data, cat);
+    this.setPageData(data, page, cat);
 };
 
 page.prototype.getSummary = function(page, category) {

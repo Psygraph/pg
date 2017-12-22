@@ -276,8 +276,8 @@ function PG() {
         //    data.swipeVal = 64;
         if(typeof(data.wifiOnly)=="undefined")
             data.wifiOnly = true;
-        //if(typeof(data.perCategorySettings)=="undefined")
-        //    data.perCategorySettings = false;
+        if(typeof(data.screenTaps)=="undefined")
+            data.screenTaps = false;
         return data;
     };
     this.getUserDataValue = function(name) {

@@ -18,41 +18,20 @@ list.prototype.update = function(show) {
     // select according to the selectedEvents list
     if(!this.initialized || !pgUtil.equal(pg.categories, this.categoryCache) ) {
         this.categoryCache = pgUtil.deepCopy(pg.categories);
-        var txt = '<ul data-role="listview" data-inset="true" id="list_eventAction">';
-        txt += '<li data-role="list-divider"><i>Select action</i></li>';
+        txt = '<li data-role="list-divider"><i>Select action</i></li>';
         var click = "return UI.list.selectAction('delete');";
         txt += '<li data-icon="false"><a href="" onclick="'+click+'">Delete events</a></li>';
         var click = "return UI.list.selectAction('clearCache');";
-        txt += '<li data-icon="false"><a href="" onclick="'+click+'">Clear event cache</a></li>';
+        txt += '<li data-icon="false"><a href="" onclick="'+click+'">Clear cache</a></li>';
         for(i=pg.categories.length-1; i>=0; i--) {
             if(i == pg.categoryIndex)
                 continue;
             click = "return UI.list.selectAction('cat:"+pg.categories[i]+"');";
-            txt += '<li data-icon="false"><a href="" onclick="'+click+'"><i>Change category</i>: '+pg.categories[i]+'</a></li>';
+            txt += '<li data-icon="false"><a href="" onclick="'+click+'">Move to category: <i>'+pg.categories[i]+'</i></a></li>';
         }
-        txt += '</ul>';
-        $("#list_action").html(txt);
+        $("#list_eventAction").html(txt).trigger('refresh');
         $("#list_eventAction").listview().listview("refresh");
-
-        // reset the "Select Events..." popup
-        txt = '<ul data-role="listview" data-inset="true" id="list_eventSelect">';
-        txt += '<li data-role="list-divider"><i>Select events</i></li>';
-        click = "return UI.list.selectEvents('all');";
-        txt += '<li data-icon="false"><a href="" onclick="'+click+'">Select all</a></li>';
-        click = "return UI.list.selectEvents('none');";
-        txt += '<li data-icon="false"><a href="" onclick="'+click+'">Select none</a></li>';
-        for(i=0; i<pg.pages.length; i++) {
-            if(pg.pages[i]=="list"  ||
-               pg.pages[i]=="chart" ||
-               pg.pages[i]=="graph")
-                continue;
-            click = "return UI.list.selectEvents('tool:"+pg.pages[i]+"');";
-            txt += '<li data-icon="false"><a href="" onclick="'+click+'"><i>tool</i>: '+pg.pages[i]+'</a></li>';
-        }
-        txt += '</ul>';
-        $("#list_select").html(txt);
-        $("#list_eventSelect").listview().listview("refresh");
-
+        
         this.initialized = true;
     }
     // Add the events
@@ -179,6 +158,18 @@ list.prototype.getPageData = function() {
         data.showData = true;
     return data;
 };
+
+function menu_listSelect() {
+    var page = pg.page();
+    $("#list_select").popup("open");
+    return false;
+}
+function menu_listAction() {
+    var page = pg.page();
+    $("#list_action").popup("open");
+    return false;
+}
+
 
 list.prototype.resize = function() {
     page.prototype.resize.call(this, false);

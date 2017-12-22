@@ -120,6 +120,8 @@ graph.prototype.updateGraph = function() {
     var interval = 0;
     if(data.interval == "none")
         interval = 0;
+    else if(data.interval == "hour")
+        interval = 60*60*1000;
     else if(data.interval == "day")
         interval = 24*60*60*1000;
     else if(data.interval == "week")

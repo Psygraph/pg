@@ -18,9 +18,11 @@
       </div>
       
     </div>
-    
-    <input type="text" id="counter_enso" class="enso clickarea" data-wrapper-class="enso" >
-    
+
+    <div class="clickarea">
+      <input type="text" id="counter_enso" class="enso clickarea" data-wrapper-class="enso" >
+    </div>
+
   </div>
   
   <div id="counter_settings" class="settings content">
@@ -31,20 +33,20 @@
     </div>
     
     <fieldset data-role="control-group">
-      <label for='counter_target'>Count target:</label>
-      <input type='range' name='counter_target' id='counter_target' value="" min='0' max='20' step='1'>
+      <label for="counter_target">Count target:</label>
+      <input type="range" name="counter_target" id="counter_target" value="" min="1" max="40" step="1">
     </fieldset>
     <fieldset>
-      <div class='ui-field-contain no-field-separator'>
-        <label for='counter_targetBehavior'>Reset behavior:</label>
-        <select id='counter_targetBehavior' value='Count target behavior' title='Count target behavior' data-native-menu='false'>
-          <option value='none'>none</option>
-          <option value='sound'>sound</option>
+      <div class="ui-field-contain no-field-separator">
+        <label for="counter_targetBehavior">Reset behavior:</label>
+        <select id="counter_targetBehavior" value="Count target behavior" title="Count target behavior" data-native-menu="false">
+          <option value="none">none</option>
+          <option value="sound">sound</option>
         </select>
       </div>
     </fieldset>
 
-    <div class='ui-field-contain no-field-separator' data-role='controlgroup'>
+    <div class="ui-field-contain no-field-separator" data-role="controlgroup">
       <legend></legend>
       <label for="counter_showCount">Show enso</label>
       <input type="checkbox" id="counter_showCount" />
@@ -52,17 +54,17 @@
 
     <div  id="counter_motion">
       <fieldset>
-        <label for='counter_motionSlider'>Shake threshold:</label>
-        <input type='range' name='motionSlider' id='counter_motionSlider' value='' min='0' max='20' step='0.1'>
+        <label for="counter_motionSlider">Shake threshold:</label>
+        <input type="range" name="motionSlider" id="counter_motionSlider" value="" min="0" max="20" step="0.01">
       </fieldset>
       <fieldset>
-        <div class='ui-field-contain no-field-separator'>
-          <label for='counter_motionAlarm'>Shake behavior:</label>
-          <select id='counter_motionAlarm' value='Motion alarm' title='Motion alarm' data-native-menu='false'>
-            <option value='none'>none</option>
-            <option value='silent'>silent</option>
-            <option value='beep'>beep/buzz</option>
-            <option value='sound'>sound</option>
+        <div class="ui-field-contain no-field-separator">
+          <label for="counter_motionAlarm">Shake behavior:</label>
+          <select id="counter_motionAlarm" value="Motion alarm" title="Motion alarm" data-native-menu="false">
+            <option value="none">none</option>
+            <option value="silent">silent</option>
+            <option value="beep">beep/buzz</option>
+            <option value="sound">sound</option>
           </select>
         </div>
       </fieldset>

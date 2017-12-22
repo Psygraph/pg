@@ -110,11 +110,16 @@ JQuery elements
     xxxheight: 36px;
 }
 .ui-header .ui-title {
+    min-height:   1em;
+    max-height:   1em;
+    margin-top:    0px;
+    margin-bottom: 0px;
     margin-left:  10%;
     margin-right: 10%;
 }
 div.ui-header, div.ui-content, div.ui-footer {
     border-top-width: 0em;
+    xxxfont-size: 0.8em;
     overflow: hidden;
     overflow-x: hidden;
     overflow-y: hidden
@@ -393,6 +398,12 @@ table {
 #eventlist {
     height: 100%;
     width:  100%;
+}
+#list_divider {
+    width: 100%;
+    border-width: 1px;
+    border-color: black;
+    border-style: solid;
 }
 .data {
     vertical-align: middle;

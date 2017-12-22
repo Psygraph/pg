@@ -10,24 +10,37 @@
       <div id="list_controls" class="ui-grid-a">
         
         <div class = "ui-hide-label ui-block-a">
-          <a href="#list_select" data-rel="popup" class="ui-btn ui-corner-all ui-shadow fast">Select Events...</a>
+          <button onclick="return menu_listSelect();" class="ui-btn ui-corner-all ui-shadow fast">Select Events...</button>
         </div>
         
         <div class = "ui-hide-label ui-block-b">
-          <a href="#list_action" data-rel="popup" class="ui-btn ui-corner-all ui-shadow fast">Select Action...</a>
+          <button onclick="return menu_listAction();" class="ui-btn ui-corner-all ui-shadow fast">Select Action...</button>
         </div>
         
       </div>
     </div>
-    
-    <div data-role="popup" id="list_select"></div>
-    <div data-role="popup" id="list_action"></div>
-    
+    <div id="list_divider"></div>
     <div id="list_table" class="scrollable">
       <table id="eventlist" class="data">
       </table>
     </div>
     
+    <div data-role="popup" id="list_select">
+      <ul data-role="listview" data-inset="true" id="list_eventSelect">
+        <li data-role="list-divider"><i>Select events</i></li>
+        <li data-icon="false"><a href="" onclick="return UI.list.selectEvents('all');">Select all</a></li>
+        <li data-icon="false"><a href="" onclick="return UI.list.selectEvents('none');">Select none</a></li>
+        <li data-icon="false"><a href="" onclick="return UI.list.selectEvents('tool:stopwatch');">stopwatch</a></li>
+        <li data-icon="false"><a href="" onclick="return UI.list.selectEvents('tool:timer');">timer</a></li>
+        <li data-icon="false"><a href="" onclick="return UI.list.selectEvents('tool:counter');">counter</a></li>
+        <li data-icon="false"><a href="" onclick="return UI.list.selectEvents('tool:note');">note</a></li>
+      </ul>
+    </div>
+    <div data-role="popup" id="list_action">
+      <ul data-role="listview" data-inset="true" id="list_eventAction">
+      </ul>
+    </div>
+        
   </div>
   
   <div id="list_settings" class="settings content">
