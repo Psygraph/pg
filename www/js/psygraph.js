@@ -555,9 +555,9 @@ function updateSubheader() {
         menus.removeClass("ui-disabled");
     // Update the category name (string)
     var catName = pg.category();
-    //if(catName == "Uncategorized")
-    //    catName = " ";
-    $(".category").text(catName);    
+    if(catName == "Uncategorized")
+        catName = "&nbsp;";
+    $(".category").html(catName);    
     menus.empty();
     for(var i=pg.numCategories()-1; i>=0; i--) {
         var cat = pg.categories[i];

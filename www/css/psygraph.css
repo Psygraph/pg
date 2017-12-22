@@ -399,6 +399,12 @@ table {
     height: 100%;
     width:  100%;
 }
+#list_divider {
+    width: 100%;
+    border-width: 1px;
+    border-color: black;
+    border-style: solid;
+}
 .data {
     vertical-align: middle;
     border: 1px solid black;

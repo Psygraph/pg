@@ -68,7 +68,6 @@ note.prototype.settings = function() {
         var data = this.getPageData();
         $("#note_addLocation").prop("checked", data['addLocation']).checkboxradio("refresh");
         $("#note_showConfirmation").prop("checked", data['showConfirmation']).checkboxradio("refresh");
-        $("#note_enhancedEditor").hide();
         //$("#note_enhancedEditor").prop("checked", data['enhancedEditor']).checkboxradio("refresh");
         UI.settings.pageCreate();
     }
