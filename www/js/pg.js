@@ -43,7 +43,7 @@ function PG() {
         this.categoryIndex  = 0;
         this.pageIndex      = 0;
         this.categories     = ["Uncategorized","Meditate","Exercise","Study"];
-        this.pages          = ["home","stopwatch","timer","counter","note","list","graph"];
+        this.pages          = ["home","stopwatch","timer","counter","note","list","graph","map"];
         this.categoryData   = {"Uncategorized": nd()};
         this.pageData       = {"home": nd(), "stopwatch": nd(),"timer": nd(),"counter": nd(),"note": nd(),"list": nd(),"map": nd(),"graph": nd() };
         this.userData       = {};
@@ -1156,7 +1156,7 @@ var pgUtil = {
             //}
         }
     },
-    
+    /*    
     selectPages: function(id, title, allPages, selectedPages) {
         var s = "";
         s += "<legend>"+title+"</legend>";
@@ -1171,7 +1171,7 @@ var pgUtil = {
         s += "</select>\n";
         return s;
     },
-
+    */
     closePopup: function(sourceElement, onswitched) {
         var afterClose = function() {
             sourceElement.off("popupafterclose", afterClose);  

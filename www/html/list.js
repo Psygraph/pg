@@ -109,13 +109,12 @@ list.prototype.settings = function() {
     if(arguments.length) {
         //var data = arguments[0];
         var data = this.getPageData();
-        var eventPages = pgUtil.deepCopy(pg.allEventPages);
-        if(pg.getUserDataValue("debug"))
-            eventPages.push("home");
 
-        var s = pgUtil.selectPages("list_pages", "Show events from:", eventPages, data.pageFilter);
-        $("#list_pageSelect").html(s);
-        $("#list_pageSelect").trigger("create");
+        if($("#list_pageSelect")[0].length > 5)
+            $("#list_pageSelect")[0].remove(5);
+        if(pg.getUserDataValue("debug"))
+            $("#list_pageSelect").append(new Option("home","home"));
+        $("#list_pageSelect").trigger("change");
 
         $("#list_showID"  ).prop("checked", data.showID  ).checkboxradio("refresh");
         $("#list_showDate").prop("checked", data.showDate).checkboxradio("refresh");

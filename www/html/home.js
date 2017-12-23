@@ -339,13 +339,13 @@ home.prototype.status = function(onlineStatus) {
             txt += formatDate(new Date(s.hist[i][0]));
             txt += "</th>";
         }
-        txt += "</tr><tr><th class='col'>Time:</th>";
+        txt += "</tr><tr><th class='col'>Time: </th>";
         for(var i=0; i<4; i++) {
             txt += "<td>";
             txt += s.hist[i][1].toFixed(2);
             txt += "</td>";
         }
-        txt += "</tr><tr><th class='col'>Correct:</th>";
+        txt += "</tr><tr><th class='col'>Correct: </th>";
         for(var i=0; i<4; i++) {
             txt += "<td>";
             txt += (100*s.acc[i][1]).toFixed(1) + "%";

@@ -50,7 +50,15 @@
       <select id="list_category" data-native-menu="false"></select>
     </div>
     
-    <div id="list_pageSelect" class="ui-field-contain no-field-separator" data-role="controlgroup">
+    <div class="ui-field-contain no-field-separator" data-role="controlgroup">
+      <legend>Show events:</legend>
+      <select id="list_pageSelect" data-native-menu="false" multiple="multiple">
+        <option data-placeholder="true">Show events:</option>
+        <option value="stopwatch">stopwatch</option>
+        <option value="timer">timer</option>
+        <option value="counter">counter</option>
+        <option value="note">note</option>
+      </select>
     </div>
     
     <div class="ui-field-contain no-field-separator" data-role="controlgroup">

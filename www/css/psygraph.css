@@ -186,9 +186,6 @@ Add the .no-field-separator class to avoid that */
     margin: 1em 0em;
     padding: 0em;
 }
-fieldset.fileButtons {
-    border-width: 1px;
-}
 /*
 ==============================================================
 CSS for categories 

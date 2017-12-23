@@ -19,17 +19,21 @@
       <select id="home_category" data-native-menu="false"></select>
     </div>
     
-    <div class="ui-field-contain no-field-separator" id="userDiv">
-      <label for="user">Email:</label>
-      <input type="text" id="home_username" name="username" value=""/>
-    </div>
-    <div class="ui-field-contain no-field-separator" id="serverDiv">
-      <label for="server">Server:</label>
-      <input type="text" id="home_server" name="server" value="localhost" data-clear-btn="true" />
-    </div>
-    <div class="ui-field-contain no-field-separator" id="loginDiv">
-      <input type="button" id="login" name="login" value="Login" onClick="UI.home.loginUser(true);"/>
-    </div>
+    <fieldset id="home_loginControls" class="settings">
+      <legend>Online:</legend>
+      <div class="ui-field-contain no-field-separator" id="userDiv">
+        <label for="user">Email:</label>
+        <input type="text" id="home_username" name="username" value=""/>
+      </div>
+      <div class="ui-field-contain no-field-separator" id="serverDiv">
+        <label for="server">Server:</label>
+        <input type="text" id="home_server" name="server" value="localhost" data-clear-btn="true" />
+      </div>
+      <div class="ui-field-contain no-field-separator" id="loginDiv">
+        <label></label>
+        <input type="button" id="login" name="login" value="Login" onClick="UI.home.loginUser(true);"/>
+      </div>
+    </fieldset>
     
     <fieldset id="home_fileButtons" class="fileButtons">
       <legend>Manage files:</legend>

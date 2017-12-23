@@ -426,15 +426,15 @@ var pgBluetooth = {
         function disconnectCB() {
             pgBluetooth.activeDeviceHandle = null;
         }
-},
+    },
     
     getBluetoothData: function() {
         return pgBluetooth.data;
-},
+    },
 
     handleSuccess: function(error) {
         showLog();
-},
+    },
 
     handleError: function(error) {
         var msg = "";
@@ -482,7 +482,7 @@ var pgBluetooth = {
                 name = pgBluetooth.uuids[sid];
             return name;
         }
-},
+    },
 
     characteristicPicker: function(characteristics, cb) {
         if(characteristics.length==1) {
@@ -504,7 +504,7 @@ var pgBluetooth = {
             var val = $('#btCharacteristics').val();
             cb(val);
         }
-},
+    },
 
     uuids: {
         "0001": "SDP",
