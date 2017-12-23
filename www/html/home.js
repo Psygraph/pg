@@ -16,7 +16,7 @@ home.prototype.update = function(show) {
         this.beginLogin(cb.bind(this)); // the ONLY call to begin login.
     }
     else {
-        //this.status(pg.loggedIn);
+        this.status(pg.loggedIn);
     }
     if(show) {
         this.resize();
@@ -75,8 +75,16 @@ home.prototype.settings = function(data) {
             $("#serverDiv").hide();
         $("#home_server").val(data.server);
         $('#home_server').prop('readonly', pg.loggedIn);
-        
-        var loginString = pg.loggedIn ? "Logout" : "Login";
+
+        var loginString;
+        if(pg.loggedIn) {
+            loginString = "Logout";
+            $("#home_fileButtons").show();
+        }
+        else {
+            $("#home_fileButtons").hide();
+            loginString = "Login";
+        }
         $('#login').val(loginString).button("refresh");
 
         UI.settings.pageCreate();
@@ -254,63 +262,6 @@ home.prototype.loginUser = function(onSettingsPage) {
     }
 };
 
-home.prototype.status = function(onlineStatus) {
-    onlineStatus = typeof(onlineSatus)!="undefined" ? onlineStatus : pg.loggedIn; 
-    var txt = "<br/>";
-    txt += "<p class='banner'><img src='img/logo.png' height='108' width='108'></img></p>";
-    txt += "<br/><br/><br/>";
-    txt += '<div id="statistics"></div>';
-    if(onlineStatus) { // online
-        $(".loginButton").html("Logout");
-        $('#login').val("Logout").button("refresh");
-    } 
-    else {
-        $(".loginButton").html("Login");
-        $('#login').val("Login").button("refresh");
-    }
-    $("#home_status").html(txt);
-    computeStats.call(this);
-    //window.setTimeout(.bind(this), 200);
-    
-    function computeStats(){
-        var data = this.getPageData();
-        var txt = "";
-        var lastSync = "unknown.";
-        if(pg.lastSync)
-            lastSync = pgUtil.getDateString(pg.lastSync, false);
-        if(onlineStatus) { // online
-            txt += "<p><b>Online</b></p>";
-            txt += "<ul>";
-            txt += "<li><b>username</b>: "  +data.username+"</li>";
-            txt += "<li><b>server</b>: "    +this.getServerLink(data.server)+"</li>";
-            txt += "<li><b>Last sync</b>: " +lastSync +"</li>";
-            txt += "</ul>";
-        }
-        else {
-            //txt += "<p><b>Offline</b></p>";
-            //txt += "<ul>";
-            //txt += "<li><b>Last sync</b>: " +lastSync +"</li>";
-            //txt += "</ul>";
-        }
-        /*
-        txt += "<p><b>30 day history</b>:</p>";
-        txt += "<ul>";
-        var pages = [ pgUtil.deepCopy(pg.allEventPages), pgUtil.deepCopy(pg.pages)];
-        // perform an intersection
-        pages = pages.shift().filter(function(v) {
-                return pages.every(function(a) {
-                        return a.indexOf(v) !== -1;
-                    });
-            });
-        for(i=0; i<pages.length; i++) {
-            var page = pages[i];
-            txt += "<li><b>"+page+"</b>: "+UI[page].getSummary(page, pg.category()) +"</li>";
-        }
-        txt += "</ul>";
-        */
-        $("#statistics").html(txt);
-    }
-};
 
 home.prototype.getServerLink = function(server) {
     var serverURL = "http://" + pgUtil.extractDomain(server);
@@ -353,6 +304,83 @@ home.prototype.passwordCB = function(server, username, password, cert, callback)
     callback = typeof(callback)!="undefined" ? callback : function(){};
     PGEN.serverLogin(server, username, password, cert, 
                      this.serverLoginCB.bind(this, server, username, callback));
+};
+
+home.prototype.status = function(onlineStatus) {
+    onlineStatus = typeof(onlineSatus)!="undefined" ? onlineStatus : pg.loggedIn; 
+    var txt = "<br/>";
+    txt += "<p class='banner'><img src='img/logo.png' height='108' width='108'></img></p>";
+    txt += "<br/><br/><br/>";
+    txt += '<div id="statistics"></div>';
+    if(onlineStatus) { // online
+        $(".loginButton").html("Logout");
+        $('#login').val("Logout").button("refresh");
+    } 
+    else {
+        $(".loginButton").html("Login");
+        $('#login').val("Login").button("refresh");
+    }
+    $("#home_status").html(txt);
+    computeStats.call(this);
+    //window.setTimeout(.bind(this), 200);
+    
+    function computeStats(){
+        var data = this.getPageData();
+        var txt = "";
+        var lastSync = "unknown.";
+        if(pg.lastSync)
+            lastSync = pgUtil.getDateString(pg.lastSync, false);
+        var rows = 4;
+        var s = analyze(rows);
+        txt += "<p><table><tbody>";
+        txt += "<tr><th></th>";
+        for(var i=0; i<4; i++) {
+            txt += "<th>";
+            txt += formatDate(new Date(s.hist[i][0]));
+            txt += "</th>";
+        }
+        txt += "</tr><tr><th class='col'>Time:</th>";
+        for(var i=0; i<4; i++) {
+            txt += "<td>";
+            txt += s.hist[i][1].toFixed(2);
+            txt += "</td>";
+        }
+        txt += "</tr><tr><th class='col'>Correct:</th>";
+        for(var i=0; i<4; i++) {
+            txt += "<td>";
+            txt += (100*s.acc[i][1]).toFixed(1) + "%";
+            txt += "</td>";
+        }
+        txt += "</tr></tbody></table></p>";
+
+        if(onlineStatus) { // online
+            //txt += "<p><b>Online</b></p>";
+            txt += "<ul>";
+            txt += "<li><b>username</b>: "  +data.username+"</li>";
+            txt += "<li><b>server</b>: "    +this.getServerLink(data.server)+"</li>";
+            txt += "<li><b>Last sync</b>: " +lastSync +"</li>";
+            txt += "</ul>";
+        }
+        else {
+            //txt += "<p><b>Offline</b></p>";
+            //txt += "<ul>";
+            //txt += "<li><b>Last sync</b>: " +lastSync +"</li>";
+            //txt += "</ul>";
+        }
+        $("#statistics").html(txt);
+    }
+    function formatDate(date) {
+          var monthNames = [
+              "January", "February", "March",
+              "April", "May", "June", "July",
+              "August", "September", "October",
+              "November", "December"
+          ];
+          var day        = date.getDate();
+          var monthIndex = date.getMonth();
+          var year       = date.getFullYear();
+          return monthIndex+1+"/"+day;
+    }
 };
 
 home.prototype.serverLoginCB = function(server, username, callback, success) {
@@ -433,6 +461,68 @@ home.prototype.logEvent = function(type) {
         pg.addNewEvents(event, true);
     }
 };
+
+function analyze(rows) {
+    // Total time
+    var totalTime = [];
+    var events = pg.getEvents(pg.category());
+    for (var i=0; i<events.length; i++) {
+        var e = pgUtil.parseEvent(events[i]);
+        if(e && e.type=="interval") {
+            // floating-point hours
+            totalTime.push([e.start, e.duration / (60*60*1000.0)]);
+        }
+    }
+    // Correct count
+    var correctCount = [];
+    var events = pg.getEventsInPage("counter", pg.category());
+    for (var i=0; i<events.length; i++) {
+        var e = pgUtil.parseEvent(events[i]);
+        if(e.type=="reset") {
+            var val = (e.data.count == e.data.target) ? 1 : 0;
+            correctCount.push([e.start, val]);
+        }
+    }
+
+    var nextTime = pgUtil.getCurrentTime();
+    var interval = 7*24*60*60*1000;
+    var hist = aggregate(totalTime, nextTime, interval, "sum");
+    var acc  = aggregate(correctCount, nextTime, interval, "mean");
+    for(var i=0; i<rows; i++) {
+        var d = new Date(nextTime-i*interval);
+        if(hist.length <= i)
+            hist[i] = [d.getTime(), 0];
+        if(acc.length <= i)
+            acc[i] = [d.getTime(), 0];
+    }
+    return {hist: hist, acc: acc};
+    
+    function aggregate(points, endTime, interval, intervalMethod) {
+        var pts = [];
+        var nextTime = endTime - interval;
+        for(var i=0; i<points.length; ) {
+            var j   = 0.0;
+            var val = 0.0;
+            while(i<points.length && 
+                  points[i][0] > nextTime ) {
+                val += points[i][1];
+                j++;
+                i++;
+            }
+            if(j) {
+                if(intervalMethod=="mean") {
+                    val = val / j;
+                }
+                pts.push([nextTime+interval, val]);
+            }
+            else {
+                pts.push([nextTime+interval, val]);
+            }
+            nextTime -= interval;
+        }
+        return pts;
+    }
+}
 
 
 UI.home = new home();

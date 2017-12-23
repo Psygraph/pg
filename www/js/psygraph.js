@@ -122,7 +122,13 @@ function singleClick(ev) {
     if($('div#modal_page').length) {
         return true;
     }
-    var DELAY = 500;
+    var page = getPage();
+    // we only look for triple click on the about or counter pages.
+    if(! (page=="counter" ||
+          page=="about")) {
+        return true;
+    }
+    var DELAY = 400;
     mouse_clicks++;
     if(mouse_clicks == 1) {
         mouse_timer = setTimeout(function() {
@@ -137,7 +143,7 @@ function singleClick(ev) {
                 mouse_clicks = 0;
             }, DELAY);
     } 
-    else {       
+    else {
         clearTimeout(mouse_timer);
         showButtons(true);
         mouse_clicks = 0;
@@ -529,8 +535,7 @@ function gotoPage(newPage) {
     UI.window.currentPage = newPage;
     if(ONSEN) {
         //$(".page").hide();
-        //$("#"+newPage+"_page").show();
-        
+        //$("#"+newPage+"_page").show();        
         var opts = {
             'animation' : "slide"
         };
@@ -740,7 +745,7 @@ var PGEN = {
                     pg.copySettings(newPG);
             }
             PGEN.readEvents(callback);
-            updateNavbar();
+            //updateNavbar();
         }
     },
     // post the login event, get a new certificate
@@ -886,6 +891,9 @@ var PGEN = {
     synchronize: function (callback) {
         callback = (typeof(callback)=="undefined") ? (function fx(){}) : callback;
 
+        // Update the pg, do the callback
+        PGEN.writePG(pg, cb);
+        
         if(!pg.dirty())
             return;
         // update page, accel and location state
@@ -897,13 +905,10 @@ var PGEN = {
         UI.state.location = pgLocation.update(false);
         //UI.state.help     = UI['help'].update;
         pgFile.writeFile("com.psygraph.state", UI.state);
-        
-        PGEN.writeEvents(pg.events, pg.deletedEvents, moreSync);  // write the events locally
         //if(!quick) // Doing this on the settings pages will blow away any of the user's changes.
         //    resetPage();
-
-        // Update the pg, do the callback
-        PGEN.writePG(pg, cb);
+        
+        PGEN.writeEvents(pg.events, pg.deletedEvents, moreSync);  // write the events locally
         function cb() {
             UI.home.status();
             callback();
@@ -1245,13 +1250,16 @@ var PGEN = {
             var headT  = $("#simple_header_template").prop('content');
             var head   = $(headT.children[0]).clone();
             node.prepend(head[0]);
+            if(page == "dialog")
+                $(node).find(".leftMenuButton").hide();
             $(node).find(".rightMenuButton").hide();
             if(title=="Settings")
                 title = "Category Prefs";
         }
         else {
             // Add the sidenav
-            var nav    = getNavbar(page);
+            var navT  = $("#navmenu_template").prop('content');
+            var nav   = $(navT.children[0]).clone();
             node.prepend(nav[0]);
             var headT  = $("#header_template").prop('content');
             var head   = $(headT.children[0]).clone();
@@ -1274,7 +1282,7 @@ var PGEN = {
                     $(element).on('vclick', element.onclick).prop('onclick', "return false");
                 }
             });
-        updateNavbar();
+        //updateNavbar();
         $(node).trigger("create");
         pageInitFinished(page);
     }
@@ -1337,26 +1345,13 @@ function menu_action(action) {
     return true;
 }
 
-function getNavbar(page) {
-    var txt = "<div id='" +page+ "_sidenav' class='sidenav' style='width:0px'>";
-    txt += "<a href='' class='fast closebtn' onclick='slideNav(false)'>&times;</a>";
-    for(var i = 0; i< pg.allPages.length; i++){
-        var page = pg.allPages[i];
-        var title = pgUtil.titleCase(page);
-        txt += '<a class="fast '+page+'_navlink navlink" onclick="gotoPage(\''+page+'\');" >'+title+'</a>';
-    }
-    txt += "</div>";
-    var node = $.parseHTML(txt);
-    return node;
-}
-
-function updateNavbar() {
-    var mapnav = $(".sidenav .map_navlink");
-    if(pg.getUserDataValue("debug")) {
-        mapnav.show();
-    }
-    else {
-        mapnav.hide();
-    }
-}
+//function updateNavbar() {
+//    var mapnav = $(".sidenav .map_navlink");
+//    if(pg.getUserDataValue("debug")) {
+//        mapnav.show();
+//    }
+//    else {
+//        mapnav.hide();
+//    }
+//}
 

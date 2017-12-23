@@ -18,8 +18,6 @@ prefs.prototype.update = function(show, state) {
         pgBluetooth.stopScan(function(){});
     }
     else {
-        // call isConnected to verify device connection.
-        pgBluetooth.isConnected(function(foo){});
         var data = this.getPageData();
         // pages
         //var s = "";
@@ -35,11 +33,8 @@ prefs.prototype.update = function(show, state) {
         dispCategories.shift();   // remove "Uncateogrized"
 
         if(!this.initialized) {
-            if(!pg.getUserDataValue("debug")) {
+            if(pgUtil.isWebBrowser()) {
                 $("#BTDiv").hide();
-            }
-            else {
-                $("#BTDiv").show();
             }
             this.initialized = true;
         }
@@ -75,7 +70,6 @@ prefs.prototype.update = function(show, state) {
                 //{ id: 1, text: 'disabled option', disabled: true },
                 //{ id: 1, text: 'hi' }
                 //]};
-                //pass it to the query callback inside your Ajax callback:
             }
         };
         //if(!pgUtil.isWebBrowser())
@@ -105,11 +99,8 @@ prefs.prototype.update = function(show, state) {
             $("#wifiOnly").prop('checked', data.wifiOnly).checkboxradio("refresh");
         //$("#screenTaps").prop('checked', data.screenTaps).checkboxradio("refresh");
 	    this.resize();
-        // start bluetooth scanning
-        if(pg.getUserDataValue("debug") ) {
-            // we need to get a location to turn on location permissions, which are required on Android.
-            pgLocation.getCurrentLocation(posCB);
-        }
+        // Get a location before starting a bluetooth scan
+        pgLocation.getCurrentLocation(posCB);
     }
     function posCB(loc) {
         showLog("Bluetooth scan starting...");
@@ -124,7 +115,7 @@ prefs.prototype.resize = function() {
 };
 
 prefs.prototype.btConnect = function() {
-    var name = pgBluetooth.getActiveDeviceName();
+    var name = pgBluetooth.activeDeviceName();
     var btDev = $("#BTDevices").val();
     if(name!="none") {
         showLog("Bluetooth disconnecting from device: " + btDev);
@@ -133,11 +124,14 @@ prefs.prototype.btConnect = function() {
     else {
         showLog("Bluetooth connecting to device: " + btDev);
     }
-    pgBluetooth.stopScan(cb1);
-    function cb1() {
-        pgBluetooth.setActiveDeviceName(btDev, cb2);
+    pgBluetooth.stopScan(cb);
+    function cb() {
+        if(btDev=="none")
+            pgBluetooth.disconnect(finish);
+        else
+            pgBluetooth.connect(btDev, finish);
     }
-    function cb2() {
+    function finish(yn) {
         UI.prefs.btSetCurrentDevice();
     }
 };
@@ -173,16 +167,12 @@ prefs.prototype.btCallback = function() {
 };
 
 prefs.prototype.btSetCurrentDevice = function() {
-    var name = pgBluetooth.getActiveDeviceName();
+    var name = pgBluetooth.activeDeviceName();
     showLog("Bluetooth connected to device: " + name);
     var label = "Connect to device:";
     if(name != "none")
         label = "Disconnect from '"+name+"'";
     $('#BTConnect').val(label).button("refresh");
-    //var dev = $("#BTCurrentDevice");
-    //dev.val(name);
-    //dev.trigger("change");
-    //dev.prop("disabled", true);
 };
 
 prefs.prototype.getPageData = function() {
@@ -213,17 +203,23 @@ prefs.prototype.submitSettings = function(doClose) {
         'wifiOnly'    : data.wifiOnly,
         'screenTaps'  : false //$("#screenTaps")[0].checked ? true : false,
     };
-
+    if(this.userData.debug) {
+        $(".debugMenu").hide();
+    }
+    else {
+        $(".debugMenu").show();
+    }
+    
     //var pages = $("#new_pages").val();
     //pages.unshift("home");
-    var pages = pg.pages;
-    var i = pages.indexOf("map");
-    if(i != -1) {
-        pages.splice(i, 1);
-    }
-    if(this.userData.debug) {
-        pages.push("map");
-    }
+    //var pages = pg.pages.slice(0);
+    //var i = pages.indexOf("map");
+    //if(i != -1) {
+    //    pages.splice(i, 1);
+    //}
+    //if(this.userData.debug) {
+    //    pages.push("map");
+    //}
     if(!pgUtil.isWebBrowser())
         this.userData.wifiOnly = $("#wifiOnly")[0].checked ? true : false;
 
@@ -231,7 +227,7 @@ prefs.prototype.submitSettings = function(doClose) {
         this.initialized = false;
     // no-op if settings have not changed
     if(pgUtil.equal(data, this.userData) &&
-       pg.equal(pg.pages, pages)         &&
+       //pg.equal(pg.pages, pages)         &&
        pg.equal(pg.categories, cateogries)) {
         if(doClose)
             gotoPage(pg.page());
@@ -242,7 +238,7 @@ prefs.prototype.submitSettings = function(doClose) {
     this.localPG.copy(pg, false);
     this.localPG.setUserData(this.userData);
     this.localPG.setCategories(categories);
-    this.localPG.setPages(pages);
+    //this.localPG.setPages(pages);
 
     if(pg.loggedIn) {
         PGEN.updateSettings( this.localPG, this.settingsUpdateComplete.bind(this,doClose) );
@@ -255,12 +251,12 @@ prefs.prototype.submitSettings = function(doClose) {
 prefs.prototype.settingsUpdateComplete = function(doClose, success) {
     var page     = pg.page();
     var category = pg.category();
-    var pagesEqual = pgUtil.equal(this.localPG.pages, pg.pages);
+    //var pagesEqual = pgUtil.equal(this.localPG.pages, pg.pages);
     var categoriesEqual = pgUtil.equal(this.localPG.categories, pg.categories);
     pg.copy(this.localPG, false);
     PGEN.writePG(pg);
-    if(!pagesEqual)
-        updateNavbar();
+    //if(!pagesEqual)
+    //    updateNavbar();
     
     // show an alert if changing the server settings was not successful.
     if(! success) {

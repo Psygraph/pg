@@ -186,7 +186,9 @@ Add the .no-field-separator class to avoid that */
     margin: 1em 0em;
     padding: 0em;
 }
-
+fieldset.fileButtons {
+    border-width: 1px;
+}
 /*
 ==============================================================
 CSS for categories 
@@ -365,8 +367,9 @@ div.lever_container {
     font-size:   36px;
     position:    absolute;
     top:         50%;
+    left:        50%;
     margin-top:  -0.5em;
-    margin-left: -0.75em;
+    margin-left: -0.5em;
     height:      1em;
     width:       1em;
     line-height: 1;
@@ -531,6 +534,22 @@ div#levers {
 input#passw { /* this is in a dialog, and appears small otherwise. */
     border-width: 1px;
     padding: 6px;
+}
+
+#statistics table {
+    border-collapse: collapse;
+}
+#statistics th {
+    border: 0px;
+    text-align: center;
+}
+#statistics th.col {
+    border: 0px;
+    text-align: right;
+}
+#statistics td {
+    border: 1px solid black;
+    text-align: center; 
 }
 
 /* STOPWATCH, TIMER

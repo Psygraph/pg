@@ -48,7 +48,8 @@ stopwatch.prototype.update = function(show, state) {
 stopwatch.prototype.settings = function() {
     var data = this.getPageData();
     if(arguments.length) {
-        $("#stopwatch_location").prop("checked", data['watchLocation']).checkboxradio('refresh');
+        $("#stopwatch_location").prop("checked", data.watchLocation).checkboxradio('refresh');
+        $("#stopwatch_continuousLocation").prop("checked", data.continuousLocation).checkboxradio('refresh');
         if(pgUtil.isWebBrowser()) {
             $("#stopwatch_acceleration").parent().hide();
             $("#stopwatch_orientation").parent().hide();
@@ -67,11 +68,11 @@ stopwatch.prototype.settings = function() {
     }
     else {
         data.watchLocation  = $("#stopwatch_location")[0].checked;
+        data.continuousLocation  = $("#stopwatch_continuousLocation")[0].checked;
         if(!pgUtil.isWebBrowser()) {
             data.watchAcceleration = $("#stopwatch_acceleration")[0].checked;
             data.watchOrientation  = $("#stopwatch_orientation")[0].checked;
-            if(pg.getUserDataValue("debug"))
-                data.watchBluetooth    = $("#stopwatch_bluetooth")[0].checked;
+            data.watchBluetooth    = $("#stopwatch_bluetooth")[0].checked;
         }
         data.updateInterval = pgUtil.getMSFromString($("#stopwatch_updateInterval")[0].value);
         data.showGraph  = $("#stopwatch_showGraph")[0].checked;
@@ -89,6 +90,8 @@ stopwatch.prototype.getPageData = function() {
     var data = pg.getPageData("stopwatch", pg.category());
     if(! ('watchLocation' in data))
         data.watchLocation = false;
+    if(! ('continuousLocation' in data))
+        data.continuousLocation = false;
     if(! ('watchAcceleration' in data))
         data.watchAcceleration = true;
     if(! ('watchBluetooth' in data))
@@ -135,8 +138,11 @@ stopwatch.prototype.startStop = function() {
             if(data.watchAcceleration || data.watchOrientation) {
                 pgAccel.start(data);
             }
-            if(data.watchBluetooth && pg.getUserDataValue("debug")) {
+            if(data.watchBluetooth) {
                 pgBluetooth.start(data);
+            }
+            if(data.watchLocation && data.continuousLocation) {
+                UI.map.startMap();
             }
         }
         this.startTime[pg.category()] = time;
@@ -161,7 +167,7 @@ stopwatch.prototype.startStop = function() {
                     e.data.orientation = orient;
                 pgAccel.stop();
             }
-            if(data.watchBluetooth && pg.getUserDataValue("debug")) {
+            if(data.watchBluetooth) {
                 var bt = pgBluetooth.getBluetoothData();
                 if(bt.length)
                     e.data.bluetooth = bt;
@@ -169,17 +175,27 @@ stopwatch.prototype.startStop = function() {
             }
         }
         if(data.watchLocation) {
-            //var t = this.getElapsedStopwatch();
-            //this.clock.setElapsedMS(t.duration);
-            pgLocation.getCurrentLocation(posCB.bind(this,e));
+            if(data.continuousLocation)
+                UI.map.stopMap(mapCB.bind(this,e));
+            else
+                pgLocation.getCurrentLocation(posCB.bind(this,e));
         }
         else {
-            posCB.call(this, e, []);
+            pg.addNewEvents(e, true);
         }
+        var t = this.getElapsedStopwatch();
+        this.clock.setElapsedMS(t.duration);
     }
     syncSoon();
     return false;
 
+    function mapCB(e, eMap) {
+        if(eMap.data) {
+            e.data.location   = eMap.data.location;
+            e.data.pathLength = eMap.data.pathLength;
+        }
+        pg.addNewEvents(e, true);
+    }
     function posCB(e, path) {
         if(typeof(path)=="string") {
             // xxx handle error
@@ -192,8 +208,6 @@ stopwatch.prototype.startStop = function() {
             e.data.location = [[pgUtil.getCurrentTime(), lat, lng, alt]];
         }
         pg.addNewEvents(e, true);
-        var t = this.getElapsedStopwatch();
-        this.clock.setElapsedMS(t.duration);
     }
 };
 
@@ -283,7 +297,7 @@ stopwatch.prototype.updateGraph = function() {
             lastTime = item.x;
     }
     // add bluetooth and accelerometer to the dataset
-    if(data.watchBluetooth && pg.getUserDataValue("debug")) {
+    if(data.watchBluetooth) {
         var bt = pgBluetooth.getBluetoothData();
         var pts = [];
         for(var i=bt.length-1; i>=0; i--) {

@@ -14,6 +14,8 @@ function map() {
     this.locationText = null;
     this.markerButton = null;
     this.startButton  = null;
+
+    pgLocation.setCallback(this.updateLocation.bind(this));
 }
 
 map.prototype = Object.create(page.prototype);
@@ -21,23 +23,21 @@ map.prototype.constructor = map;
 
 map.prototype.update = function(show, state) {
     if(!show) {
-        pgLocation.setCallback(null);
         return {startTime: this.startTime, lastPoint: this.lastPoint};
     }
     if(typeof(state)!="undefined" && state) {
         this.startTime = state.startTime;
         this.lastPoint = state.lastPoint;
     }
-    pgLocation.setCallback(this.updateLocation.bind(this));
     if(!this.map) {
         this.createMap();
         this.resize();
     }
-    if(this.startTime) { // we are running
-        this.startButton.setState('stop');
-    } else {
-        this.startButton.setState('start');
-    }
+    //if(this.startTime) { // we are running
+    //    this.startButton.setState('stop');
+    //} else {
+    //    this.startButton.setState('start');
+    //}
 
     pgLocation.getCurrentLocation(this.updateLocation.bind(this));
     var data = this.getPageData();
@@ -151,31 +151,32 @@ map.prototype.updateLocation = function(path) {
         $("#mapid").html(html);
     }
     /* The user can click the marker for this info.
-    else {
-        if(!hasData) { // this will be an error string
-            html = "<p>" +path +"</p>";
-        }
-        else {
-            html = "<p>" +html +"</p>";
-        }
-        this.locationText._container.innerHTML = html;
-    }
+       else {
+       if(!hasData) { // this will be an error string
+       html = "<p>" +path +"</p>";
+       }
+       else {
+       html = "<p>" +html +"</p>";
+       }
+       this.locationText._container.innerHTML = html;
+       }
     */
 };
 
 map.prototype.onMapClick = function(e) {
-    if(!this.dblClick || 
-       this.dblClick.time+800 < pgUtil.getCurrentTime())
-        UI.map.closePopups();
+    //if(!this.dblClick || 
+    //   this.dblClick.time+800 < pgUtil.getCurrentTime())
+    //    UI.map.closePopups();
     //return false;
 };
 map.prototype.onMapDblClick = function(e) {
-    this.dblClick = {'ll': e.latlng, 'time': pgUtil.getCurrentTime()};
-    var txt = "<a href='' onclick='UI.map.markPoint(UI.map.dblClick.ll); return false;'>Create new marker</a>";
-    this.popup
-        .setLatLng(e.latlng)
-        .setContent(txt)
-        .openOn(this.map);
+    this.center(false);
+    //this.dblClick = {'ll': e.latlng, 'time': pgUtil.getCurrentTime()};
+    //var txt = "<a href='' onclick='UI.map.markPoint(UI.map.dblClick.ll); return false;'>Create new marker</a>";
+    //this.popup
+    //.setLatLng(e.latlng)
+    //.setContent(txt)
+    //.openOn(this.map);
     //return false;
 };
 
@@ -216,7 +217,7 @@ map.prototype.center = function(doPopup) {
     //    UI.map.map.panTo(this.lastPoint);
     //}
     //else
-        pgLocation.getCurrentLocation(locationCB.bind(this, doPopup));
+    pgLocation.getCurrentLocation(locationCB.bind(this, doPopup));
     return false;
     
     function locationCB(doPopup, path) {
@@ -243,44 +244,56 @@ map.prototype.center = function(doPopup) {
     }
 };
 
-map.prototype.startStop = function() {
+map.prototype.startMap = function() {
     var now = pgUtil.getCurrentTime();
-    if(this.startTime==0){
-        // we *were* stopped
-        var data = this.getPageData();
-        var opts = {
-            'powerSaving': data.powerSaving,
-            'accuracy':    data.accuracy
-        };
-        pgLocation.start(opts);
-        this.startTime = now;
-        this.startButton.setState('stop');
-    }
-    else {
-        var len = pgLocation.stop();
-        this.startButton.setState('start');
-        var e = {
-            start:    this.startTime,
-            duration: now - this.startTime,
-            category: pg.category(),
-            page:     "map",
-            type:     "interval"
-        };
-        this.startTime = 0;
-        pgLocation.getLocationData(cb.bind(this,e));
-    }
-    syncSoon();
-    return false;
-    
+    var data = this.getPageData();
+    var opts = {
+        'powerSaving': data.powerSaving,
+        'accuracy':    data.accuracy
+    };
+    pgLocation.start(opts);
+    UI.map.startTime = now;
+    //this.startButton.setState('stop');
+};
+
+map.prototype.stopMap = function(callback) {
+    var now = pgUtil.getCurrentTime();
+    var len = pgLocation.stop();
+    //this.startButton.setState('start');
+    var e = {
+        start:    this.startTime,
+        duration: now - this.startTime,
+        category: pg.category(),
+        page:     "stopwatch",
+        type:     "interval",
+        data:     null
+    };
+    this.startTime = 0;
+    pgLocation.getLocationData(cb.bind(this,e));
     function cb(e, path) {
         if(path.length) {
             e.data = {"location":   path,
                       "pathLength": pgLocation.getPathLength(path)
             };
-            pg.addNewEvents(e, true);
-            // refresh the page
-            resetPage();
         }
+        callback(e);
+        // refresh the page
+        resetPage();
+        syncSoon();
+    }
+};
+
+map.prototype.startStop = function() {
+    if(this.startTime==0){
+        this.startMap();
+    }
+    else {
+        this.stopMap(callback);
+    }
+    return false;
+    function callback(e) {
+        if(e.data)
+            pg.addNewEvents(e, true);
     }
 };
 
@@ -303,56 +316,56 @@ map.prototype.createMap = function() {
     this.map.on('click', this.onMapClick.bind(this));
     this.addMarkers(data);
     this.addLines(data);
-    this.createButtons();
+    //this.createButtons();
 };
 
 map.prototype.createButtons = function() {
     var customControl = L.Control.extend({
-        options: {
-            position: 'topleft',
-            callback: null,
-            imgSrc:   ''
-        },
-        onAdd: function (map) {
-            var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
-            //container.style.backgroundColor = 'white';
-            container.style.backgroundImage = this.options.imgSrc;
-            container.style.backgroundSize = "128px 128px";
-            container.style.width  = '128px';
-            container.style.height = '128px';
-            container.onclick = function(){return this.options.callback();}.bind(this);
-            var image = L.DomUtil.create('img', 'leaflet-buttons-control-img', container);
-            image.setAttribute('src', this.options.imgSrc);
-            image.setAttribute('height', '100%');
-            image.setAttribute('width', '100%');
-            return container;
-        },
-        setState: function(state) {
-            if(state=="start")
-                this._container.children[0].setAttribute('src', 'img/start.png');
-            else
-                this._container.children[0].setAttribute('src', 'img/stop.png');
-        }
-    });
+            options: {
+                position: 'topleft',
+                callback: null,
+                imgSrc:   ''
+            },
+            onAdd: function (map) {
+                var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+                //container.style.backgroundColor = 'white';
+                container.style.backgroundImage = this.options.imgSrc;
+                container.style.backgroundSize = "128px 128px";
+                container.style.width  = '128px';
+                container.style.height = '128px';
+                container.onclick = function(){return this.options.callback();}.bind(this);
+                var image = L.DomUtil.create('img', 'leaflet-buttons-control-img', container);
+                image.setAttribute('src', this.options.imgSrc);
+                image.setAttribute('height', '100%');
+                image.setAttribute('width', '100%');
+                return container;
+            },
+            setState: function(state) {
+                if(state=="start")
+                    this._container.children[0].setAttribute('src', 'img/start.png');
+                else
+                    this._container.children[0].setAttribute('src', 'img/stop.png');
+            }
+        });
     textControl = L.Control.extend({
-        options: {
-            position: 'bottomleft',
-            callback: null
-        },
-        onAdd: function (map) {
-            var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
-            //container.style.backgroundColor = 'white';
-            container.style.width     = 'auto';
-            container.style.height    = '12pt';
-            container.style.padding   = '2px';
-            container.style.textAlign = 'left';
-            return container;
-        }
-    });
-    this.markerButton = new customControl({position: 'topleft', callback: UI.map.center.bind(this, false), imgSrc: 'img/mark.png'});
-    this.map.addControl(this.markerButton);
-    this.startButton = new customControl({position: 'topright', callback: UI.map.startStop.bind(this), imgSrc: 'img/start.png'});
-    this.map.addControl(this.startButton);
+            options: {
+                position: 'bottomleft',
+                callback: null
+            },
+            onAdd: function (map) {
+                var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+                //container.style.backgroundColor = 'white';
+                container.style.width     = 'auto';
+                container.style.height    = '12pt';
+                container.style.padding   = '2px';
+                container.style.textAlign = 'left';
+                return container;
+            }
+        });
+    //this.markerButton = new customControl({position: 'topleft', callback: UI.map.center.bind(this, false), imgSrc: 'img/mark.png'});
+    //this.map.addControl(this.markerButton);
+    //this.startButton = new customControl({position: 'topright', callback: UI.map.startStop.bind(this), imgSrc: 'img/start.png'});
+    //this.map.addControl(this.startButton);
     L.control.scale().addTo(this.map);
     this.locationText = new textControl({});
     this.map.addControl(this.locationText);
@@ -391,38 +404,38 @@ map.prototype.addTileLayer = function(data) {
 }
 
 
-map.prototype.closePopups = function() {
-    /*
-    for(var i=0; i<UI.map.marker.length; i++) {
-        try {
-            UI.map.marker[i].closePopup();
-        }
-        catch(err) {}
-    }
-    */
-    UI.map.map.closePopup();
-};
+    map.prototype.closePopups = function() {
+        /*
+          for(var i=0; i<UI.map.marker.length; i++) {
+          try {
+          UI.map.marker[i].closePopup();
+          }
+          catch(err) {}
+          }
+        */
+        UI.map.map.closePopup();
+    };
 
 map.prototype.setMarkerName = function(id) {
     this.closePopups();
     // display a textinput popup to gather the marker name.
     var event    = pg.getEventFromID(id);
     var origName = event[E_DATA].title;
-    var pos      = event[E_DATA].location;
+    var pos      = event[E_DATA].location[0];
     var latLng   = pos[1] + ", " + pos[2];
     var text =     "<div class='ui-field-contain no-field-separator'>"+
-        "<label for='markerPos'>Location:</label>" +
-        "<input type='text' id='markerPos' name='markerPos' value='"+latLng+"'/>"+
-        "</div>"+
-        "<div class='ui-field-contain no-field-separator'>"+
-        "<label for='markerName'>Name:</label>" +
-        "<input type='text' id='markerName' name='markerName' value='"+origName+"' data-clear-btn='true' />"+
-        "</div>";
+    "<label for='markerPos'>Location:</label>" +
+    "<input type='text' id='markerPos' name='markerPos' value='"+latLng+"'/>"+
+    "</div>"+
+    "<div class='ui-field-contain no-field-separator'>"+
+    "<label for='markerName'>Name:</label>" +
+    "<input type='text' id='markerName' name='markerName' value='"+origName+"' data-clear-btn='true' />"+
+    "</div>";
 
     showDialog({title: origName, 'true': "OK", 'false': "Cancel", 'other': "Delete"},
                text,
                cb.bind(this)
-              );
+    );
 
     function cb(val) {
         if(val) {
@@ -452,7 +465,7 @@ map.prototype.showMarkerText = function(id) {
     showDialog({title: title, true: "OK", false: "Cancel"},
                text,
                cb.bind(this)
-              );
+    );
     function cb(clickedOK) {
         resetPage();
     }
@@ -477,7 +490,7 @@ map.prototype.addMarkers = function(data) {
     for (var i=0; i<events.length; i++) {
         var e = pgUtil.parseEvent(events[i]);
         if(e &&
-           (e.page=="note" || (e.page=="map" && e.type=="marker")) &&
+           (e.page=="note" || e.page=="stopwatch") &&
            typeof(e.data.location)!="undefined" ) {
             addMarker.call(this, markerIndex++, e);
         }

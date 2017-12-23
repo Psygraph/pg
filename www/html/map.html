@@ -21,16 +21,16 @@
       <select id="map_category" data-native-menu="false"></select>
     </div>
     
-    <div class='ui-field-contain no-field-separator'>
-      <label for='map_provider'>Data provider:</label>
-      <select id='map_provider' value='Data provider' title='Data provider' data-native-menu='false'>
-        <option value='OSM'>Open Street Map</option>
-        <option value='MapBox'>MapBox</option>
-        <option value='ArcGIS'>ArcGIS</option>
+    <div class="ui-field-contain no-field-separator">
+      <label for="map_provider">Data provider:</label>
+      <select id="map_provider" value="Data provider" title="Data provider" data-native-menu="false">
+        <option value="OSM">Open Street Map</option>
+        <option value="MapBox">MapBox</option>
+        <option value="ArcGIS">ArcGIS</option>
       </select>
     </div>
     
-    <div class='ui-field-contain no-field-separator' data-role='controlgroup'>
+    <div class="ui-field-contain no-field-separator" data-role="controlgroup">
       <legend>Display all:</legend>
       <label for="map_showMarkers">markers</label>
       <input type="checkbox" id="map_showMarkers"></input>
@@ -38,14 +38,14 @@
       <input type="checkbox" id="map_showPaths"></input>
     </div>
     
-    <div class='ui-field-contain no-field-separator' data-role='controlgroup'>
+    <div class="ui-field-contain no-field-separator" data-role="controlgroup">
       <legend>Power saving:</legend>
       <label for="map_powerSaving">powerSaving</label>
       <input type="checkbox" id="map_powerSaving"></input>
     </div>
-    <div class='ui-field-contain no-field-separator'>
-      <label for='map_accuracy'>Accuracy:</label>
-      <input type='range' name='map_accuracy' id='map_accuracy' min='0' max='10' step='1'></input>
+    <div class="ui-field-contain no-field-separator">
+      <label for="map_accuracy">Accuracy:</label>
+      <input type="range" name="map_accuracy" id="map_accuracy" min="0" max="10" step="1"></input>
     </div>
 
     <div data-role="fieldcontain">
@@ -57,14 +57,14 @@
   </div>
   
   <div id="map_help" class="help content">
-    <strong>Map</strong>
-    <p>The <strong>Map</strong> tool lets you gather GPS data, and is available only if debugging is turned on.  Pressing the round button allows you to start or stop gathering continuous location (GPS) data. Pressing the pin icon centers the map at the current location. Map markers can be created by clicking on the current location icon (the Sierpinsky triangle), or double-clicking anywhere on the map.</p>
+    <p><strong>Map</strong></p>
+    <p>The <strong>Map</strong> tool lets you view the location of your stopwatch and note events (if you have selected to save location information with those events). You drag and zoom the map by swiping and pinching, and you center the map by double clicking.</p>
     <p>The settings allow you to:
     <ul>
       <li>Select the data provider used for map imagery.</li>
-      <li>Display all markers or all paths.</li>
+      <li>Display all markers (locations) and paths (continuous locations).</li>
       <li>Select power saving mode, which governs background location updates.</li>
-      <li>Set the desired accuracy (10 is the most accurate).</li>
+      <li>Set the accuracy (10 is the most accurate).</li>
     </ul>
     </p>
     <br/>

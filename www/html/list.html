@@ -28,12 +28,13 @@
     <div data-role="popup" id="list_select">
       <ul data-role="listview" data-inset="true" id="list_eventSelect">
         <li data-role="list-divider"><i>Select events</i></li>
-        <li data-icon="false"><a href="" onclick="return UI.list.selectEvents('all');">Select all</a></li>
-        <li data-icon="false"><a href="" onclick="return UI.list.selectEvents('none');">Select none</a></li>
-        <li data-icon="false"><a href="" onclick="return UI.list.selectEvents('tool:stopwatch');">stopwatch</a></li>
-        <li data-icon="false"><a href="" onclick="return UI.list.selectEvents('tool:timer');">timer</a></li>
-        <li data-icon="false"><a href="" onclick="return UI.list.selectEvents('tool:counter');">counter</a></li>
-        <li data-icon="false"><a href="" onclick="return UI.list.selectEvents('tool:note');">note</a></li>
+        <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('all');">Select all</a></li>
+        <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('none');">Select none</a></li>
+        <li data-icon="false"><a href="" class="debugMenu" onclick="return UI.list.selectEvents('tool:home');">home</a></li>
+        <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('tool:stopwatch');">stopwatch</a></li>
+        <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('tool:timer');">timer</a></li>
+        <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('tool:counter');">counter</a></li>
+        <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('tool:note');">note</a></li>
       </ul>
     </div>
     <div data-role="popup" id="list_action">
@@ -72,10 +73,10 @@
   </div>
   
   <div id="list_help" class="help content">
-    <strong>List</strong>
+    <p><strong>List</strong></p>
     <p>The <strong>List</strong> tool shows all of the events in the current category. You select events by clicking on them individually or by using the <i>Select Events...</i> button (selected events are displayed on the graph page). Selected events can be deleted or changed to a different category with the <i>Select Action...</i> button.</p>
     <p>The settings allow you to filter the displayed events by the tool that created them, and choose which columns of data to display for each event.</p>
-    <br/>
+    <br></br>
     <template>
     <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/list.png" alt="list" width="300" />  
     <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/list_settings.png" alt="list_settings" width="300" />

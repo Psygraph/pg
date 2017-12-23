@@ -111,7 +111,7 @@ list.prototype.settings = function() {
         var data = this.getPageData();
         var eventPages = pgUtil.deepCopy(pg.allEventPages);
         if(pg.getUserDataValue("debug"))
-            eventPages.push("home","map");
+            eventPages.push("home");
 
         var s = pgUtil.selectPages("list_pages", "Show events from:", eventPages, data.pageFilter);
         $("#list_pageSelect").html(s);

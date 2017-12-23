@@ -26,7 +26,7 @@
     -->
         <div id="BTDiv" class="ui-field-contain no-field-separator"> 
           <div class="leftFloat">
-            <input type="button" id="BTConnect" onClick="UI.prefs.btConnect()" class="btn fast" value="Connect to Device" title="Connect" data-inline="true"/></input>                      
+            <input type="button" id="BTConnect" onclick="UI.prefs.btConnect(); return false;" class="btn fast" value="Connect to Device" title="Connect" data-inline="true"/></input>                      
           </div>
           <div class="">
             <select id="BTDevices" value="none" title="Bluetooth Device" data-native-menu="false" onchange="">
@@ -35,17 +35,24 @@
           </div>
         </div>
         
-        <label for="debug">Turn on debugging and error reporting.</label>
+        <label for="debug">Turn on error logging</label>
         <input type="checkbox" name="debug" id="debug"></input>
-
-        <label for="wifiOnly">Upload files using WIFI only.</label>
-        <input type="checkbox" name="wifiOnly" id="wifiOnly"></input>
         <!--
         <label for="screenTaps">Allow screen taps to press buttons.</label>
         <input type="checkbox" name="screenTaps" id="screenTaps"></input>
         -->
         <br/>
       </div>
+
+    <fieldset id="prefs_fileButtons" class="fileButtons">
+      <legend>Manage files:</legend>
+        <!--input type="button" data-inline="true"  class="prefs_button" onclick="return PGEN.selectAction('deleteEvents');" value="Remove events"></input-->
+        <input type="button" data-inline="true"  class="prefs_button" onclick="return PGEN.selectAction('deleteSettings');" value="Remove settings"></input>
+        <input type="button" data-inline="true"  class="prefs_button" onclick="return PGEN.selectAction('deleteEverything');" value="Remove all"></input>
+
+        <label for="wifiOnly">Upload files using WIFI only.</label>
+        <input type="checkbox" name="wifiOnly" id="wifiOnly"></input>
+      </fieldset>
       
       <div data-role="fieldcontain" id="settingButtons">
 	    <input type="button" id="cancelPrefs" onClick="gotoPage(pg.page()); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"></input>

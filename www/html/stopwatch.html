@@ -45,6 +45,12 @@
       <label for="stopwatch_bluetooth">Bluetooth</label>
       <input type="checkbox" id="stopwatch_bluetooth" />
     </div>
+
+    <div data-role="control-group">
+      <label for="stopwatch_continuousLocation">Continuous Location</label>
+      <input type="checkbox" id="stopwatch_continuousLocation" />
+    </div>
+    
     <div class="ui-field-contain no-field-separator">
       <label for="stopwatch_updateInterval">Update interval (s):</label>
       <input type="text" class="settings" id="stopwatch_updateInterval" value="" />
@@ -61,11 +67,12 @@
   </div>
 
   <div id="stopwatch_help" class="help content">
-    <strong>Stopwatch</strong>
+    <p><strong>Stopwatch</strong></p>
     <p>The <strong>Stopwatch</strong> tool records your meditation sessions or other activities. The reset button (on the left) and start/stop button (on the right) allow you to reset, start, and stop the clock.</p>
     <p>The settings let you:
     <ul>
-      <li>Collect data along with the event (e.g. from your phone or a Bluetooth device).</li>
+      <li>Collect various data along with the event (from your phone or a Bluetooth device).</li>
+      <li>Specify that location data should be gathered continuously.</li>
       <li>Specify the data sampling rate.</li>
       <li>Show or hide the real-time graph.</li>
     </ul>

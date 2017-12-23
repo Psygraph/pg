@@ -105,11 +105,12 @@
               <li data-icon="comment"><a href="" onclick="return menu_action('about');" class="aboutButton" >About</a></li>
               <li data-icon="gear"><a href="" onclick="return menu_action('prefs');" class="prefsButton" >Prefs</a></li>
               <li data-icon="home"><a href="" class="loginButton" onclick="return menu_action('login');">Login</a></li>
-              <li data-icon="alert"><a href="" class="eventButton" onclick="return menu_action('event');">Files</a></li>
+              <!--li data-icon="alert"><a href="" class="eventButton" onclick="return menu_action('event');">Files</a></li-->
               <li data-icon="info"><a href="" onclick="return menu_action('help');" id="HelpButton">Help</a></li>
             </ul>
           </div>
 
+          <!--
           <div data-role="popup" class="eventPopupMenu" data-theme="a">
             <ul data-role="listview" data-inset="true" class="ui-listview-outer" >
               <li data-role="list-divider"><i>Manage Files...</i></li>
@@ -120,7 +121,7 @@
               <li data-icon="false"><a href="" onclick="return PGEN.selectAction('deleteEverything');">Delete everything</a></li>
             </ul>
           </div>
-          
+          -->
           <div id="navbar" class="navbar" data-role="navbar" data-position="fixed" data-tap-toggle="false" data-theme="b">
             <ul>
               <li class="navbar_button"><a class="pg_page_title navbar_link_left navbar_link" data-role="button" data-theme="b" href="" onclick="gotoPageMain()" data-icon="home" data-iconpos="left" >PAGE</a></li>
@@ -143,7 +144,7 @@
 
       <template id="subheader_template">
         <div class="subheader" data-role="control-group">
-          <div class="category">Loading...</div>
+          <div class="category"></div>
         </div>
       </template>
       
@@ -161,8 +162,8 @@
               <input type="image"  class="button lever_button fast" title="Left" 
                      onclick="lever('left'); return false;" src="img/reset.png" alt="left"></input>
             </div>
-            <button id="buttons_close" class="fast ui-btn-inline ui-icon-delete ui-btn-icon-notext" onclick="showButtons(false); return false;"></button>
-            <div id="lever_right" class="lever_container fast" onclick="lever('right'); return false;" >
+            <button id="buttons_close" class="fast ui-btn ui-icon-delete ui-btn-icon-notext ui-corner-all" onclick="showButtons(false); return false;"></button>
+             <div id="lever_right" class="lever_container fast" onclick="lever('right'); return false;" >
               <input type="image"  class="button lever_button fast" title="Right" 
                      onclick="lever('right'); return false;" src="img/start.png" alt="right"></input>
             </div>
@@ -170,6 +171,24 @@
         </div>
       </template>
       
+      <template id="navmenu_template">
+        <div class="sidenav" style="width:0px">
+          <a href="" class="fast closebtn" onclick="slideNav(false)">&times;</a>
+          <br/>
+          <a class="fast home_navlink navlink" onclick="gotoPage('home')" >home</a>
+          <hr/>
+          <a class="fast stopwatch_navlink navlink" onclick="gotoPage('stopwatch')" >stopwatch</a>
+          <a class="fast timer_navlink navlink" onclick="gotoPage('timer')" >timer</a>
+          <a class="fast counter_navlink navlink" onclick="gotoPage('counter')" >counter</a>
+          <a class="fast note_navlink navlink" onclick="gotoPage('note')" >note</a>
+          <hr/>
+          <a class="fast list_navlink navlink" onclick="gotoPage('list')" >list</a>
+          <a class="fast graph_navlink navlink" onclick="gotoPage('graph')" >graph</a>
+          <a class="fast map_navlink navlink" onclick="gotoPage('map')" >map</a>
+        </div>
+      </template>
+
+
 <script>
 // The next line should not be altered, it is subject to string replacement.
 var WORDPRESS=false;
