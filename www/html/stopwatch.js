@@ -64,7 +64,6 @@ stopwatch.prototype.settings = function() {
         }
         $("#stopwatch_updateInterval").val( pgUtil.getStringFromMS(data.updateInterval) );
         $("#stopwatch_showGraph").prop("checked", data['showGraph']).checkboxradio('refresh');
-        UI.settings.pageCreate();
     }
     else {
         data.watchLocation  = $("#stopwatch_location")[0].checked;

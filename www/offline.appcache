@@ -47,10 +47,10 @@ html/map.html
 html/map.js
 html/note.html
 html/note.js
-html/prefs.html
-html/prefs.js
-html/settings.html
-html/settings.js
+html/preferences.html
+html/preferences.js
+html/categories.html
+html/categories.js
 html/stopwatch.html
 html/stopwatch.js
 html/timer.html

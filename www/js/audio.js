@@ -198,7 +198,7 @@ var pgAudio = {
                 // enable shake-to-stop
                 if(shakeToStop) {
                     pgAccel.start();
-                    pgAccel.onShake( pgAudio.stop(-1) );
+                    pgAccel.onShake( pgAudio.stop.bind(this,-1) );
                 }
             }
             // next try using HTML5

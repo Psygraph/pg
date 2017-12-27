@@ -63,7 +63,6 @@ graph.prototype.settings = function() {
     if(arguments.length) {
         $("#graph_signal").val(data.signal).change();
         $("#graph_interval").val(data.interval).change();
-        UI.settings.pageCreate();
     }
     else {
         var d = {signal:   $("#graph_signal").val(),
@@ -148,7 +147,7 @@ graph.prototype.updateGraph = function() {
                 }
             }
         }
-        if(pts.length>1) {
+        if(pts.length) {
             hasPoints = true;
             this.addPoints(lineIndex++, pts, interval);
         }
@@ -168,7 +167,7 @@ graph.prototype.updateGraph = function() {
                 }
             }
         }
-        if(pts.length>1) {
+        if(pts.length) {
             hasPoints = true;
             this.addPoints(lineIndex++, pts, interval);
         }
@@ -192,7 +191,7 @@ graph.prototype.updateGraph = function() {
                 }
             }
         }
-        if(pts.length>1) {
+        if(pts.length) {
             hasPoints = true;
             this.addPoints(lineIndex++, pts, interval);
         }
@@ -208,7 +207,7 @@ graph.prototype.updateGraph = function() {
                 pts.push([e.start, e.duration / (60*60*1000.0)]);
             }
         }
-        if(pts.length>1) {
+        if(pts.length) {
             hasPoints = true;
             this.addPoints(lineIndex++, pts, interval);
         }

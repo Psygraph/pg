@@ -76,7 +76,6 @@ counter.prototype.settings = function() {
         if(pgUtil.isWebBrowser()) {
             $("#counter_motion").hide();
         }
-        UI.settings.pageCreate();
     }
     else {
         if(! pgUtil.isWebBrowser()) {

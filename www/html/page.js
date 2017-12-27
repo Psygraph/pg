@@ -1,5 +1,7 @@
 var page = function(name) {
     this.name = name;
+    this.localPG = new PG();
+    this.localPG.init();
     //this.src  = {};
 };
 
@@ -206,6 +208,112 @@ page.prototype.displayEventData = function(e) {
     }
     function getTimeString(dur) {
         return pgUtil.getStringFromMS(dur) + " sec";
+    }
+};
+
+// ======= PAGE SETTINGS ======
+
+page.prototype.createSettings = function() {
+    var page     = pg.page();
+    var category = pg.category();
+    var pc = $("#"+page+"_category");
+    pc.empty();
+    for(var i=0; i<pg.categories.length; i++) {
+        var cat = pg.categories[i];
+        pc.append(new Option(cat, cat));
+    }
+    pc.val(category).change();
+    pc.on('change', function() {
+            var category = pc.val();
+            if(category != pg.category())
+                gotoCategory(category);
+        });
+    var data = UI[page].getPageData(page, pg.category());
+    UI[page].settings(data);
+};
+
+page.prototype.submitSettings = function(doClose) {
+    var page     = getPage();
+    var category = pg.category();
+
+    // now safe to make a copy of the pg, which might have been changed by the previous calls.
+    this.localPG.copy(pg, false);
+    
+    var newPageData = UI[page].settings();
+    var pmtime      = pg.getPageMtime(page);
+    if(doClose=="applyAll") {
+        for(var i=0; i<pg.categories.length; i++)
+            setPageDataForCategory(this.localPG, newPageData, page, pg.categories[i]);
+    }
+    else {
+        setPageDataForCategory(this.localPG, newPageData, page, category);
+    }
+
+    // no-op if settings have not changed
+    if(pgUtil.encode(this.localPG, true) == pgUtil.encode(pg, true)) {
+        if(doClose=="OK")
+            gotoPage(pg.page(), true);
+        return;
+    }
+    // Here we might download and cache the CSS or TEXT files.
+    this.localPG.dirty(true);
+    if(pg.loggedIn) {
+        PGEN.updateSettings( this.localPG, this.settingsUpdateComplete.bind(this,doClose) );
+    }
+    else {
+        this.settingsUpdateComplete(doClose, true);
+    }
+
+    function setPageDataForCategory(localPG, newPageData, page, category) {
+        var pageData = pg.getPageData(page, category);
+        if(!pgUtil.equal(pageData, newPageData)) {
+            pmtime = pgUtil.getCurrentTime();
+            localPG.setPageData(pmtime, newPageData, page, category);
+        }
+    }
+};
+
+page.prototype.settingsUpdateComplete = function(doClose, success) {
+    //if( pg.online && !pgUtil.equal(this.localPG, pg, ['mtime'], true) ) {
+
+    // account for changes
+    var category   = this.localPG.category();
+    var newCatData = this.localPG.getCategoryData(category);
+    var catData    = pg.getCategoryData(category);    
+    var styleEqual = pgUtil.equal(catData.style, newCatData.style);
+    var soundEqual = pgUtil.equal(catData.sound, newCatData.sound);
+    var textEqual  = pgUtil.equal(catData.text, newCatData.text);
+
+    // copy changes
+    pg.copy(this.localPG, false);
+    PGEN.writePG(pg,writeCB);
+    
+    if(getPage()=="categories") {
+        gotoPage("categories"); // changing the categories means we need to update the category widget.
+        gotoCategory(pg.categoryIndex);
+        //if(!soundEqual)
+            pgAudio.alarm();
+        if(!textEqual)
+            pg.getCategoryText(category, true);
+    }
+
+    // show an alert if changing the server settings was not successful.
+    if(! success) {
+        showAlert("Could not update data on server", "Warning", onClose.bind(this) );
+    }
+    else {
+        onClose();
+    }
+    function onClose() {
+        gotoCategory(pg.categoryIndex);
+        if(doClose=="OK")
+            gotoPage(pg.page());
+        else if(getPage=="categories")
+            gotoPage("categories"); // since the change was applied, reload the data to be sure we saved correctly
+    }
+    function writeCB(success) {
+        if(!success)
+            showAlert("Could not write data locally", "Error");
     }
 };
 

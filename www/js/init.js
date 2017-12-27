@@ -68,7 +68,7 @@ var app = {
             $("body").on( "pagecontainercreate", function( event, ui ) {
                     $(":mobile-pagecontainer").pagecontainer({load: PGEN.initializePage});
                     var pages = ["home", "stopwatch", "timer", "counter", "note", "list", "graph", 
-                                 "map", "dialog", "about", "settings", "prefs", "help"];
+                                 "map", "dialog", "about", "categories", "preferences", "help"];
                     pagesRemaining = pages.length;
                     for(var i=0; i<pages.length; i++) {
                         var page = pages[i]+".html";

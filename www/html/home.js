@@ -86,8 +86,6 @@ home.prototype.settings = function(data) {
             loginString = "Login";
         }
         $('#login').val(loginString).button("refresh");
-
-        UI.settings.pageCreate();
     }
     else {
         var data = this.getPageData();
@@ -180,7 +178,8 @@ home.prototype.endLogin = function() {
 home.prototype.lever = function(arg) {
 };
 
-home.prototype.loginUser = function(onSettingsPage) {
+home.prototype.loginUser = function() {
+    var onSettingsPage = (pg.page()=="home" && getSubPage()=="settings");
     UI.home.loggingIn = true;
     var data = this.getPageData();
     var username = data.username;
@@ -193,18 +192,17 @@ home.prototype.loginUser = function(onSettingsPage) {
         //data = this.getPageData();
     }
     showBusy(true);
-    var f = function(){ 
+    var p = function(){ 
         UI.home.loggingIn=false; 
         showBusy(false); 
         gotoPage(pg.page());
     };
-    if(!onSettingsPage)
-        f = function() { 
-            UI.home.loggingIn=false; 
-            showBusy(false); 
-            gotoPage("home");
-            gotoPageSettings();
-        };
+    var f = function() { 
+        UI.home.loggingIn=false; 
+        showBusy(false); 
+        gotoPage("home");
+        gotoPageSettings();
+    };
     if(pg.loggedIn) {
         PGEN.logout(this.logoutCB.bind(this));
         return
@@ -236,7 +234,7 @@ home.prototype.loginUser = function(onSettingsPage) {
     PGEN.verifyUser(server, username, verifyUserCB);
     function verifyUserCB(err) {
         if(!err) {
-            UI.home.getPassword(server, username, f);
+            UI.home.getPassword(server, username, p);
         }
         else {
             if(err=="user") {
@@ -468,7 +466,7 @@ function analyze(rows) {
     var events = pg.getEvents(pg.category());
     for (var i=0; i<events.length; i++) {
         var e = pgUtil.parseEvent(events[i]);
-        if(e && e.type=="interval") {
+        if(e && e.page=="stopwatch" && e.type=="interval") {
             // floating-point hours
             totalTime.push([e.start, e.duration / (60*60*1000.0)]);
         }

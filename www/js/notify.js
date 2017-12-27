@@ -55,7 +55,7 @@ var pgNotify = {
         function cb(sound) {
             var numNotifications = atTime.length; //atTime.length;
             var id=0;
-            var txt = null;
+            var txt = {title:"",text:""};
             for(var i=numNotifications-1; i>=0; i--) {
                 if(hasText)
                     txt = pg.getCategoryText(category);
@@ -89,15 +89,9 @@ var pgNotify = {
         // show the icon only on android
         if(!pgUtil.isWebBrowser() && device.platform=="Android")
             opts.icon = "res://icon.png";
-        if(category == "Uncategorized") {
-            opts.title      = " ";
-            opts.data.title = " ";
-        }
-        else {
+        if(txt) {
             opts.title      = txt.title;
             opts.data.title = txt.title;
-        }
-        if(txt) {
             var len = txt.text.length;
             if(len) {
                 var text = txt.text[pgUtil.randomInt(0,len-1)];
@@ -107,6 +101,10 @@ var pgNotify = {
                 opts.text = text;
                 opts.data.text = text;
             }
+        }
+        if(category == "Uncategorized" || !txt) {
+            opts.title      = " ";
+            opts.data.title = " ";
         }
         if(pgNotify.usePlugin) {
             opts.text = $(opts.text).text(); // convert to plain text

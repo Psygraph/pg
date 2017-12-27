@@ -58,7 +58,7 @@ var pgLocation = {
     
     setCallback: function(cb) {
         pgLocation.callback = cb;
-        pgLocation.locationChecker(pgLocation.callback != null);
+        //pgLocation.locationChecker(pgLocation.callback != null);
     },
 
     runInBG: function() {

@@ -32,8 +32,9 @@ timer.prototype.update = function(show, state) {
                 'countdownDuration': this.countdownDuration, 
                 'notifyState': notifyState };
     }
-    //showLog("startTime: " + pgUtil.getStringFromMS(this.startTime.Uncategorized) );
     if(typeof(state) != "undefined") {
+        for(cat in state.startTime)
+            showLog("startTime elapsed: " + pgUtil.getStringFromMS(this.startTime[cat]) );
         this.startTime = state.startTime;
         this.countdownDuration = state.countdownDuration;
         //showLog("Restoring startTime: " + pgUtil.getStringFromMS(this.startTime.Uncategorized) );
@@ -94,15 +95,8 @@ timer.prototype.settings = function() {
         $("#timer_loop").prop('checked', data.loop).checkboxradio("refresh");
         $("#countdown_setDuration").val(pgUtil.getStringFromMS(data.countdownTime));
         $("#countdown_setRandom").val(pgUtil.getStringFromMS(data.randomInterval));
-        if(!pg.getUserDataValue("debug")) {
+        if(pgUtil.isWebBrowser())
             $("#timer_extraAlarmsDiv").hide();
-        }
-        else {
-            $("#timer_extraAlarmsDiv").show();
-            var alarmVal = data.extraAlarms.toString();
-            $("#timer_extraAlarms").val(alarmVal);
-        }
-        UI.settings.pageCreate();
     }
     else {
         this.refreshTimer();
@@ -111,8 +105,7 @@ timer.prototype.settings = function() {
         data.loop =       $("#timer_loop")[0].checked;
         data.countdownTime = pgUtil.getMSFromString($("#countdown_setDuration").val());
         data.randomInterval = pgUtil.getMSFromString($("#countdown_setRandom").val());
-        if(pg.getUserDataValue("debug"))
-            data.extraAlarms = parseInt($("#timer_extraAlarms").val());
+        data.extraAlarms = parseInt($("#timer_extraAlarms").val());
         this.changedCountdownTime(data);
         return data;
     }
@@ -186,10 +179,11 @@ timer.prototype.setNotification = function(category, atTime) {
     var hasText  = pageData.timerAlarm=="text" || pageData.timerAlarm=="both";
     var data = this.getPageData(category);
     var times = [atTime];
-    if(data.loop) {
+    //if(data.loop) {
         for(var i=0; i<data.extraAlarms; i++) 
             times[times.length] = times[times.length-1] + this.computeNewInterval(category);
-    }
+    //}
+    this.unsetNotification(category);
     pgNotify.setNotification(category, times, hasText, hasSound);
 };
 
@@ -317,7 +311,6 @@ timer.prototype.reset = function(category, complete, notification) {
             }
             else {
                 if(this.running(category)) {
-                    this.unsetNotification(category);
                     this.setNotification(category, time + newInterval);
                 }
             }

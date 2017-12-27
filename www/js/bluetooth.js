@@ -168,7 +168,7 @@ var pgBluetooth = {
             //    showLog("Disconnected from Bluetooth device: " + result.address);
             //    pgBluetooth.activeDevice = {};
             //}
-            
+            /*
             function getDeviceServices(address) {
                 showLog("Getting BlueTooth device services for: "+address);
                 if (device.platform=="Android") {
@@ -230,7 +230,12 @@ var pgBluetooth = {
                     }
                 }
             }
+            */
             function bleServiceCallback(sID) {
+                if(sID==-1) {
+                    connectCB(false);
+                    return;
+                }
                 var service = pgBluetooth.activeDevice.services[sID];
                 showLog("services returned with: " + service );
                 var characteristics = pgBluetooth.activeDevice.characteristics;
@@ -249,6 +254,10 @@ var pgBluetooth = {
                 }
                 pgBluetooth.characteristicPicker(cIDs, addServiceCB);
                 function addServiceCB(cID) {
+                    if(cID==-1) {
+                        connectCB(false);
+                        return;
+                    }
                     var characteristic = cIDs[cID];
                     var characteristics = pgBluetooth.activeDevice.characteristics;
                     showLog('Adding service ' + service + '; characteristic:' + characteristic);
@@ -339,17 +348,18 @@ var pgBluetooth = {
             if (bytes.length) {
                 if(pgBluetooth.activeDeviceName().substring(0,6) == "PDXEDU") {
                     // little endian encoding of uint32 timestamp
-                    var timeMod = decodeUint32(bytes);
+                    var timeMod  = decodeUint32(bytes);
+                    var periodMS = bytes[4] + bytes[5]*256;
                     if(!pgBluetooth.firstTime) {
                         var time = pgUtil.getCurrentTime();
                         pgBluetooth.firstTime = time - timeMod;
                     }
-                    for(var i=4; i<bytes.length; i+=2) {
+                    for(var i=6; i<bytes.length; i+=2) {
                         // little endian encoding of uint16 value
                         var num = bytes[i] + bytes[i+1] * 256;
                         var val = [pgBluetooth.firstTime + timeMod, num];
                         pgBluetooth.data.push(val);
-                        timeMod += 10;
+                        timeMod += periodMS;
                     }
                 }
                 // Retrieve the BPM value for the Heart Rate Monitor
@@ -468,10 +478,14 @@ var pgBluetooth = {
         }
         dialog_content += '</select></div>';
 
-        showDialog({'title': pgBluetooth.activeDeviceName(), true: "OK"},
+        showDialog({'title': pgBluetooth.activeDeviceName(), true: "OK", false: "Cancel"},
                    dialog_content,
-                   dialog_cb, "prefs");
-        function dialog_cb() {
+                   dialog_cb, "preferences");
+        function dialog_cb(tf) {
+            if(!tf) {
+                pgBluetooth.disconnect(cb.bind(this,-1));
+                return;
+            }
             var val = $('#btServices').val();
             cb(val);
         }
@@ -497,10 +511,14 @@ var pgBluetooth = {
         }
         dialog_content += '</select></div>';
 
-        showDialog({'title': pgBluetooth.activeDeviceName(), true: "OK"},
+        showDialog({'title': pgBluetooth.activeDeviceName(), true: "OK", false: "Cancel"},
                    dialog_content,
-                   dialog_cb, "prefs");
-        function dialog_cb() {
+                   dialog_cb, "preferences");
+        function dialog_cb(tf) {
+            if(!tf) {
+                pgBluetooth.disconnect(cb.bind(this,-1));
+                return;
+            }
             var val = $('#btCharacteristics').val();
             cb(val);
         }

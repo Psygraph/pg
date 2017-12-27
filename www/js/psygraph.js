@@ -18,8 +18,8 @@ var UI = {
     graph:      null,
     chart:      null,
     about:      null,
-    prefs:      null,
-    settings:   null,
+    preferences:null,
+    categories: null,
     help:       null,
 
     state:      {},
@@ -37,13 +37,13 @@ function finalInit() {
     document.addEventListener("pause",  onPause,    false);
     document.addEventListener("resume", onResume,   false);
     document.addEventListener("backbutton", onBackKeyDown, false);
+    document.addEventListener("volumedownbutton", lever.bind(this,"left"), false);
+    document.addEventListener("volumeupbutton", lever.bind(this,"right"), false);
     window.addEventListener("resize",   onResize,   false);
     window.addEventListener("keydown",  onKeyDown,  false);
-    //window.addEventListener("keyup",    onKeyPress, false);
     window.addEventListener("error",    onError,    false);
     $("body").on("vclick", singleClick );
-    //$("body").on( "dblclick", onDoubleTap );
-    
+
     // set the online status
     if(navigator.connection) {
         var networkState = navigator.connection.type;
@@ -57,7 +57,6 @@ function finalInit() {
     
     // load Bluetooth
     pgBluetooth.init();
-    
     gotoLoadedPage("home"); 
 }
 
@@ -210,7 +209,7 @@ function onKeyDown(e) {
             gotoPageHelp();
             break;
         case 80: // "p"
-            gotoPage("prefs");
+            gotoPage("preferences");
             break;
         //case 16: // shift
         case 188: // ",", hopefully less than without shift
@@ -471,7 +470,7 @@ function gotoLoadedPage(page) {
     }
 }
 function gotoPageMain() {
-    var page = pg.page();
+    var page = getPage();
     $("#"+page+"_main").show();
     $("#"+page+"_settings").hide();
     $("#"+page+"_help").hide();
@@ -480,22 +479,22 @@ function gotoPageMain() {
     UI[page].resize();
 }
 function gotoPageSettings() {
-    var page = pg.page();
+    var page = getPage();
     $("#"+page+"_main").hide();
     $("#"+page+"_settings").show();
     $("#"+page+"_help").hide();
-    UI.settings.showPageSettings();
+    UI[page].createSettings(data);
     UI[page].resize();
 }
 function gotoPageHelp() {
-    var page = pg.page();
+    var page = getPage();
     $("#"+page+"_main").hide();
     $("#"+page+"_settings").hide();
     $("#"+page+"_help").show();
     UI[page].resize();
 }
 function getSubPage() {
-    var page = pg.page();
+    var page = getPage();
     if($("#"+page+"_main").is(':visible'))
         return "main";
     else if($("#"+page+"_settings").is(':visible'))
@@ -1241,20 +1240,23 @@ var PGEN = {
         }
         var title = pgUtil.titleCase(page);
         // get the header from the template
-        if(page == "settings" || 
+        if(page == "categories" || 
            page == "about"    ||
            page == "help"     ||
            page == "dialog"   ||
-           page == "prefs"
+           page == "preferences"
         ) {
             var headT  = $("#simple_header_template").prop('content');
             var head   = $(headT.children[0]).clone();
             node.prepend(head[0]);
             if(page == "dialog")
                 $(node).find(".leftMenuButton").hide();
-            $(node).find(".rightMenuButton").hide();
-            if(title=="Settings")
-                title = "Category Prefs";
+            if(page == "preferences" ||
+               page == "categories") {
+                //$(node).find(".rightMenuButton").hide();
+            }
+            else 
+                $(node).find(".rightMenuButton").hide();
         }
         else {
             // Add the sidenav
@@ -1291,14 +1293,15 @@ var PGEN = {
 function menu_leftButton() {
     var page   = getPage();
     var pgPage = pg.page();
-    if(page=="settings") { // return to prefs
-        gotoPage("prefs");
-    }
-    else if (page=="help"   || 
-             page=="about"  || 
-             page=="dialog" || 
-             page=="prefs") {
-        gotoPage(pgPage);
+    if (page=="help"     || 
+        page=="about"    || 
+        page=="dialog"   || 
+        page=="categories" || 
+        page=="preferences") {
+        if(getSubPage()=="help")
+            gotoPageMain();
+        else
+            gotoPage(pg.page());
     }
     else {
         slideNav(!isSlideNavOpen());
@@ -1306,8 +1309,14 @@ function menu_leftButton() {
     return false;
 }
 function menu_rightButton() {
-    var page = pg.page();
-    $("#"+page+"_page .rightMenu").popup("open");
+    var page = getPage();
+    if(page=="preferences" || 
+       page=="categories") {
+        gotoPageHelp();
+    }
+    else {
+        $("#"+page+"_page .rightMenu").popup("open");
+    }
     return false;
 }
 function isSlideNavOpen() {
@@ -1327,11 +1336,14 @@ function menu_action(action) {
     if(action=="about") {
         gotoPage("about");
     }
-    else if(action=="prefs") {
-        gotoPage("prefs");
+    else if(action=="preferences") {
+        gotoPage("preferences");
+    }
+    else if(action=="categories") {
+        gotoPage("categories");
     }
     else if(action=="login") {
-        pgUtil.closePopup($('#'+page+'_page .rightMenu'), UI.home.loginUser.bind(UI.home,false)); 
+        pgUtil.closePopup($('#'+page+'_page .rightMenu'), UI.home.loginUser.bind(UI.home)); 
     }
     else if(action=="event") {
         pgUtil.switchPopup($('#'+page+'_page .rightMenu'), $('#'+page+'_page .eventPopupMenu')); 

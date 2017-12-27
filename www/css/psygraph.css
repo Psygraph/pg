@@ -323,9 +323,11 @@ div.content {
 /* Various widgets
 ============================================================== */
 textarea {
-    margin: 4px 4px 4px 4px;
+    margin:       4px 4px 4px 4px;
     border-width: 0em 0em 0em 0em;
-    padding: 0em 0em 0em 0em;
+    padding:      0em 0em 0em 0em;
+    resize:       none;
+    wrap:         soft;
 }
 input {
     margin: 0.2em;
@@ -473,9 +475,6 @@ div#helpDiv, div#aboutDiv {
 div.helpPageDiv {
     margin-bottom: 40px;
 }
-div#aboutDiv, div#helpDiv {
-    background: #EFEFEF; /* #90A0BB; */
-}
 ul {
     text-align: left;
 }
@@ -500,18 +499,31 @@ div#levers {
     padding-right: 4em;
 }
 
-/* PREFS
+/* PREFERENCES
 ============================================================== */
-#new_pgaes_button {
+#new_pages_button {
     font-size: 1.1em;
 }
-#prefsPage label {
+#preferencesPage label {
     text-align: left;
 }
-.select2-selection__choice {
-    font-size: 1.2em;
-}          
-
+.selectize-input {
+    border: 0px;
+    padding: 0px;
+}
+.selectize-item, #categories_new-selectized {
+    font-size: 22px;
+    margin: 5px;
+    background: #DDDDDD !important;
+    border-color: #DDDDDD !important;
+    -webkit-border-radius: 6px;        
+    -moz-border-radius: 6px;
+    border-radius: 6px;
+    border-width: 6px 2px 2px 2px !important;
+}
+.selectize-input a.remove {
+    font-size: 18px !important;
+}
 /* HOME 
 ============================================================== */
 #home_status {

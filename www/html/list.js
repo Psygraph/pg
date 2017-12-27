@@ -15,6 +15,14 @@ list.prototype.update = function(show) {
     if(!show) {
         return;
     }
+
+    //if($("#list_pageSelect")[0].length > 5)
+    //    $("#list_pageSelect")[0].remove(5);
+    //if(pg.getUserDataValue("debug"))
+    //    $("#list_pageSelect").append(new Option("home","home"));
+    //$("#list_pageSelect").selectmenu('refresh');
+    //$("#list_pageSelect").trigger('change');
+
     // select according to the selectedEvents list
     if(!this.initialized || !pgUtil.equal(pg.categories, this.categoryCache) ) {
         this.categoryCache = pgUtil.deepCopy(pg.categories);
@@ -110,36 +118,21 @@ list.prototype.settings = function() {
         //var data = arguments[0];
         var data = this.getPageData();
 
-        if($("#list_pageSelect")[0].length > 5)
-            $("#list_pageSelect")[0].remove(5);
-        if(pg.getUserDataValue("debug"))
-            $("#list_pageSelect").append(new Option("home","home"));
-        $("#list_pageSelect").trigger("change");
-
+        $("#list_pageSelect").val(data.pageFilter).trigger("change");
         $("#list_showID"  ).prop("checked", data.showID  ).checkboxradio("refresh");
         $("#list_showDate").prop("checked", data.showDate).checkboxradio("refresh");
         $("#list_showPage").prop("checked", data.showPage).checkboxradio("refresh");
         $("#list_showData").prop("checked", data.showData).checkboxradio("refresh");
-
-        UI.settings.pageCreate();
     }
     else {
         var data = {
-            pageFilter: $("#list_pages").val(),
+            pageFilter: $("#list_pageSelect").val(),
             showID:     $("#list_showID")[0].checked,
             showDate:   $("#list_showDate")[0].checked,
             showPage:   $("#list_showPage")[0].checked,
             showData:   $("#list_showData")[0].checked,
         };
         return data;
-    }
-    function printCheckbox(id, label, checked) {
-        s = "<label for='" +id+ "'>" +label+ "</label>";
-        s += "<input type='checkbox' id='" + id + "' name='"+id+"' value='"+id+"' ";
-        if(checked)
-            s += "checked ";
-        s += "/>";
-        return s;
     }
 };
 

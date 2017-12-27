@@ -1,0 +1,62 @@
+
+<div id="preferences_page" class="page" data-role="page" data-fullscreen="true">
+  
+  <div id="preferences_main" class="main content">
+    
+    <div data-role="control-group" class="inset">
+      
+      <div id="preferencesSettings">
+        
+        <div id="page_select" class="ui-field-contain no-field-separator needsclick"></div>
+        
+        <!--
+            <div id="swipeDiv" class="ui-field-contain no-field-separator">
+              <label for="swipeSlider">Swipe sensitivity:</label>
+              <input type="range" name="swipeSlider" id="swipeSlider" value="20" min="5" max="100">
+            </div>
+            -->
+        <fieldset id="BTDiv" class="settings">
+          <legend>Bluetooth Device:</legend>
+          <input type="button" id="BTConnect" onclick="UI.preferences.btConnect(); return false;" class="btn fast" value="Connect to Device" title="Connect" data-inline="true"/></input>                      
+          <select id="BTDevices" value="none" title="Bluetooth Device" data-native-menu="false" onchange="">
+            <option value="none">none</option>
+          </select>
+        </fieldset>
+      
+        <fieldset id="preferences_fileButtons" class="settings">
+          <legend>File Management:</legend>
+          <!--input type="button" data-inline="true"  class="preferences_button" onclick="return PGEN.selectAction('deleteEvents');" value="Remove events"></input-->
+          <input type="button" data-inline="true"  class="preferences_button" onclick="return PGEN.selectAction('deleteSettings');" value="Remove settings"></input>
+          <input type="button" data-inline="true"  class="preferences_button" onclick="return PGEN.selectAction('deleteEverything');" value="Remove all files"></input>
+          
+          <label for="wifiOnly">Upload files using WIFI only.</label>
+          <input type="checkbox" name="wifiOnly" id="wifiOnly"></input>
+        </fieldset>
+
+        <label for="preferences_debug">Turn on error logging</label>
+        <input type="checkbox" name="debug" id="preferences_debug"></input>
+        
+        <div data-role="fieldcontain" id="settingButtons">
+	      <input type="button" id="cancelPreferences" onClick="gotoPage(pg.page()); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"></input>
+	      <!--input type="button" id="applyPreferences" onClick="UI.preferences.submit(false); return false;" class="btn fast" value="Apply" title="apply" data-inline="true"></input-->
+	      <input type="button" id="OKPreferences" onClick="UI.preferences.submit(true); return false;" class="btn fast" value="OK" title="OK" data-inline="true"/></input>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="preferences_help" class="help content">
+    <p><strong>Preferences</strong></p>
+    <p class="help">The <strong>Preferences</strong> page lets you connect to Bluetooth devices, remove settings and other data, and turn on error logging.</p>
+    <p>If you want to connect to a Bluetooth device and you have a Bluetooth LE (4.0) heart rate monitor, select the device from the list of available of available devices, click Connect, and then specify the signal that you wish to acquire from the device.  Then go to the Stopwatch page settings and select the <i>Bluetooth</i> option to begin logging Bluetooth data.</p> 
+    <br/>
+    <template>
+      <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/preferences.png" alt="" width="300" />
+    </template>
+  </div>
+  
+  
+  
+  <script src="html/preferences.js"></script>
+</div>
+

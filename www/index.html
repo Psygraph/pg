@@ -13,7 +13,7 @@
 
         <meta name="description" content="The Psygraph Digital Mala" />
 
-        <link rel="stylesheet" type="text/css" href="css/pg-theme.min.css" />
+        <link rel="stylesheet" type="text/css" href="css/pg-theme.css" />
         <link rel="stylesheet" type="text/css" href="css/jquery.mobile.icons.min.css" />
         <link rel="stylesheet" type="text/css" href="css/jquery.mobile.structure-1.4.5.min.css" />
                 
@@ -23,7 +23,7 @@
         -->
         <link rel="stylesheet" type="text/css" href="css/vis.min.css" />
         <link rel="stylesheet" type="text/css" href="css/leaflet.css" />
-        <link rel="stylesheet" type="text/css" href="css/select2.min.css" />
+        <link rel="stylesheet" type="text/css" href="css/selectize.css" />
   
         <link rel="stylesheet" type="text/css" id="base_style"  href="css/psygraph.css" />
         <link rel="stylesheet" type="text/css" id="user_style"  href="media/default.css" />
@@ -79,7 +79,7 @@
       <script type="text/javascript" src="js/init.js"></script>
       <script type="text/javascript" src="js/jquery.mobile-1.4.5.min.js"></script>
       <!-- widgets that depend on jquery mobile -->
-      <script type="text/javascript" src="js/select2.full.min.js"></script>
+      <script type="text/javascript" src="js/selectize.js"></script>
       <script type="text/javascript" src="js/jquery.knob.js"></script>
       <script type="text/javascript" src="js/pgUI.js"></script>
       <script type="text/javascript" src="cordova.js"></script>
@@ -88,7 +88,7 @@
         <div class="header" data-role="header" data-theme="b" data-position="fixed" data-tap-toggle="false">
           <button data-position="fixed" onclick="return menu_leftButton();" data-icon="arrow-l" data-iconpos="left" class="ui-btn-left leftMenuButton fast">Back</button>
           <h2 class="banner"><b class="pg_page_title"></b></h2>
-          <button data-position="fixed" data-icon="arrow-u" data-iconpos="right" onclick="return menu_rightButton();" class="ui-btn-right rightMenuButton fast">Forward</button>
+          <button data-position="fixed" data-icon="info" data-iconpos="right" onclick="return menu_rightButton();" class="ui-btn-right rightMenuButton fast">Info</button>
         </div>
       </template>
       
@@ -103,7 +103,8 @@
             <ul data-role="listview" data-inset="true" class="ui-listview-outer" id="ActionSet">
               <li data-role="list-divider"><i>Action...</i></li>
               <li data-icon="comment"><a href="" onclick="return menu_action('about');" class="aboutButton" >About</a></li>
-              <li data-icon="gear"><a href="" onclick="return menu_action('prefs');" class="prefsButton" >Prefs</a></li>
+              <li data-icon="gear"><a href="" onclick="return menu_action('preferences');" class="preferencesButton" >Preferences</a></li>
+              <li data-icon="tag"><a href="" onclick="return menu_action('categories');" class="catPreferencesButton" >Categories</a></li>
               <li data-icon="home"><a href="" class="loginButton" onclick="return menu_action('login');">Login</a></li>
               <!--li data-icon="alert"><a href="" class="eventButton" onclick="return menu_action('event');">Files</a></li-->
               <li data-icon="info"><a href="" onclick="return menu_action('help');" id="HelpButton">Help</a></li>
@@ -175,16 +176,16 @@
         <div class="sidenav" style="width:0px">
           <a href="" class="fast closebtn" onclick="slideNav(false)">&times;</a>
           <br/>
-          <a class="fast home_navlink navlink" onclick="gotoPage('home')" >home</a>
+          <a class="fast home_navlink navlink" onclick="gotoPage('home')" >Home</a>
           <hr/>
-          <a class="fast stopwatch_navlink navlink" onclick="gotoPage('stopwatch')" >stopwatch</a>
-          <a class="fast timer_navlink navlink" onclick="gotoPage('timer')" >timer</a>
-          <a class="fast counter_navlink navlink" onclick="gotoPage('counter')" >counter</a>
-          <a class="fast note_navlink navlink" onclick="gotoPage('note')" >note</a>
+          <a class="fast stopwatch_navlink navlink" onclick="gotoPage('stopwatch')" >Stopwatch</a>
+          <a class="fast counter_navlink navlink" onclick="gotoPage('counter')" >Counter</a>
+          <a class="fast timer_navlink navlink" onclick="gotoPage('timer')" >Timer</a>
+          <a class="fast note_navlink navlink" onclick="gotoPage('note')" >Note</a>
           <hr/>
-          <a class="fast list_navlink navlink" onclick="gotoPage('list')" >list</a>
-          <a class="fast graph_navlink navlink" onclick="gotoPage('graph')" >graph</a>
-          <a class="fast map_navlink navlink" onclick="gotoPage('map')" >map</a>
+          <a class="fast list_navlink navlink" onclick="gotoPage('list')" >List</a>
+          <a class="fast graph_navlink navlink" onclick="gotoPage('graph')" >Graph</a>
+          <a class="fast map_navlink navlink" onclick="gotoPage('map')" >Map</a>
         </div>
       </template>
 

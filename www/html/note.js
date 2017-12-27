@@ -51,6 +51,7 @@ note.prototype.resize = function() {
     var titleHeight  = $("#noteTitleDiv").outerHeight(true);
     var buttonHeight = $("#note_submit").outerHeight(true);
     var textContainerHeight = win.height - (header+subheader+titleHeight+buttonHeight+12);
+    var textContainerHeight = Math.max(textContainerHeight, 240);
     $("#noteTextContainer").outerHeight(textContainerHeight);
     $("#noteText").outerHeight(textContainerHeight-12);
     var width  = win.width;
@@ -69,7 +70,6 @@ note.prototype.settings = function() {
         $("#note_addLocation").prop("checked", data['addLocation']).checkboxradio("refresh");
         $("#note_showConfirmation").prop("checked", data['showConfirmation']).checkboxradio("refresh");
         //$("#note_enhancedEditor").prop("checked", data['enhancedEditor']).checkboxradio("refresh");
-        UI.settings.pageCreate();
     }
     else {
         var data = { 

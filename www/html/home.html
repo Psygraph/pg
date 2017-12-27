@@ -31,20 +31,20 @@
       </div>
       <div class="ui-field-contain no-field-separator" id="loginDiv">
         <label></label>
-        <input type="button" id="login" name="login" value="Login" onClick="UI.home.loginUser(true);"/>
+        <input type="button" id="login" name="login" value="Login" onclick="UI.home.loginUser();"/>
       </div>
     </fieldset>
     
-    <fieldset id="home_fileButtons" class="fileButtons">
+    <fieldset id="home_fileButtons" class="settings">
       <legend>Manage files:</legend>
-      <input type="button" data-inline="true"  class="prefs_button" onclick="return PGEN.selectAction('downloadEvents');" value="Download events"></input>
-      <input type="button" data-inline="true"  class="prefs_button" onclick="return PGEN.selectAction('uploadFiles');" value="Upload files"></input>
+      <input type="button" data-inline="true"  class="preferences_button" onclick="return PGEN.selectAction('downloadEvents');" value="Download events"></input>
+      <input type="button" data-inline="true"  class="preferences_button" onclick="return PGEN.selectAction('uploadFiles');" value="Upload files"></input>
     </fieldset>
     
     <div data-role="fieldcontain">
-	  <input type="button" onClick="gotoPageMain(); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"></input>
-	  <input type="button" onClick="UI.settings.submitSettings('apply'); return false;" class="btn fast" value="Apply" title="apply" data-inline="true"></input>
-	  <input type="button" onClick="UI.settings.submitSettings('OK'); return false;" class="btn fast" value="OK" title="OK" data-inline="true"/></input>
+	  <input type="button" onclick="gotoPageMain(); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"></input>
+	  <input type="button" onclick="UI.home.submitSettings('apply'); return false;" class="btn fast" value="Apply" title="apply" data-inline="true"></input>
+	  <input type="button" onclick="UI.home.submitSettings('OK'); return false;" class="btn fast" value="OK" title="OK" data-inline="true"/></input>
     </div>
 
   </div>
@@ -52,7 +52,7 @@
   <div id="home_help" class="help content">
     <p><strong>Home</strong></p>
     <p>The <strong>Home</strong> page displays a summary of your data over the last four weeks.  Two rows of data are displayed: the total amount of time tracked by the stopwatch and your breath counting score.  If you are signed in online, account information is displayed.</p>
-    <p>The settings display your username on psygraph.com, which must be a valid email address.  If you wish to register for an account, please visit <a href="" onClick="return pgUtil.openWeb('https://psygraph.com/register')">psygraph.com</a></p>
+    <p>The settings display your username on psygraph.com, which must be a valid email address.  If you wish to register for an account, please visit <a href="" onclick="return pgUtil.openWeb('https://psygraph.com/register')">psygraph.com</a></p>
     
     <template>
       <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/home.png" alt="home" width="300" />

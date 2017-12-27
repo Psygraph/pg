@@ -23,8 +23,10 @@ map.prototype.constructor = map;
 
 map.prototype.update = function(show, state) {
     if(!show) {
+        pgLocation.locationChecker(false);
         return {startTime: this.startTime, lastPoint: this.lastPoint};
     }
+    pgLocation.locationChecker(true);
     if(typeof(state)!="undefined" && state) {
         this.startTime = state.startTime;
         this.lastPoint = state.lastPoint;
@@ -49,19 +51,18 @@ map.prototype.update = function(show, state) {
 map.prototype.settings = function() {
     var data = this.getPageData();
     if(arguments.length) {
-        $("#map_showMarkers").prop("checked", data.showMarkers).checkboxradio();
-        $("#map_showPaths").prop("checked", data.showPaths).checkboxradio();
-        $("#map_powerSaving").prop("checked", data.powerSaving).checkboxradio();
+        $("#map_showMarkers").prop("checked", data.showMarkers).checkboxradio("refresh");
+        $("#map_showPaths").prop("checked", data.showPaths).checkboxradio("refresh");
+        $("#map_powerSaving").prop("checked", data.powerSaving).checkboxradio("refresh");
         $("#map_accuracy").val(data.accuracy).trigger("change");
         $("#map_provider").val(data.provider).trigger("change");
-        UI.settings.pageCreate();
     }
     else {
         var data = this.getPageData();
-        data = { powerSaving:      $("#map_powerSaving")[0].checked,
+        data = { powerSaving:      $("#map_powerSaving")[0].checked ? true : false,
                  accuracy:          parseFloat($("#map_accuracy")[0].value),
-                 showMarkers:      $("#map_showMarkers")[0].checked,
-                 showPaths:        $("#map_showPaths")[0].checked,
+                 showMarkers:      $("#map_showMarkers")[0].checked ? true : false,
+                 showPaths:        $("#map_showPaths")[0].checked ? true : false,
                  provider:         $("#map_provider").val()
         };
         //data.accuracy = Math.min(data.accuracy, 1000);
@@ -561,7 +562,7 @@ map.prototype.addLines = function(data) {
     for (var i=0; i<events.length; i++) {
         var e = pgUtil.parseEvent(events[i]);
         if(e &&
-           e.page=="map" && e.type=="interval" &&
+           e.type=="interval" &&
            typeof(e.data.location)!="undefined" ) {
             var path = [];
             for(j=0; j<e.data.location.length; j++) {

@@ -45,9 +45,8 @@ function PG() {
         this.categories     = ["Uncategorized","Meditate","Exercise","Study"];
         this.pages          = ["home","stopwatch","timer","counter","note","list","graph","map"];
         this.categoryData   = {"Uncategorized": nd()};
-        this.pageData       = {"home": nd(), "stopwatch": nd(),"timer": nd(),"counter": nd(),"note": nd(),"list": nd(),"map": nd(),"graph": nd() };
+        this.pageData       = {"home": nd(), "stopwatch": nd(),"timer": nd(),"counter": nd(),"note": nd(),"list": nd(),"map": nd(),"graph": nd(),"categories": nd(),"prefs": nd() };
         this.userData       = {};
-
         this.online         = true;
         this.background     = false;
         this.server         = "";
@@ -250,6 +249,8 @@ function PG() {
         return data['mtime'];
     };
     this.setPageData = function(mtime, data, page, category) {
+        if(typeof(this.pageData[page])=="undefined")
+            this.pageData[page] = {'mtime': 0, 'data': {}};
         this.pageData[page].mtime = mtime;
         if(category==undefined)
             this.pageData[page].data = pgUtil.deepCopy(data);

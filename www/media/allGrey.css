@@ -1,0 +1,53 @@
+
+html {
+    background: #AAAAAA;
+    font-size: 1.1em;
+    font-family: sans-serif;
+}
+
+/* header and menu buttons */
+.ui-header {
+    background-color: #AAAAAA;
+}
+div.header .ui-bar-b .ui-btn, html .ui-bar-b .ui-btn {
+    background-color: #AAAAAA;
+}
+/* text color for main menu */
+.ui-bar-b
+{
+    color: rgb(0,0,0,1);
+}
+/* navbar */
+div.header .ui-navbar .ui-btn.ui-btn-b {
+    background-color: #AAAAAA;
+}
+div.header .ui-navbar .ui-btn.ui-btn-b:hover {
+    background-color: rgb(237, 237, 237);
+}
+
+div.header .ui-navbar .ui-btn.ui-btn-b.ui-btn-active {
+    background-color: rgb(237, 237, 237);
+    border-color: rgb(237, 237, 237);
+    text-shadow: rgb(0, 0, 0) 0px 0px 0px ;
+    box-shadow: none !important;
+}
+/* remove navbar focus */
+.ui-page-theme-a .ui-btn:focus
+{
+    box-shadow: none !important;
+}
+
+/* links chould be styled differently from bold text */
+a, a:visited, a:hover {
+    color: rgb(0,0,0,1) !important;
+}
+
+/* navmenu should have white text */
+.sidenav a, .sidenav a:visited, sidenav a:hover {
+    color: rgb(240,240,240,1) !important;
+}
+
+/* text color on pages */
+.ui-overlay-a, .ui-page-theme-a, .ui-page-theme-a .ui-panel-wrapper {
+    color: #444444;
+}
