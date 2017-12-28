@@ -17,8 +17,8 @@ function PG() {
     this.categoryIndex  = null;
     this.pageIndex      = null;
     this.categories     = null;
-    this.allPages       = ["home","stopwatch","timer","counter","note","list","graph","map"];
-    this.allEventPages  = ["stopwatch","timer","counter","note"];
+    this.allPages       = ["home","stopwatch","counter","timer","note","list","graph","map"];
+    this.allEventPages  = ["stopwatch","counter","timer","note"];
     this.pages          = null;
     this.categoryData   = null;
     this.pageData       = null;
@@ -43,9 +43,9 @@ function PG() {
         this.categoryIndex  = 0;
         this.pageIndex      = 0;
         this.categories     = ["Uncategorized","Meditate","Exercise","Study"];
-        this.pages          = ["home","stopwatch","timer","counter","note","list","graph","map"];
+        this.pages          = ["home","stopwatch","counter","timer","note","list","graph","map"];
         this.categoryData   = {"Uncategorized": nd()};
-        this.pageData       = {"home": nd(), "stopwatch": nd(),"timer": nd(),"counter": nd(),"note": nd(),"list": nd(),"map": nd(),"graph": nd(),"categories": nd(),"prefs": nd() };
+        this.pageData       = {"home": nd(), "stopwatch": nd(),"counter": nd(),"timer": nd(),"note": nd(),"list": nd(),"map": nd(),"graph": nd(),"categories": nd(),"prefs": nd() };
         this.userData       = {};
         this.online         = true;
         this.background     = false;

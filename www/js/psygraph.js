@@ -871,10 +871,7 @@ var PGEN = {
             finish(true);
         }
         else {
-            var tempPG = new PG();
-            tempPG.init();
-            tempPG.copy(pg, false);
-            PGEN.writePG(tempPG, writeEvents);
+            PGEN.writePG(pg, writeEvents);
         }
         function writeEvents() {
             PGEN.writeEvents(pg.events, pg.deletedEvents, finish);
@@ -940,8 +937,11 @@ var PGEN = {
         pgFile.readFile("com.psygraph", callback);
     },
     writePG: function(data, callback) {
+        var tempPG = new PG();
+        tempPG.init();
+        tempPG.copy(data, false);
         callback = typeof(callback)!="undefined" ? callback : cb;
-        pgFile.writeFile("com.psygraph.pg", data, callback);
+        pgFile.writeFile("com.psygraph.pg", tempPG, callback);
         function cb(success) {
             if(!success)
                 showAlert("Could not save pg settings file", "Error");

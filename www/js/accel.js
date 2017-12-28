@@ -3,7 +3,7 @@ var pgAccel = {
     accelWatchId:         null,
     orientWatchId:        null,
     opts:                 { updateInterval: 250, watchRot: false, watchAccel: true },
-    //previousAcceleration: new Array(),
+    previousAcceleration: new Array(),
     previousRotation:     new Array(),
     previousOrientation:  new Array(),
     lastAcc:              {t: 0, x:0, y:0, z:0},
@@ -21,7 +21,7 @@ var pgAccel = {
             return;
         }
         if(typeof(opts.restarting)=="undefined") {
-            //pgAccel.previousAcceleration = new Array();
+            pgAccel.previousAcceleration = new Array();
             pgAccel.previousRotation     = new Array();
             pgAccel.previousOrientation  = new Array();
         }
@@ -53,7 +53,12 @@ var pgAccel = {
             }
         }
 
-        function accelSuccess() {
+        function accelSuccess(accel) {
+            var len = pgAccel.previousAcceleration.length;
+            pgAccel.previousAcceleration[len] = [ accel.timestamp,
+                                                  accel.x,
+                                                  accel.y,
+                                                  accel.z ];
         }
         function accelFail() {
             showError("Could not gather acceleration data.");
@@ -92,7 +97,7 @@ var pgAccel = {
         if(!starting) {
             var state = {running:     pgAccel.running,
                          opts:        pgAccel.opts,
-                         prevAccel:   pgAccel.getAccelerationData(),//pgAccel.previousAcceleration,
+                         prevAccel:   pgAccel.previousAcceleration,
                          prevRot:     pgAccel.previousRotation,
                          prevOrient:  pgAccel.previousOrientation
                         };
@@ -100,7 +105,7 @@ var pgAccel = {
         }
         if(typeof(state)!="undefined") { //starting
             pgAccel.opts                 = state.opts;
-            pgAccel.setAccelerationData(state.prevAccel);
+            pgAccel.previousAcceleration = state.prevAccel;
             pgAccel.previousRotation     = state.prevRot;
             pgAccel.previousOrientation  = state.prevOrient;
             if(state.running)
@@ -123,13 +128,10 @@ var pgAccel = {
     },
     // get the accumulated accel data
     getAccelerationData: function() {
-        if(typeof(navigator.cyclometer)=="undefined")
-            return [];
-        return navigator.cyclometer.getPreviousAcceleration();
-    },
-    setAccelerationData: function(data) {
-        if(typeof(navigator.cyclometer)!="undefined")
-            return navigator.cyclometer.setPreviousAcceleration(data);
+        //if(typeof(navigator.cyclometer)=="undefined")
+        //    return [];
+        //return navigator.cyclometer.getPreviousAcceleration();
+        return pgAccel.previousAcceleration;
     },
     // get the accumulated rotation data
     getRotationData: function() {
