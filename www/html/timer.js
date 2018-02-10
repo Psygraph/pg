@@ -1,221 +1,174 @@
 
-function timer() {
-    page.call(this, "timer");
+function Timer() {
+    ButtonPage.call(this, "timer");
     this.clock             = null;
-    // the following two are per-category.
-    this.startTime         = {};
-    this.countdownDuration = {};
 
-    this.timerWidget    = null;
-    this.durationWidget = null;
+    this.tempCategory = null;
+    this.visible = true;
+
+    this.timerWidget    = $('#countdown_timer');
+    this.durationWidget = $('#countdown_duration');
 }
 
-timer.prototype = Object.create(page.prototype);
-timer.prototype.constructor = timer;
+Timer.prototype = Object.create(ButtonPage.prototype);
+Timer.prototype.constructor = Timer;
 
-timer.prototype.update = function(show, state) {
-    var initializing = ! this.clock;
-    if(initializing) {
-        this.timerWidget    = $('#countdown_timer');
-        this.durationWidget = $('#countdown_duration');
-        this.durationWidget.prop("disabled", true);
-        pgNotify.setCallback(this.notificationCallback.bind(this));
-        this.clock  = new Clock(this.timerCallback.bind(this), 50, function(a,b,c){});
-    }
-    var category = pg.category();
-    if(!show) {
-        if(this.clock)
-            this.clock.stop();
-        var notifyState = pgNotify.state();
-        //showLog("Storing startTime: " + pgUtil.getStringFromMS(this.startTime.Uncategorized) );
-        return {'startTime': this.startTime, 
-                'countdownDuration': this.countdownDuration, 
-                'notifyState': notifyState };
-    }
-    if(typeof(state) != "undefined") {
-        for(cat in state.startTime)
-            showLog("startTime elapsed: " + pgUtil.getStringFromMS(this.startTime[cat]) );
-        this.startTime = state.startTime;
-        this.countdownDuration = state.countdownDuration;
-        //showLog("Restoring startTime: " + pgUtil.getStringFromMS(this.startTime.Uncategorized) );
-        pgNotify.state(state.notifyState);
-    }
-    this.refreshTimer(category);
-    if(initializing) {  // see if there are any notifications that need to be removed.
-        // we have to run this after setting the state because we set the startTime
-        for(var i=0; i<pg.categories.length; i++) {
-            var cat = pg.categories[i];
-            if(typeof(this.countdownDuration[category])=="undefined") {
-                var e = this.getElapsedTimer(category);
-                this.countdownDuration[category] = e.countdownTime;
+Timer.prototype.update = function(show, data) {
+    ButtonPage.prototype.update.call(this, show, data);
+    if(show) {
+        var initializing = !this.clock;
+        if (initializing) {
+            this.durationWidget.prop("disabled", true);
+            pgNotify.setCallback(this.notificationCallback.bind(this));
+            this.clock = new Clock(this.timerCallback.bind(this), 50, function (a, b, c) {});
+            // see if there are any notifications that need to be removed.
+            // we have to run this after setting the state because we set the startTime
+            pgNotify.callElapsed(pg.category(), this.isRunning(), true);
+            this.pushCategory(pg.category());
+            for (var i = 0; i < pg.categories.length; i++) {
+                if(this.tempCategory === pg.categories[i])
+                    continue;
+                gotoCategory(pg.categories[i]);
+                pgNotify.callElapsed(pg.category(), this.isRunning(), true);
             }
-            var running = this.running(cat);
-            pgNotify.callElapsed(cat, running, true);
+            this.popCategory();
+        }
+        if(this.visible) {
+            var restart = this.isRunning();
+            if (restart)
+                this.start(true);
+            else
+                this.refreshTimer();
+            this.resize();
         }
     }
-    this.resize();
+    else {
+        if(this.clock)
+            this.clock.stop();
+    }
+    return data;
 };
 
-timer.prototype.refreshTimer = function(category) {
-    category = (typeof(category) != "undefined") ? category : pg.category();
+Timer.prototype.pushCategory = function(cat) {
+    this.tempCategory = pg.category();
+    this.visible = false;
+    if(cat !== pg.category())
+        gotoCategory(cat);
+};
+Timer.prototype.popCategory = function() {
+    gotoCategory(this.tempCategory);
+    this.tempCategory = null;
+    this.visible = true;
+};
+Timer.prototype.refreshTimer = function() {
     var data = this.getPageData();
-    var e = this.getElapsedTimer(category);
-    if(typeof(this.countdownDuration[category])=="undefined")
-        this.countdownDuration[category] = e.countdownTime;
-    this.durationWidget.val(pgUtil.getStringFromMS(this.countdownDuration[category]));
-    this.clock.setCountdown(this.countdownDuration[category]);
-
-    // update the screen widgets
-    //$("#countdown_setDuration").val(pgUtil.getStringFromMS(data.countdownTime));
-    //$("#countdown_setRandom").val(pgUtil.getStringFromMS(data.randomInterval));
-    //$("#countdown_setDuration").prop("disabled", e.running);
-    //$("#countdown_setRandom").prop("disabled", e.running);
-    
-    if(e.running == 1) {
+    this.durationWidget.val(pgUtil.getStringFromMS(data.countdownTime));
+    this.clock.setCountdown(data.countdownTime);
+    var e = this.getElapsedTimer();
+    if(this.isRunning()) {
         this.clock.startFromTime(e.startTime);
     }
     else {
         this.clock.setElapsedMS(e.duration);
     }
-    $("#countdown_duration").show();
-    if(e.running == 1) {
-        $('#timer_start').hide().prop('disabled', true);
-        $('#timer_stop').show().prop('disabled', false);
-    } else {
-        $('#timer_start').show().prop('disabled', false);
-        $('#timer_stop').hide().prop('disabled', true);
-    }
-    return e.running;
 };
 
-timer.prototype.settings = function() {
-    if(arguments.length) {
-        var data = this.getPageData();        
+Timer.prototype.settings = function(show, data) {
+    if(show) {
         $("#timer_alarm").val(data.timerAlarm).change();
         $("#timer_loop").prop('checked', data.loop).checkboxradio("refresh");
-        $("#countdown_setDuration").val(pgUtil.getStringFromMS(data.countdownTime));
+        $("#countdown_setDuration").val(pgUtil.getStringFromMS(data.countdownInterval));
         $("#countdown_setRandom").val(pgUtil.getStringFromMS(data.randomInterval));
         if(pgUtil.isWebBrowser())
             $("#timer_extraAlarmsDiv").hide();
     }
     else {
-        this.refreshTimer();
-        var data = this.getPageData();
-        data.timerAlarm = $("#timer_alarm").val();
-        data.loop =       $("#timer_loop")[0].checked;
-        data.countdownTime = pgUtil.getMSFromString($("#countdown_setDuration").val());
-        data.randomInterval = pgUtil.getMSFromString($("#countdown_setRandom").val());
-        data.extraAlarms = parseInt($("#timer_extraAlarms").val());
-        this.changedCountdownTime(data);
-        return data;
+        data.timerAlarm        = $("#timer_alarm").val();
+        data.loop              = $("#timer_loop")[0].checked;
+        data.countdownInterval = pgUtil.getMSFromString($("#countdown_setDuration").val());
+        data.randomInterval    = pgUtil.getMSFromString($("#countdown_setRandom").val());
+        data.extraAlarms       = parseInt($("#timer_extraAlarms").val());
+        data.countdownTime     = this.computeNewCountdown(data);
+        this.refreshTimer(data);
     }
+    return data;
 };
 
-timer.prototype.resize = function() {
-    page.prototype.resize.call(this, false);
+Timer.prototype.resize = function() {
+    Page.prototype.resize.call(this, false);
 };
 
-timer.prototype.changedCountdownValue = function() {
-    //var value = pgUtil.getMSFromString($("#countdown_setDuration").val());
-    //var data = this.getPageData();
-    //data.countdownTime = value;
-    //this.setPageData(data);
-    //UI.timer.changedCountdownTime(data);
-    return false;
-}
-timer.prototype.changedRandomValue = function(value) {
-    //var value = pgUtil.getMSFromString($("#countdown_setRandom").val());
-    //var data = this.getPageData();
-    //data.randomInterval = value;
-    //this.setPageData(data);
-    //UI.timer.changedCountdownTime(data);
-    return false;
-}
-
-timer.prototype.changedCountdownTime = function(data) {
-    // should the following set all categories?
-    var category = pg.category();
-    var countdownTime = Math.floor(data.countdownTime + data.randomInterval * Math.random() );
-    UI.timer.countdownDuration[category] = countdownTime;
-    UI.timer.refreshTimer(category);
-}
-
-timer.prototype.running = function(cat) {
-    return this.startTime.hasOwnProperty(cat) && (this.startTime[cat] > 0);
-};
-    
-timer.prototype.getPageData = function(category) {
-    category = (typeof(category) != "undefined") ? category : pg.category();
-    var data = pg.getPageData("timer", category);
+Timer.prototype.getPageData = function() {
+    var data = pg.getPageData("timer", pg.category());
     if(! ('timerAlarm' in data))
-        data.timerAlarm     = "both";
+        data.timerAlarm = "both";
     if(! ('loop' in data))
-        data.loop           = 0;
-    if(! ('countdownTime' in data))
-        data.countdownTime  = 4*1000;
+        data.loop = 0;
+    if(! ('startTime' in data))
+        data.startTime = 0;
+    if(! ('countdownInterval' in data))
+        data.countdownInterval = 4*1000;
     if(! ('randomInterval' in data))
         data.randomInterval = 4*1000;
     if(! ('extraAlarms' in data))
         data.extraAlarms = 0;
+    if(! ('countdownTime' in data))
+        data.countdownTime  = this.computeNewCountdown(data);
     return data;
 };
 
-timer.prototype.lever = function(arg) {
-    if(arg=="left") {
-        this.reset(pg.category(), false);
-    }
-    else if(arg=="right") {
-        this.startStop();
-    }
-};
-
-timer.prototype.setNotification = function(category, atTime) {
+Timer.prototype.setNotification = function(atTime) {
     if(atTime < pgUtil.getCurrentTime()) {
         atTime = pgUtil.getCurrentTime() + 200;
-        showLog("Error: notification scheduled in the past.");
+        pgUI_showLog("Error: notification scheduled in the past.");
     }
-    var pageData = this.getPageData(category);
-    var hasSound = pageData.timerAlarm=="sound" || pageData.timerAlarm=="both";
-    var hasText  = pageData.timerAlarm=="text" || pageData.timerAlarm=="both";
-    var data = this.getPageData(category);
+    var pageData = this.getPageData();
+    var hasSound = pageData.timerAlarm==="sound" || pageData.timerAlarm==="both";
+    var hasText  = pageData.timerAlarm==="text" || pageData.timerAlarm==="both";
+    var data = this.getPageData();
     var times = [atTime];
     //if(data.loop) {
         for(var i=0; i<data.extraAlarms; i++) 
-            times[times.length] = times[times.length-1] + this.computeNewInterval(category);
+            times[times.length] = times[times.length-1] + this.computeNewCountdown();
     //}
-    this.unsetNotification(category);
-    pgNotify.setNotification(category, times, hasText, hasSound);
+    this.unsetNotification();
+    pgNotify.setNotification(pg.category(), times, hasText, hasSound);
 };
 
-timer.prototype.unsetNotification = function(category) {
-    pgNotify.removeCategory(category);
-    showLog("Unset "+category+" notification.");
+Timer.prototype.unsetNotification = function() {
+    pgNotify.removeCategory(pg.category());
+    pgUI_showLog("Unset "+pg.category()+" notification.");
 };
 
-timer.prototype.notificationCallback = function(data, running) {
-    running = typeof(running)!= "undefined" ? running : false;
+// The following method has posed a problem for the infrastructure because it is a notification
+// which may pertain to a non-current category (i.e. not the one returned by pg.category() ).
+// We used to pass around a category parameter, which is error prone.
+// We now just pay the overhead of switching the global (pg) category
+Timer.prototype.notificationCallback = function(notifyData, running) {
+    running = typeof(running)!== "undefined" ? running : false;
     // remove the notification. This allows our app to play sound and display text.
-    showLog("Received " +data.category +" notification callback at: " + pgUtil.getCurrentTime() + " with time : " + data.time);
-    var eventRunning;
-    if(data.time != 0) {
-        eventRunning = this.refreshTimer(data.category);
-        this.reset(data.category, true, data);
+    pgUI_showLog("Received " +notifyData.category +" notification callback at: " + pgUtil.getCurrentTime() + " with time : " + notifyData.time);
+
+    this.pushCategory(notifyData.category);
+    //this.refreshTimer();
+    var scheduledEnd = notifyData.time;
+    var id = notifyData.id;
+    if(scheduledEnd !== 0) {
+        this.notifyReset(scheduledEnd, id);
     }
     else {
         // There was no notification, but perhaps there should have been.
         // Call reset anyway to restart the clock.
-        eventRunning = this.refreshTimer(data.category);
+        var data = this.getPageData();
+        scheduledEnd   = data.startTime + data.countdownTime;
         if(running) {
-            this.reset(data.category, true);
-            //this.startStop(data.category); //stop
-            //this.startStop(data.category); //start
+            this.notifyReset(scheduledEnd, id);
         }
     }
-    //if(running != eventRunning)
-    //showAlert("eventRunning: "+eventRunning+", running: "+running);
-};
+    this.popCategory();
+ };
 
-timer.prototype.timerCallback = function(ms) {
+Timer.prototype.timerCallback = function(ms) {
     var str = pgUtil.getStringFromMS(ms, true);
     this.timerWidget.val(str);
     //var category = page.category();
@@ -224,117 +177,109 @@ timer.prototype.timerCallback = function(ms) {
     //$('#timer_knob').val(frac).trigger('change');
 };
 
-timer.prototype.startStop = function(category, time, isNotification) {
-    category = (typeof(category) != "undefined") ? category : pg.category();
-    var remaining = this.clock.getRemaining();
-    if(remaining==0 && !this.running(category) ) {
-        this.reset(category, false);
-        remaining = this.clock.getRemaining();
-    }
-    time = (typeof(time) != "undefined") ? time : pgUtil.getCurrentTime()+1;// this will occur after any reset
-    var currentPage = pg.page()=="timer" && pg.category()==category;
-    if(! this.running(category)) {
-        var data = this.getPageData(category);
-        var dur = this.countdownDuration[category];
-        if(dur==0)
-            return;  // there is no zero-length countdown.
-        this.clock.setCountdown(dur);
-        this.clock.start();
-        $('#timer_start').hide().prop('disabled', true);
-        $('#timer_stop').show().prop('disabled', false);
-        this.startTime[category] = time;
-        // Set a notification.
-        // This may mean that both the timer and the notification attempt to trigger the Reset()
-        this.setNotification(category, time + remaining);
+Timer.prototype.start = function(restart) {
+    if(restart) {
+        this.refreshTimer();
+        ButtonPage.prototype.start.call(this, restart);
     }
     else {
-        if(!isNotification)
-            this.unsetNotification(category);
-        this.clock.stop();
-        $('#timer_start').show().prop('disabled', false);
-        $('#timer_stop').hide().prop('disabled', true);
-        var dur = time - this.startTime[category];
-        pg.addNewEvents({'page': "timer",
-                    'type': "interval",
-                    'start': this.startTime[category],
-                    'duration': dur,
-                    }, true);
-        this.startTime[category] = 0;
-        this.refreshTimer(category);
-        //this.unsetNotification(category);
+        var data = this.getPageData();
+        var time = pgUtil.getCurrentTime()+1; // this will occur after any reset
+        var e = this.getElapsedTimer();
+        var remaining = e.duration;
+        if(!remaining) {
+            remaining = data.countdownTime;
+            this.clock.setCountdown(remaining);
+            this.reset();
+            this.clock.startFromTime(time);
+        }
+        else
+            this.clock.start();
+        ButtonPage.prototype.start.call(this, restart);
+        this.setPageDataField("startTime", time);
+        // Set a notification.
+        // This may mean that both the timer and the notification attempt to trigger the Reset()
+        this.setNotification(time + remaining);
     }
-    syncSoon();
-    return false;
+};
+Timer.prototype.stop = function(time, isNotification) {
+    time = (typeof(time) !== "undefined") ? time : pgUtil.getCurrentTime()+1; // ensure this will occur after any reset
+    isNotification = (typeof(isNotification) !== "undefined") ? isNotification : false;
+    ButtonPage.prototype.stop.call(this);
+    if(!isNotification)
+        this.unsetNotification();
+    this.clock.stop();
+    var data = this.getPageData();
+    pg.addNewEvents({'page': "timer",
+        'type': "interval",
+        'start': data.startTime,
+        'duration': time - data.startTime
+    }, true);
+    data.startTime = 0;
+    this.setPageData(data);
+    this.refreshTimer();
 };
 
-timer.prototype.computeNewInterval = function(category) {
-    var data = this.getPageData(category);
-    var interval = Math.floor(data.countdownTime + data.randomInterval * Math.random() );
-    return interval;
-};
-
-timer.prototype.reset = function(category, complete, notification) {
-    var isNotification = (typeof(notification) != "undefined") ? true : false;
+Timer.prototype.reset = function() {
+    ButtonPage.prototype.reset.call(this);
     var time           = pgUtil.getCurrentTime();
-    var currentPage    = (pg.page()=="timer") && (pg.category()==category);
-    var data           = this.getPageData(category);
-    var newInterval    = this.countdownDuration[category];//pgUtil.getMSFromString(this.durationWidget.value);
-    var scheduledEnd   = this.startTime[category] + this.countdownDuration[category];
-    if(isNotification)
-        scheduledEnd = notification.time;
-    var finished       = complete && data.loop==0;
+    var data           = this.getPageData();
+
+    // add the new event
+    var edata = {'resetTime': data.countdownTime, 'complete': false};
+    pg.addNewEvents({'page': "timer", 'type': "reset", 'start': time, 'data': edata}, true);
+    // If we are called from the pgNotify callback, reschedule
+    if (this.isRunning()) { // always true
+        this.setNotification(time + data.countdownTime);
+    }
+    // update the clock
+    this.refreshTimer();
+};
+Timer.prototype.notifyReset = function(scheduledTime, id) {
+    ButtonPage.prototype.reset.call(this);
+    var time           = pgUtil.getCurrentTime();
+    var currentPage    = (pg.page()==="timer");
+    var data           = this.getPageData();
+    var finished       = !data.loop;
 
     // trigger startStop if we have finished
     var resetTime = time;
     if(finished) {
-        resetTime = scheduledEnd;
+        resetTime = scheduledTime;
         // set the start time, execute the alarm.
-        if(this.running(category))
-            this.startStop(category, resetTime, isNotification); // was "time", could be notification.time
+        if(this.isRunning())
+            this.stop(resetTime, true); // was "time", could be notification.time
         if(currentPage)
-            this.refreshTimer(category);
+            this.refreshTimer();
     }
     // add the new event
-    if(complete) {
-        newInterval = this.computeNewInterval(category);
-        this.countdownDuration[category] = newInterval;
-    }
-    var edata = {'resetTime': newInterval, 'complete': complete};
-    pg.addNewEvents({'page': "timer", 'type': "reset", 'category': category, 'start': resetTime, 'data': edata}, true);
+    var newInterval = this.computeNewCountdown();
+    data.countdownTime = newInterval;
+    this.setPageDataField("countdownTime", newInterval);
+
+    var edata = {'resetTime': newInterval, 'complete': true};
+    pg.addNewEvents({'id': id, 'page': "timer", 'type': "reset", 'start': resetTime, 'data': edata}, true);
     if(!finished) {
-        // If we are called from the pgNotify callback, reschedule
-        if(newInterval) {
-            if(complete) {
-                if(isNotification) {
-                    this.setNotification(category, time + newInterval);
-                }
-            }
-            else {
-                if(this.running(category)) {
-                    this.setNotification(category, time + newInterval);
-                }
-            }
-        }
+        this.setNotification(time + newInterval);
         // if this is the current page, update the clock
-        if(currentPage) {
-            this.refreshTimer(category);
+        if (currentPage) {
+            this.refreshTimer();
         }
     }
-    
-    syncSoon();
-    return false;
+};
+Timer.prototype.computeNewCountdown = function(data) {
+    data = data || this.getPageData();
+    return Math.floor(data.countdownInterval + data.randomInterval * Math.random() );
 };
 
-timer.prototype.getElapsedTimer = function(category) {
-    var e              = pg.getEventsInPage("timer", category);
-    var startTime      = 0;
-    if(this.startTime.hasOwnProperty(category))
-        startTime = this.startTime[category];
-    var running        = startTime != 0;
+Timer.prototype.getElapsedTimer = function() {
+    var e         = pg.getEventsInPage("timer");
+    var data      = this.getPageData();
+    var startTime = data.startTime;
+    var running        = startTime !== 0;
     // We are not allowed to use the page data in this computation.
     // however, the first event will have no prior reset events, so needs a starting value.
-    var data           = this.getPageData(category);
-    var countdownTime  = Math.floor(data.countdownTime + data.randomInterval * Math.random() );
+    var countdownTime  = this.computeNewCountdown(data);
     //var countdownTime  = data.countdownTime;
     //var countdownTime  = 0.0;
     var duration       = 0.0;
@@ -344,7 +289,7 @@ timer.prototype.getElapsedTimer = function(category) {
         var elapsedTime = 0.0;
         for(var i=0; i<e.length; i++) {
             var event = pgUtil.parseEvent(e[i]);
-            if(event.type=="interval") {
+            if(event.type==="interval") {
                 var eventStartTime = event.start;
                 var eventDuration  = event.duration;
                 var eventStopTime  = event.start + event.duration;
@@ -357,8 +302,8 @@ timer.prototype.getElapsedTimer = function(category) {
                 else
                     elapsedTime += event.duration;
             }
-            else if(event.type == "reset") {
-                if(resetTime == 0) {
+            else if(event.type === "reset") {
+                if(resetTime === 0) {
                     countdownTime = parseInt(event.data.resetTime);
                     resetTime     = event.start;
                 }
@@ -372,7 +317,7 @@ timer.prototype.getElapsedTimer = function(category) {
     else {
         for(var i=0; i<e.length; i++) {
             var event = pgUtil.parseEvent(e[i]);
-            if(event.type=="interval") {
+            if(event.type==="interval") {
                 var eventStartTime = event.start;
                 var eventDuration  = event.duration;
                 var eventStopTime  = event.start + event.duration;
@@ -391,7 +336,7 @@ timer.prototype.getElapsedTimer = function(category) {
                 else
                     duration += event.duration;
             }
-            else if(event.type == "reset") {
+            else if(event.type === "reset") {
                 if(!resetTime) {
                     countdownTime = parseInt(event.data.resetTime);
                     resetTime     = event.start;
@@ -401,9 +346,8 @@ timer.prototype.getElapsedTimer = function(category) {
     }
     // If we are running, the client should use the start time.
     // otherwise, the client should use the duration.
-    var ans = {'countdownTime': countdownTime, 'startTime': startTime, 'duration': duration, 'running': running};
-    return ans;
+    return {'countdownTime': countdownTime, 'startTime': startTime, 'duration': duration, 'running': running};
 };
 
-UI.timer = new timer();
+UI.timer = new Timer();
 //# sourceURL=timer.js

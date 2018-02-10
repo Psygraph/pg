@@ -8,59 +8,54 @@ pg.init();
 ONSEN = false;
 
 var UI = {
-    home:       null,
-    stopwatch:  null,
-    timer:      null,
-    counter:    null,
-    list:       null,
-    map:        null,
-    note:       null,
-    graph:      null,
-    chart:      null,
-    about:      null,
-    preferences:null,
-    categories: null,
-    help:       null,
+    home:        null,
+    stopwatch:   null,
+    timer:       null,
+    counter:     null,
+    list:        null,
+    map:         null,
+    note:        null,
+    graph:       null,
+    chart:       null,
+    about:       null,
+    preferences: null,
+    categories:  null,
+    help:        null,
+    dialog:      null,
 
-    state:      {},
-    window:     {t: null, onPageChange: null, currentPage: null, alertCallback: null}
+    state:      {accel: {}, orient: {}, location: {}, notify: {}, random: {}, device: {}, bluetooth: {}},
+    window:     {t: null, currentPage: null, alertCallback: null}
 };
 
 function UIinitialize() {
     if(UI.window.t)
         clearTimeout(UI.window.t);
 }
-
-// INITIALIZATION ==============================
-
-function finalInit() {
-    document.addEventListener("pause",  onPause,    false);
-    document.addEventListener("resume", onResume,   false);
-    document.addEventListener("backbutton", onBackKeyDown, false);
-    document.addEventListener("volumedownbutton", lever.bind(this,"left"), false);
-    document.addEventListener("volumeupbutton", lever.bind(this,"right"), false);
-    window.addEventListener("resize",   onResize,   false);
-    window.addEventListener("keydown",  onKeyDown,  false);
-    window.addEventListener("error",    onError,    false);
-    $("body").on("vclick", singleClick );
-
-    // set the online status
-    if(navigator.connection) {
-        var networkState = navigator.connection.type;
-        if(networkState == Connection.NONE)
-            pg.online = false;
-        else
-            pg.online = true;
-        document.addEventListener("online", onOnline, false);
-        document.addEventListener("offline", onOffline, false);
+// update page, accel and location state
+function updateState(tf) {
+    //var page = getPage();
+    //if(UI[page]) {
+    //    UI.state[page] = UI[page].update(false);
+    //}
+    if(tf) {
+        pgAccel.update(true,     UI.state.accel);
+        pgLocation.update(true,  UI.state.location);
+        pgNotify.update(true,    UI.state.notify);
+        pgRandom.update(true,    UI.state.random);
+        pgOrient.update(true,    UI.state.orient);
+        pgBluetooth.update(true, UI.state.bluetooth);
+        pgDevice.update(true,    UI.state.device);
     }
-    
-    // load Bluetooth
-    pgBluetooth.init();
-    gotoLoadedPage("home"); 
+    else {
+        UI.state.accel     = pgAccel.update(false,     UI.state.accel);
+        UI.state.location  = pgLocation.update(false,  UI.state.location);
+        UI.state.notify    = pgNotify.update(false,    UI.state.notify);
+        UI.state.random    = pgRandom.update(false,    UI.state.random);
+        UI.state.orient    = pgOrient.update(false,    UI.state.orient);
+        UI.state.bluetooth = pgBluetooth.update(false, UI.state.bluetooth);
+        UI.state.device    = pgDevice.update(false,    UI.state.device);
+    }
 }
-
-
 // UI things =============================================
 
 function onOnline() {
@@ -76,14 +71,13 @@ function onPause() {
     //cordova.plugins.backgroundMode.enable();
     syncSoon();
     pg.background = true;
-    showLog("Entering pause state...");
+    pgUI_showLog("Entering pause state...");
     showPage(false);
     //UI.home.logEvent("pause");
-    return;    
 }
 function onResume() {
     pg.background = false;
-    showLog("Resuming...");
+    pgUI_showLog("Resuming...");
     showPage(true);
     syncSoon();
     //UI.home.logEvent("resume");
@@ -93,19 +87,19 @@ function onBackKeyDown() {
 }
 
 function onError(err) {
-    var event = {'start':pgUtil.getCurrentTime(),
+    var event = {'start': pgUtil.getCurrentTime(),
                  'page': "home",
                  'type': "error"};
     event.data = {'text': err.message};
     event.data.title = "Error: " +pgFile.basename(err.filename) +":" +err.lineno;
-    if(UI.home.loggingIn) {
+    if(pgLogin.loggingIn) {
         pgFile.writeFile("com.psygraph.lastError", event);
-        showAlert(event.data.text, event.data.title);
+        pgUI.showAlert(event.data.text, event.data.title);
     }
-    if(pg.getUserDataValue("debug")) {
+    if(pg.debug()) {
         pg.addNewEvents(event, true);
         syncSoon();
-        showAlert(event.data.text, event.data.title);
+        pgUI.showAlert(event.data.text, event.data.title);
     }
     // returning true overrides the default window behaviour (i.e. we handled the error).
     return true;
@@ -113,29 +107,29 @@ function onError(err) {
 
 var mouse_clicks = 0, mouse_timer = null;
 function singleClick(ev) {
-    if(! $(ev.target).hasClass("leftMenuButton") && isSlideNavOpen()) {
-        slideNav(false);
+    if(! $(ev.target).hasClass("leftMenuButton") && pgUI.isSlideNavOpen()) {
+        pgUI.slideNav(false);
         ev.preventDefault();
         return;
     }
-    if($('div#modal_page').length) {
+    if($('div.modal_page').length) {
         return true;
     }
     var page = getPage();
     // we only look for triple click on the about or counter pages.
-    if(! (page=="counter" ||
-          page=="about")) {
+    if(! (page==="counter" ||
+          page==="about")) {
         return true;
     }
     var DELAY = 400;
     mouse_clicks++;
-    if(mouse_clicks == 1) {
+    if(mouse_clicks === 1) {
         mouse_timer = setTimeout(function() {
                 onSingleTap(ev);
                 mouse_clicks = 0;
             }, DELAY);
     } 
-    else if(mouse_clicks == 2) {
+    else if(mouse_clicks === 2) {
         clearTimeout(mouse_timer);
         mouse_timer = setTimeout(function() {
                 onDoubleTap(ev);
@@ -144,35 +138,25 @@ function singleClick(ev) {
     } 
     else {
         clearTimeout(mouse_timer);
-        showButtons(true);
+        UI[pg.page()].tripleClick();
         mouse_clicks = 0;
         ev.preventDefault();
         ev.stopPropagation();
     }
 }
 function onSingleTap(ev) {
-    if(! pg.getUserDataValue('screenTaps'))
-        return;
-    var ca = $(ev.target).closest(".clickarea");
-    if(ca.length)
-        lever("right");
 }
 function onDoubleTap(ev) {
-    if(! pg.getUserDataValue('screenTaps'))
-        return;
-    var ca = $(ev.target).closest(".clickarea");
-    if(ca.length)
-        lever("left");
 }
 
 function isInInputArea(e) {
     var isInput = false;
-    isInput |= (e.target.type == "text"     ||
-                e.target.type == "textarea" ||
-                e.target.type == "search"   ||
-                e.target.type == "input"    ||
-                e.target.type == "password" ||
-                e.target.type == "select");
+    isInput |= (e.target.type === "text"     ||
+                e.target.type === "textarea" ||
+                e.target.type === "search"   ||
+                e.target.type === "input"    ||
+                e.target.type === "password" ||
+                e.target.type === "select");
     isInput |= $(e.target).closest(".select2").length;
     return isInput;
 }
@@ -237,10 +221,10 @@ function onKeyPress(e) {
         switch(key) {
         case 13: // return key
             var def = $('.default');
-            if(def.length==1)
+            if(def.length===1)
                 def.click();
             else
-                showLog("Too many defaults");
+                pgUI_showLog("Too many defaults");
             break;
         default:
             return true;
@@ -252,14 +236,14 @@ function onKeyPress(e) {
 
 function lever(arg) {
     var page = getPage();
-    if( page != "" &&
-        (pg.allPages.indexOf(page) != -1 || page=="about"))
+    if( page !== "" &&
+        (pg.allPages.indexOf(page) !== -1 || page==="about"))
         UI[page].lever(arg);
 }
 
 function onResize() {
     var id = getPage();
-    if(typeof(UI[id])!="undefined")
+    if(typeof(UI[id])!=="undefined")
         UI[id].resize();
 }
 
@@ -267,160 +251,13 @@ function onResize() {
 // Pages that modify events or state should call this,
 // but it is also called when navigating away from pages.
 function syncSoon() {
-    callback = (typeof(callback)=="undefined") ? (function fx(){}) : callback;
+    callback = (typeof(callback)==="undefined") ? (function fx(){}) : callback;
     clearTimeout(UI.window.t);
     UI.window.t = setTimeout(timeout, 4000);
     function timeout() {
-        if(UI.home && UI.home.hasFinishedLogin())
+        if(pgLogin.hasFinishedLogin())
             PGEN.synchronize();
     }
-}
-
-// User interaction ================================
-
-function showDialog(s, message, callback, nextPage) {
-    nextPage = (typeof(nextPage)=="undefined") ? pg.page() : nextPage;
-    $("#dialog_page .pg_page_title").text(s.title);
-    $("#dialogText").html(message);
-    $("#dialogText select").trigger("refresh");
-    $(".default").removeClass('default');
-
-    if(typeof(s['true'])!="undefined") {
-        $("#dialogOK").html(s['true']);
-        $("#dialogOK").show();
-        $("#dialogOK").css('display','');
-    }
-    else {
-        $("#dialogOK").html(".");
-        $("#dialogOK").hide();
-    }
-    $("#dialogOK").one('click', function(e) {
-            gotoPage(nextPage);
-            if(callback) 
-                callback(1);
-            return true;
-        });
-    
-    if(typeof(s['false'])!="undefined") {
-        $("#dialogCancel").html(s['false']);
-        $("#dialogCancel").show();
-        // sometimes these appear with "inline" defined, for no appearent reason....
-        $("#dialogCancel").css('display','')
-    }
-    else {
-        $("#dialogCancel").html(".");
-        $("#dialogCancel").hide();
-    }
-    $("#dialogCancel").one('click', function(e) {
-            gotoPage(nextPage);
-            if(callback) 
-                callback(0);
-            return true;
-        });
-    
-    if(typeof(s['other'])!="undefined") {
-        $("#dialogOther").html(s['other']);
-        $("#dialogOther").show();
-        $("#dialogOther").css('display','');
-    }
-    else {
-        $("#dialogOther").hide();
-        $("#dialogOther").html(s['other']);
-    }
-    $("#dialogOther").one('click', function(e) {
-            gotoPage(nextPage);
-            if(callback)
-                callback(2);
-            return true;
-        });
-    
-    gotoPage("dialog");
-    $("#dialog_page").trigger("create");
-    //$("#dialog").trigger("create").trigger("refresh");
-    var input = $("#dialogText").find("input");
-    if(input.length) {
-        input[0].focus();
-    }
-    if(s['true']) {
-        $("#dialogOK").addClass('default');
-    }
-}
-
-function showBusy(show) {
-    $('div#modal_page').remove();
-    if(show) {
-        var T  = $("#busy_template").prop('content');
-        var n   = $(T.children[0]).clone();
-        $('body').prepend(n[0]);
-    }
-}
-function showButtons(show) {
-    $('div#modal_page').remove();
-    if(show) {
-        var T   = $("#buttons_template").prop('content');
-        var n   = $(T.children[0]).clone();
-        $('body').prepend(n[0]);
-        $("#buttons_page .fast").each(function(index, element) {
-                if (element.onclick) {
-                    $(element).on('vclick', element.onclick).prop('onclick', "return false");
-                }
-            });
-        var win = getWindowDims();
-        $("#buttons_page .lever_container").css({
-                'height':       win.height/2+"px",
-                    'width':    win.width+"px"
-                    });
-    }
-}
-function showLog(msg) {
-    console.log(msg);
-}
-function showWarn(msg) {
-    console.warn('WARNING: ' +msg);
-    if(pg.getUserDataValue("debug")) {
-        pg.addNewEvents({page: "home", type: "warn", data: {'text': msg}}, true);
-    }
-}
-function showError(msg) {
-    console.error('ERROR: ' +msg);
-    pg.addNewEvents({page: "home", type: "error", data: {'text': msg}}, true);
-}
-
-function showAlert(message, title, cb) {
-    title   = typeof(title)!="undefined" ? title : "Alert";
-    message = pgUtil.escape(message, false, false);
-    title   = pgUtil.escape(title, false, false);
-    var modal     = typeof(cb)!="undefined" ? false : true;
-    UI.window.alertCallback = typeof(cb)!="undefined" ? cb : null;
-    $(".default").removeClass('default');
-
-    $("#pgAlert").remove();
-    var html = '<div id="pgAlert" data-role="popup" id="popupDialog" data-overlay-theme="a" data-theme="a"'+
-        'data-position-to="window" data-dismissible="'+ !modal +'" class="ui-content" >'+
-        '<div id="alertHead" data-role="header" data-theme="a"><h1>'+title+'</h1></div>'+
-        '<div id="alertBody" role="main" class="ui-content">'+
-        '<div id="alertText">'+message+'</div>'+
-        '<a href="" class="ui-btn ui-corner-all ui-shadow default" '+
-        'onclick="$(\'#pgAlert\').popup(\'close\');return alertCallbackHolder();">OK</a>'+
-        '</div></div>';
-    var dlg = $(html);
-    $("body").append(dlg);
-    $("#pgAlert").enhanceWithin();
-    $("#pgAlert").popup().popup("open");
-}
-
-function alertCallbackHolder() {
-    if(UI.window.alertCallback)
-        UI.window.alertCallback.apply(this, arguments);
-    return false;
-}
-function printCheckbox(id, label, checked) {
-    s = "<label for='" +id+ "'>" +label+ "</label>";
-    s += "<input type='checkbox' id='" + id + "' name='"+id+"' value='"+id+"' ";
-    if(checked)
-        s += "checked ";
-    s += "/>";
-    return s;
 }
 
 // PAGE NAVIGATION ====================================
@@ -454,12 +291,6 @@ function goDown(event) {
 function getPage() {
     return UI.window.currentPage;
 }
-function getValidPage(page) {
-    if(page=="home" && pg.pages.length>1) {
-        //    page = pg.pages[1];
-    }
-    return page;
-}
 function gotoLoadedPage(page) {
     if(! UI[page]) {
         setTimeout(gotoLoadedPage.bind(this,page), 200);
@@ -483,7 +314,7 @@ function gotoPageSettings() {
     $("#"+page+"_main").hide();
     $("#"+page+"_settings").show();
     $("#"+page+"_help").hide();
-    UI[page].createSettings(data);
+    UI[page].createSettings();
     UI[page].resize();
 }
 function gotoPageHelp() {
@@ -505,7 +336,6 @@ function getSubPage() {
         return "";
 }
 function gotoPage(newPage) {
-    newPage = getValidPage(newPage);
     var oldPage = getPage();
     UI.lastPage = oldPage;
     var opts = {'changeHash': false,
@@ -513,21 +343,22 @@ function gotoPage(newPage) {
     };
     // update old state
     if(oldPage && UI[oldPage]) {
-        UI.state[oldPage] = UI[oldPage].update();
+        var data = UI[oldPage].getPageData();
+        UI.state[oldPage] = UI[oldPage].update(false, data);
     }
     // change the PG page
     var index = pg.pages.indexOf(newPage);
-    if(index==-1) {
+    if(index===-1) {
         // this is a compatibility issue.  Users used to be able to hide pages
-        if(pg.allPages.indexOf(newPage) != -1)
+        if(pg.allPages.indexOf(newPage) !== -1)
             pg.pages.push(newPage);
         index = pg.pages.indexOf(newPage);
     }
-    if(index!=-1) {
+    if(index!==-1) {
         pg.pageIndex = index;
     }
     // remove the loading dialog, if present
-    showBusy(false);
+    pgUI.showBusy(false);
     // change the display page
     if(oldPage == null)
         opts.allowSamePageTransition = true;
@@ -535,34 +366,36 @@ function gotoPage(newPage) {
     if(ONSEN) {
         //$(".page").hide();
         //$("#"+newPage+"_page").show();        
-        var opts = {
+        var lopts = {
             'animation' : "slide"
         };
         //$("#onsNavigator")[0].replacePage("ons_"+newPage+"_page");
-        $("#onsNavigator")[0].replacePage("html/"+newPage+".html", opts);
+        $("#onsNavigator")[0].replacePage("html/"+newPage+".html", lopts);
     }
     else {
+        var pc = $.mobile.pageContainer;
         //$(":mobile-pagecontainer").pagecontainer("change", newPage+"_page", opts);
-        $(":mobile-pagecontainer").pagecontainer("change", $("#"+newPage+"_page"), opts);
+        pc.pagecontainer("change", $("#"+newPage+"_page"), opts);
     }
     // update new state
     if(newPage && UI[newPage]) {
-        UI[newPage].update(true, UI.state[newPage]);
+        var data = UI[newPage].getPageData();
+        UI[newPage].update(true, data);
     }
-    if(UI.onPageChange) {
-        UI.onPageChange();
-        UI.onPageChange = null;
-    }
-    syncSoon();
+    //if(UI.onPageChange) {
+    //    UI.onPageChange();
+    //    UI.onPageChange = null;
+    //}
+    pgAudio.stopAlarm(-1);
     //updateSubheader(); // updating the page does not change the header, which currently has only category info
     gotoPageMain();
-    slideNav(false);
+    pgUI.slideNav(false);
 }
 function showPage(update) {
     var page = getPage();
     if(UI[page]) {
         if(!update)
-            UI.state[page] = UI[page].update(false);
+            UI.state[page] = UI[page].update(false, UI[page].getPageData());
         else {
             UI[page].update(true, UI.state[page]);
             syncSoon();
@@ -572,7 +405,7 @@ function showPage(update) {
 function resetPage() {
     var page = getPage();
     if(UI[page]) {
-        UI.state[page] = UI[page].update(false);
+        UI.state[page] = UI[page].update(false, UI[page].getPageData());
         UI[page].update(true, UI.state[page]);
     }
 }
@@ -585,7 +418,7 @@ function updateSubheader() {
         menus.removeClass("ui-disabled");
     // Update the category name (string)
     var catName = pg.category();
-    if(catName == "Uncategorized")
+    if(catName === "Uncategorized")
         catName = "&nbsp;";
     $(".category").html(catName);    
     menus.empty();
@@ -597,9 +430,9 @@ function updateSubheader() {
 }
 
 function gotoCategory(num) {
-    if(typeof(num)=="string") {
+    if(typeof(num)==="string") {
         var index = pg.categories.indexOf(num);
-        if(index != -1)
+        if(index !== -1)
             num = index;
         else
             num = 0;
@@ -609,40 +442,42 @@ function gotoCategory(num) {
     num = num > pg.numCategories()-1 ? pg.numCategories()-1 : num;
     // update the stylesheet URL
     var page = getPage();
-    UI.state[page] = UI[page].update(false);
+    UI.state[page] = UI[page].update(false, UI[page].getPageData());
     pg.categoryIndex = num; // the category change has to happen between the state updates
-    if(pg.pages.indexOf(page) != -1) // make sure it is not the settings page
+    if(pg.pages.indexOf(page) !== -1) // make sure it is not the settings page
         UI[page].update(true, UI.state[page]);
     var cd = pg.getCategoryData(pg.category());
     var style = "media/" + cd.style;
     $("#user_style").attr("href", style);
+    $("html").css('backgroundColor', cd.color);
     updateSubheader();
     // reload the settings if the cateogry has changed
-    if(getSubPage()=="settings")
+    if(getSubPage()==="settings")
         gotoPageSettings();
 }
-
+/*
 function setPageChangeCallback(cb) {
     var oldPageChange = UI.onPageChange;
     UI.onPageChange = function() {
         cb();
+        pgAudio.stopAlarm(-1);
         if(oldPageChange)
             oldPageChange();
     };
 }
-
+*/
 // SERVER COMMUNICATION ==========================================
 
 function postData(data, callback, isAsync) {
     if(callback === undefined)
         callback = function(){};
-    if(isAsync == undefined)
+    if(isAsync === undefined)
         isAsync = true;
     var url = "";
-    if(data.action == "login" || data.action == "checkUser") {
+    if(data.action === "login" || data.action === "checkUser") {
         url = data.server + "/server.php";
         if(!pg.online) {
-            showLog("Not online, but tried: "+data.action);
+            pgUI_showLog("Not online, but tried: "+data.action);
             return callback(false, null);   
         }
     }
@@ -651,7 +486,7 @@ function postData(data, callback, isAsync) {
         data.username = pg.username;
         data.cert     = pg.cert;
     }
-    if(typeof(data.timeout)=="undefined")
+    if(typeof(data.timeout)==="undefined")
         data.timeout = 6000;
     data.version  = pg.version;
     var dat = JSON.stringify(data);
@@ -669,7 +504,7 @@ function postData(data, callback, isAsync) {
                 });
     function ajaxSuccess(d) {
         if(d.error) {
-            showLog(d.error);
+            pgUI_showLog(d.error);
             callback(false, d);
         }
         else {
@@ -677,23 +512,26 @@ function postData(data, callback, isAsync) {
         }
     }
     function ajaxError(request, status, error) {
-        showLog("ERROR: " + status + ", " + error);
+        pgUI_showLog("ERROR: " + status + ", " + error);
         if(request.responseText)
-            showLog(request.responseText);
+            pgUI_showLog(request.responseText);
         callback(false, null);
     }
 }
+
+
+
 
 var PGEN = {
     servers: [],
 
     augmentServerURL: function(server) {
-        if(PGEN.servers.indexOf(server) == -1) {
-            if(server.indexOf("plugins")==-1) {// xxx this is not a great test for the plugins directory
+        if(PGEN.servers.indexOf(server) === -1) {
+            if(server.indexOf("plugins")===-1) {// xxx this is not a great test for the plugins directory
                 // call wordpress via XML-RPC
                 var args = new Array("pg.serverURL");
                 var possibleServer = xmlRpcSend(server + "/xmlrpc.php", args);
-                if(possibleServer != "") {
+                if(possibleServer !== "") {
                     PGEN.servers[server] = possibleServer;
                 }
                 else
@@ -709,7 +547,7 @@ var PGEN = {
         pg.useServer = true;
         server = PGEN.augmentServerURL(server);
         if(!pg.online)
-            showLog("VerifyUser called when not online");
+            pgUI_showLog("VerifyUser called when not online");
         postData({'action': "checkUser", 'server': server, 'username': username}, verifyCB, false);
         function verifyCB(status, d) {
             if(status) {
@@ -720,11 +558,11 @@ var PGEN = {
                 pg.server = server;
                 // was connectivity bad, or was the username unknown?
                 if(!d) {
-                    showLog("Could not connect to server for verification");
+                    pgUI_showLog("Could not connect to server for verification");
                     callback("server");
                 }
                 else {
-                    showLog("Plugin or user not found in WordPress");
+                    pgUI_showLog("Plugin or user not found in WordPress");
                     callback("user");
                 }
             }
@@ -735,14 +573,15 @@ var PGEN = {
         PGEN.readPG(pgLoaded);
         function pgLoaded(success, newPG) {
             if(success) {
-                if(username!=newPG.username) {
+                if(username!==newPG.username) {
                     // ??? should we write different (local) files for each username?
-                    showWarn("User '"+username+"' inheriting settings of '" +newPG.username +"'");
+                    pgUI_showWarn("User '"+username+"' inheriting settings of '" +newPG.username +"'");
                     pg.copySettings(newPG);
                 }
                 else
                     pg.copySettings(newPG);
             }
+            pg.updatePageData(); // add/remove new/obsolete page data
             PGEN.readEvents(callback);
             //updateNavbar();
         }
@@ -752,7 +591,7 @@ var PGEN = {
         // xxx we need to heavily comment this logic...
         pg.useServer = true;
         server = PGEN.augmentServerURL(server);
-        showLog("Attempted server login: " + server);
+        pgUI_showLog("Attempted server login: " + server);
         var loginSuccess = false;
         postData({'action': "login", 'server': server, 'username': username, 'cert': cert, 'password': password}, validated);
         
@@ -850,12 +689,12 @@ var PGEN = {
                 s = data[j];
                 // decode booleans, save files
                 for(var i in s) {
-                    if(s[i]=="true")
+                    if(s[i]==="true")
                         s[i] = true;
-                    else if(s[i]=="false")
+                    else if(s[i]==="false")
                         s[i] = false;
-                    else if(typeof(s[i])=="string" &&
-                            s[i].substring(0,5) == "data:") {
+                    else if(typeof(s[i])==="string" &&
+                            s[i].substring(0,5) === "data:") {
                         s[i] = pgFile.saveDataURI(field, s[i]);
                     }
                 }
@@ -874,37 +713,32 @@ var PGEN = {
             PGEN.writePG(pg, writeEvents);
         }
         function writeEvents() {
-            PGEN.writeEvents(pg.events, pg.deletedEvents, finish);
+            PGEN.writeEvents(pg, finish);
         }
         function finish(tf) {
             //pg.init();
             if(callback)
                 callback(tf);
-            showBusy(false);
+            pgUI.showBusy(false);
             gotoPage(pg.page());
         }
     },
     synchronize: function (callback) {
-        callback = (typeof(callback)=="undefined") ? (function fx(){}) : callback;
+        callback = (typeof(callback)==="undefined") ? (function fx(){}) : callback;
 
         // Update the pg, do the callback
         PGEN.writePG(pg, cb);
         
         if(!pg.dirty())
             return;
-        // update page, accel and location state
-        //var page = getPage();
-        //if(UI[page]) {
-        //    UI.state[page] = UI[page].update(false);
-        //}
-        UI.state.accel    = pgAccel.update(false);
-        UI.state.location = pgLocation.update(false);
-        //UI.state.help     = UI['help'].update;
+
+        updateState(false);
+
         pgFile.writeFile("com.psygraph.state", UI.state);
         //if(!quick) // Doing this on the settings pages will blow away any of the user's changes.
         //    resetPage();
         
-        PGEN.writeEvents(pg.events, pg.deletedEvents, moreSync);  // write the events locally
+        PGEN.writeEvents(pg, moreSync);  // write the events locally
         function cb() {
             UI.home.status();
             callback();
@@ -921,16 +755,16 @@ var PGEN = {
                 }
             }
             else {
-                showAlert("Could not save pg events file", "Error");
+                pgUI.showAlert("Could not save pg events file", "Error");
             }
         }
     },
     writePsygraph: function(data, callback) {
-        callback = typeof(callback)!="undefined" ? callback : cb;
+        callback = typeof(callback)!=="undefined" ? callback : cb;
         pgFile.writeFile("com.psygraph", data);
         function cb(success) {
             if(!success)
-                showAlert("Could not save psygraph settings file", "Error");
+                pgUI.showAlert("Could not save psygraph settings file", "Error");
         }
     },
     readPsygraph: function(callback) {
@@ -940,35 +774,51 @@ var PGEN = {
         var tempPG = new PG();
         tempPG.init();
         tempPG.copy(data, false);
-        callback = typeof(callback)!="undefined" ? callback : cb;
+        callback = typeof(callback)!=="undefined" ? callback : cb;
         pgFile.writeFile("com.psygraph.pg", tempPG, callback);
         function cb(success) {
             if(!success)
-                showAlert("Could not save pg settings file", "Error");
+                pgUI.showAlert("Could not save pg settings file", "Error");
         }
     },
     readPG: function(callback) {
         pgFile.readFile("com.psygraph.pg", callback);
     },
-    writeEvents: function(events, deletedEvents, callback) {
-        callback = typeof(callback)!="undefined" ? callback : cb;
-        var data = {'events': events, 'deletedEvents': deletedEvents};
+    writeEvents: function(pgTemp, callback) {
+        callback = typeof(callback)!=="undefined" ? callback : cb;
+        var data = {'events': pgTemp.events,
+            'deletedEvents': pgTemp.deletedEvents,
+            'selectedEvents': pgTemp.selectedEvents
+        };
         pgFile.writeFile("com.psygraph.events", data, callback);
         function cb(success) {
             if(!success)
-                showAlert("Could not save pg events file", "Error");
+                pgUI.showAlert("Could not save pg events file", "Error");
             //else  xxx logic to write then move the file
             //    pgFile.moveFile("com.psygraph.events_new", "com.psygraph.events");
         }
     },
     readEvents: function(callback) {
         pgFile.readFile("com.psygraph.events", cb);
+        pgFile.readFile("com.psygraph.state", cbState);
+
         function cb(success, data) {
             if(success) {
-                pg.events        = data.events;
-                pg.deletedEvents = data.deletedEvents;
+                pg.events         = data.events;
+                pg.deletedEvents  = data.deletedEvents;
+                if(data.selectedEvents)
+                    pg.selectedEvents = data.selectedEvents;
             }
             if(callback) callback(success);
+        }
+        function cbState(success, data) {
+            if(success) {
+                UI.state = data;
+                updateState(true);
+            }
+            else {
+                showLog("Could not read state file.");
+            }
         }
     },
     deleteFiles: function() {
@@ -977,8 +827,8 @@ var PGEN = {
     },
     updateSettings: function(newPG, callback) {
         if(pg.useServer) {
-            showBusy(true);
-            showLog("Writing settings to the server");
+            pgUI.showBusy(true);
+            pgUI_showLog("Writing settings to the server");
             postData({'action': "settings", 'pg': pgUtil.encode(newPG, true) },
                      function(success, request){getDataURL(success, request, newPG, callback)});
         }
@@ -987,7 +837,7 @@ var PGEN = {
         }
 
         function getDataURL(success, request, newPG, callback) {
-            if(success && request[0]!="mtime" && pgUtil.isWebBrowser()) {
+            if(success && request[0]!=="mtime" && pgUtil.isWebBrowser()) {
                 var doUpload = false;
                 var categoryData = {};
                 for(var cat in request.categoryData) {
@@ -1015,13 +865,13 @@ var PGEN = {
             }
             else
                 callback(success);
-            showBusy(false);
+            pgUI.showBusy(false);
         }
     },
     // download events from the server
     downloadEvents: function(callback) {
         if(!(pg.loggedIn && pg.online)) {
-            showAlert("You must be online and logged in to issue this command", "Not online");
+            pgUI.showAlert("You must be online and logged in to issue this command", "Not online");
             //$('#home_action').popup('close');
             callback(true);
         }
@@ -1031,7 +881,7 @@ var PGEN = {
         function createEvents(success, data) {
             if(success) {
                 pg.addEventArray(data, false, true);
-                PGEN.writeEvents(pg.events, pg.deletedEvents, cb);
+                PGEN.writeEvents(pg, cb);
             }
             else
                 cb();
@@ -1041,9 +891,9 @@ var PGEN = {
         }
     },
     uploadFiles: function(force, callback) {
-        force = typeof(force)=="undefined" ? false : force;
+        force = typeof(force)==="undefined" ? false : force;
         if(!(pg.loggedIn && pg.online)) {
-            showAlert("You must be online and logged in to issue this command");
+            pgUI.showAlert("You must be online and logged in to issue this command");
             callback(false);
             return;
         }
@@ -1054,7 +904,7 @@ var PGEN = {
         //callback = (typeof(callback)!="undefined")? callback : function(){};
         var callback = function(){};
         if(!(pg.loggedIn && pg.online)) {
-            showAlert("You must be online and logged in to issue this command");
+            pgUI.showAlert("You must be online and logged in to issue this command");
             return;
         }
         uploadDeletedEvents();
@@ -1078,7 +928,7 @@ var PGEN = {
                     pg.deleteDeletedEventIDs(data.ids);
                 }
                 else
-                    showLog("ERROR: Could not delete events.");
+                    pgUI_showLog("ERROR: Could not delete events.");
             }
         }
         function uploadCreatedEvents(callback) {
@@ -1107,7 +957,7 @@ var PGEN = {
                     pg.changeEventIDs(data.idlist);
                     resetPage(); // in case the page had been cacheing event ID's
                     /// xxx we should only write the events once.
-                    PGEN.writeEvents(pg.events, pg.deletedEvents);
+                    PGEN.writeEvents(pg);
                 }
                 callback(success);
                 //pg.deleteEventsInRange(data.startTime, data.endTime);
@@ -1116,25 +966,25 @@ var PGEN = {
         }
     },
     selectAction: function(selection) {
-        if(selection == "") {
+        if(selection === "") {
             // no-op.
         }
-        else if(selection == "downloadEvents") {
-            showBusy(true);
+        else if(selection === "downloadEvents") {
+            pgUI.showBusy(true);
             PGEN.downloadEvents(cb);
         }
-        else if(selection == "uploadFiles") {
-            showBusy(true);
+        else if(selection === "uploadFiles") {
+            pgUI.showBusy(true);
             PGEN.uploadEvents();
             PGEN.uploadFiles(true, cb);
         }
-        else if(selection == "deleteSettings") {
+        else if(selection === "deleteSettings") {
             var localPG = new PG();
             localPG.init();
             localPG.dirty(true);
             PGEN.updateSettings(localPG, settingsCB);
         }
-        else if(selection == "deleteEvents") {
+        else if(selection === "deleteEvents") {
             var text ="";
             if(pg.loggedIn && pg.online) {
                 text = "<p>Do you wish to delete all events from both this device and the server?</p>" +
@@ -1144,23 +994,23 @@ var PGEN = {
                 text = "<p>Do you wish to delete all events from this device?</p>" +
                 "<p>(You can log in to delete events on the server).</p>";
             }
-            showDialog({title: "Delete events?", true: "Delete", false: "Cancel"},
+            pgUI.showDialog({title: "Delete events?", true: "Delete", false: "Cancel"},
                        text, deleteEventsCB.bind(this));
         }
-        else if(selection == "deleteEverything") {
-            showDialog({title: "Delete all data?", true: "Delete", false: "Cancel"},
+        else if(selection === "deleteEverything") {
+            pgUI.showDialog({title: "Delete all data?", true: "Delete", false: "Cancel"},
                        "<p>Do you wish to delete all data and preferences from this device" +
                        (pg.loggedIn ? " <b>AND the server</b> (because you are currently logged in)" : "") +
                        "?</p><p>This action cannot be undone.</p>",
                        deleteEverythingCB.bind(this));
         }
         else {
-            showLog ("Unknown selection: " + selection);
+            pgUI_showLog ("Unknown selection: " + selection);
         }
         function cb(success) {
-            showBusy(false);
+            pgUI.showBusy(false);
             if(!success) {
-                showAlert("Command failed.");
+                pgUI.showAlert("Command failed.");
             }
             gotoPage(pg.page());
             //resetPage();
@@ -1176,7 +1026,7 @@ var PGEN = {
                 gotoPage(pg.page());
             function deleteCB(success) {
                 if(!success) {
-                    showAlert("Events could not be erased.");
+                    pgUI.showAlert("Events could not be erased.");
                 }
                 gotoPage(pg.page());
             }
@@ -1186,20 +1036,17 @@ var PGEN = {
                 gotoPage(pg.page());
                 PGEN.deleteEverything(deleteCB.bind(this));
             }
-            else
-                $('#home_action').popup('close');
             function deleteCB(success) {
                 if(!success) {
-                    showAlert("Data could not be erased.");
-                    $('#home_action').popup('close');
+                    pgUI.showAlert("Data could not be erased.");
                 }
                 UI.state = {};
-                UI.home.logoutAndErase();
+                pgLogin.logoutAndErase();
             }
         }
         function settingsCB(success) {
             if(pg.loggedIn && !success)
-                showAlert("Could not update settings on the server.", "Error");
+                pgUI.showAlert("Could not update settings on the server.", "Error");
             pg.copy(localPG, false);
             PGEN.writePG(pg);
             gotoPage(pg.page());
@@ -1211,7 +1058,7 @@ var PGEN = {
         pgFile.deleteFile("com.psygraph.events");
         pgFile.deleteAudioFiles();
         pg.initializeEvents();
-        PGEN.writeEvents(pg.events, pg.deletedEvents, callback);  // write the (emptied) events locally
+        PGEN.writeEvents(pg, callback);  // write the (emptied) events locally
     },
     deleteServerEvents: function(callback) {
         postData({action: "deleteAllEvents"}, callback);
@@ -1222,148 +1069,6 @@ var PGEN = {
             postData({action: "deleteUser"}, callback, false);
         else
             callback(true);
-    },
-
-    initializePage: function(event, ui) {
-        var target = event.target;
-        var page;
-        var node;
-        if(ONSEN) {
-            var pageName = target.children[1].children[0].id; // e.g. "home_page"
-            page = pageName.substring(0, pageName.length-5);
-            node = $("#"+page+"_page");
-        }
-        else {
-            var pageName = ui.content[0].id; // e.g. "home_page"
-            page = pageName.substring(0, pageName.length-5);
-            node = ui.toPage[0];
-        }
-        var title = pgUtil.titleCase(page);
-        // get the header from the template
-        if(page == "categories" || 
-           page == "about"    ||
-           page == "help"     ||
-           page == "dialog"   ||
-           page == "preferences"
-        ) {
-            var headT  = $("#simple_header_template").prop('content');
-            var head   = $(headT.children[0]).clone();
-            node.prepend(head[0]);
-            if(page == "dialog")
-                $(node).find(".leftMenuButton").hide();
-            if(page == "preferences" ||
-               page == "categories") {
-                //$(node).find(".rightMenuButton").hide();
-            }
-            else 
-                $(node).find(".rightMenuButton").hide();
-        }
-        else {
-            // Add the sidenav
-            var navT  = $("#navmenu_template").prop('content');
-            var nav   = $(navT.children[0]).clone();
-            node.prepend(nav[0]);
-            var headT  = $("#header_template").prop('content');
-            var head   = $(headT.children[0]).clone();
-            node.prepend(head[0]);
-        }
-
-        // Add the subheader
-        var catT = $("#category_template").prop('content');
-        var cat  = $(catT.children[0]).clone();
-        //node.prepend(cat[0]);
-        var subheader = $("#subheader_"+page);
-        subheader.empty();
-        subheader.prepend(cat[0]);
-        subheader.trigger("create");
-        
-        $(node).find(".pg_page_title").html(title);
-        $(node).find('input.fast, a.fast, button.fast').each(function(index, element) {
-                if (element.onclick) {
-                    //$(element).on('vclick', element.onclick).removeAttr('onclick');
-                    $(element).on('vclick', element.onclick).prop('onclick', "return false");
-                }
-            });
-        //updateNavbar();
-        $(node).trigger("create");
-        pageInitFinished(page);
     }
 };
-
-function menu_leftButton() {
-    var page   = getPage();
-    var pgPage = pg.page();
-    if (page=="help"     || 
-        page=="about"    || 
-        page=="dialog"   || 
-        page=="categories" || 
-        page=="preferences") {
-        if(getSubPage()=="help")
-            gotoPageMain();
-        else
-            gotoPage(pg.page());
-    }
-    else {
-        slideNav(!isSlideNavOpen());
-    }
-    return false;
-}
-function menu_rightButton() {
-    var page = getPage();
-    if(page=="preferences" || 
-       page=="categories") {
-        gotoPageHelp();
-    }
-    else {
-        $("#"+page+"_page .rightMenu").popup("open");
-    }
-    return false;
-}
-function isSlideNavOpen() {
-    return $(".sidenav").css("width") != "0px";
-}
-function slideNav(open) {
-    var page = pg.page();
-    if(open) {
-        $(".sidenav").css("width", "250px");
-    }
-    else {
-        $(".sidenav").css("width", "0px");
-    }
-}
-function menu_action(action) {
-    var page = pg.page();
-    if(action=="about") {
-        gotoPage("about");
-    }
-    else if(action=="preferences") {
-        gotoPage("preferences");
-    }
-    else if(action=="categories") {
-        gotoPage("categories");
-    }
-    else if(action=="login") {
-        pgUtil.closePopup($('#'+page+'_page .rightMenu'), UI.home.loginUser.bind(UI.home)); 
-    }
-    else if(action=="event") {
-        pgUtil.switchPopup($('#'+page+'_page .rightMenu'), $('#'+page+'_page .eventPopupMenu')); 
-    }
-    else if(action=="help") {
-        gotoPage("help");
-    }
-    else {
-        showError("Unknown menu command");
-    }
-    return true;
-}
-
-//function updateNavbar() {
-//    var mapnav = $(".sidenav .map_navlink");
-//    if(pg.getUserDataValue("debug")) {
-//        mapnav.show();
-//    }
-//    else {
-//        mapnav.hide();
-//    }
-//}
 

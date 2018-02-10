@@ -1,7 +1,7 @@
 //"use strict";
 
 var categories = function () {
-    page.call(this, "categories");
+    Page.call(this, "categories");
     this.src     = {};
     this.selectizeOpts = {
         plugins: ['remove_button'],
@@ -20,9 +20,11 @@ var categories = function () {
         },
         onDelete: function(values) { }
     };
-}
 
-categories.prototype = Object.create(page.prototype);
+    this.colorPicker = tinycolorpicker($("#colorPicker")[0]);
+};
+
+categories.prototype = Object.create(Page.prototype);
 categories.prototype.constructor = categories;
 
 categories.prototype.update = function(show) {
@@ -35,7 +37,7 @@ categories.prototype.update = function(show) {
         cats.val(dispCategories.join(","));
         cats.selectize(this.selectizeOpts);
         
-        if(typeof(this.src[pg.category()])=="undefined")
+        if(typeof(this.src[pg.category()])==="undefined")
             this.src[pg.category()] = {};
 
         var catChoice = $("#categories_category");
@@ -48,9 +50,7 @@ categories.prototype.update = function(show) {
         catChoice.val(pg.category()).trigger("change");
         
         // show the applyAll button?
-        //if(pg.getUserDataValue('perCategorySettings'))
         //$('#applyAllCategories').parent().show();
-        //else
         $('#applyAllCategories').parent().hide();
 
         this.resize();
@@ -58,11 +58,11 @@ categories.prototype.update = function(show) {
 };
 
 categories.prototype.resize = function() {
-    page.prototype.resize.call(this, true);
+    Page.prototype.resize.call(this, true);
 };
 
-categories.prototype.settings = function() {
-    if(arguments.length) {
+categories.prototype.settings = function(show, data) {
+    if(show) {
         // we never show a settings page
     }
     else {
@@ -81,8 +81,8 @@ categories.prototype.settings = function() {
             this.localPG.setCategoryData(category, cmtime, newCatData);
         }
         // since all of our settings are stored on the PG, the page data is empty
-        return {};
     }
+    return data;
 };
 
 categories.prototype.updateCategory = function() {
@@ -92,11 +92,11 @@ categories.prototype.updateCategory = function() {
     var data = pg.getCategoryData(category);
     UI.categories.applyCategory(data);
     return false;
-}
+};
 
 categories.prototype.applyCategory = function() {
-    var category = pg.category()
-    if(typeof(this.src[category])=="undefined")
+    var category = pg.category();
+    if(typeof(this.src[category])==="undefined")
         this.src[category] = {};
 
     if(arguments.length) {
@@ -106,6 +106,7 @@ categories.prototype.applyCategory = function() {
         //$("#descEdit").val(data.description);
 
         // ### style ###
+
         var styleVal = data.style;
         if(data.style.length > limit) {
             UI.categories.src[pg.category()].styleEdit = data.style;
@@ -113,9 +114,12 @@ categories.prototype.applyCategory = function() {
         }
         var strings = ["default.css"];
         if(pgUtil.isWebBrowser())
-            strings = ["default.css","allGrey.css","aqua.css","black.css","dkgrey.css","grey.css","lime.css","ltblue.css","ltgreen.css","ltgrey.css","orange.css","pink.css","steelblue.css","violet.css","white.css","yellow.css"];
+            strings = ["default.css","allGrey.css"];
         displaySelect("styleEdit", strings, styleVal);
-        
+
+        // ### color ###
+        this.colorPicker.setColor($("html").css('backgroundColor'));
+
         // ### sound ###
         var soundVal = data.sound;
         if(data.sound.length > limit) {
@@ -124,7 +128,7 @@ categories.prototype.applyCategory = function() {
         }
         strings = ["default.mp3"];
         if(pgUtil.isWebBrowser())
-            strings = ["default.mp3","alarm.mp3","bell.mp3","bike.mp3","birds.mp3","crickets.mp3","singingBowl.mp3"];
+            strings = ["default.mp3","alarm.mp3","bell.mp3","bike.mp3","birds.mp3","crickets.mp3","hyoshigi.mp3","mokugyo.mp3","singingBowl.mp3","taiko.mp3"];
         displaySelect("soundEdit", strings, soundVal);
 
         // ### text ###
@@ -135,7 +139,7 @@ categories.prototype.applyCategory = function() {
         }
         strings = ["default.xml"];
         if(pgUtil.isWebBrowser())
-            strings = ["default.xml","christian.xml","einstein.xml","lojong.xml","twain.xml"];
+            strings = ["default.xml","christian.xml","einstein.xml","lojong.xml","twain.xml", "monroe.xml"];
         displaySelect("textEdit", strings, textVal);
         
         if(!pgUtil.isWebBrowser()) {
@@ -145,8 +149,10 @@ categories.prototype.applyCategory = function() {
         }
     }
     else {
+        var color = this.colorPicker.colorHex;
+
         var newCatData = {
-            //'description': $("#descEdit")[0].value,
+            'color':       color,
             'style':       $("#styleEdit")[0].value,
             'sound':       $("#soundEdit")[0].value,
             'text':        $("#textEdit")[0].value
@@ -185,7 +191,7 @@ categories.prototype.removeExt = function(txt) {
 categories.prototype.addSelect = function(id, selected, strings) {
     var list = $("#"+id);
     list.children().remove();
-    if(strings.indexOf(selected)==-1)
+    if(strings.indexOf(selected)===-1)
         strings.push(selected);
     for(var i=0; i<strings.length; i++) {
         list.append(new Option(UI.categories.removeExt(strings[i]), strings[i]));
@@ -197,7 +203,7 @@ categories.prototype.addSelect = function(id, selected, strings) {
 categories.prototype.getFileURL = function(id) {
     //var dlg = printCheckbox("encode", "Encode", false) + "<br/>";
     // $("#encode").prop('checked')    
-    showDialog( {title: "File URL:", true: "OK", false: "Cancel"},
+    pgUI.showDialog( {title: "File URL:", true: "OK", false: "Cancel"},
                 '<input id="fileURL" type="text"/>',
                 function(ok){
                     if(ok) {

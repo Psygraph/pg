@@ -1,65 +1,74 @@
 <div id="home_page" class="page" data-role="page" data-fullscreen="true">
-  
-  <div id="home_main" class="main content">
-    <div id="subheader_home" data-role="control-group">
-      <div class="category"><i></i></div>
-    </div>
-    
-    <div data-role="control-group" class="inset"></div>
-    
-    <div id="home_status" style="height:10px">
-      <p class="banner"><img src="img/logo.png" height="108" width="108"></img></p>
-    </div>
-  </div>
-  
-  <div id="home_settings" class="settings content">
-    
-    <div class="ui-field-contain no-field-separator">
-      <label for="home_category">Category:</label>
-      <select id="home_category" data-native-menu="false"></select>
-    </div>
-    
-    <fieldset id="home_loginControls" class="settings">
-      <legend>Online:</legend>
-      <div class="ui-field-contain no-field-separator" id="userDiv">
-        <label for="user">Email:</label>
-        <input type="text" id="home_username" name="username" value=""/>
-      </div>
-      <div class="ui-field-contain no-field-separator" id="serverDiv">
-        <label for="server">Server:</label>
-        <input type="text" id="home_server" name="server" value="localhost" data-clear-btn="true" />
-      </div>
-      <div class="ui-field-contain no-field-separator" id="loginDiv">
-        <label></label>
-        <input type="button" id="login" name="login" value="Login" onclick="UI.home.loginUser();"/>
-      </div>
-    </fieldset>
-    
-    <fieldset id="home_fileButtons" class="settings">
-      <legend>Manage files:</legend>
-      <input type="button" data-inline="true"  class="preferences_button" onclick="return PGEN.selectAction('downloadEvents');" value="Download events"></input>
-      <input type="button" data-inline="true"  class="preferences_button" onclick="return PGEN.selectAction('uploadFiles');" value="Upload files"></input>
-    </fieldset>
-    
-    <div data-role="fieldcontain">
-	  <input type="button" onclick="gotoPageMain(); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"></input>
-	  <input type="button" onclick="UI.home.submitSettings('apply'); return false;" class="btn fast" value="Apply" title="apply" data-inline="true"></input>
-	  <input type="button" onclick="UI.home.submitSettings('OK'); return false;" class="btn fast" value="OK" title="OK" data-inline="true"/></input>
+
+    <div id="home_main" class="main content">
+        <div id="subheader_home" data-role="control-group">
+            <div class="category"><i></i></div>
+        </div>
+
+        <div id="home_logo" data-role="control-group" class="inset"></div>
+
+        <div id="home_status">
+            <p class="banner">
+                <br/>
+                <img src="images/logo.png" height="108" width="108" />
+                <br/>
+            </p>
+            <div id="statistics"></div>
+        </div>
+        <div id="home_graphContainer" class="graphContainer">
+            <div id="home_graph" class="graph"></div>
+        </div>
+
     </div>
 
-  </div>
-  
-  <div id="home_help" class="help content">
-    <p><strong>Home</strong></p>
-    <p>The <strong>Home</strong> page displays a summary of your data over the last four weeks.  Two rows of data are displayed: the total amount of time tracked by the stopwatch and your breath counting score.  If you are signed in online, account information is displayed.</p>
-    <p>The settings display your username on psygraph.com, which must be a valid email address.  If you wish to register for an account, please visit <a href="" onclick="return pgUtil.openWeb('https://psygraph.com/register')">psygraph.com</a></p>
-    
-    <template>
-      <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/home.png" alt="home" width="300" />
-      <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/home_settings.png" alt="home_settings" width="300" />
-    </template>
-    
-  </div>
-  
-  <script src="html/home.js"></script>
+    <div id="home_settings" class="settings content">
+
+        <div class="ui-field-contain no-field-separator">
+            <label for="home_category">Category:</label>
+            <select id="home_category" data-native-menu="false"></select>
+        </div>
+        <div class="ui-field-contain no-field-separator">
+            <label for="home_history">Show History:</label>
+            <select name="interval" id="home_history" data-native-menu="false">
+                <option value="2">2</option>
+                <option value="4">4</option>
+                <option value="8">8</option>
+                <option value="24">24</option>
+            </select>
+        </div>
+        <div class="ui-field-contain no-field-separator">
+            <label for="home_interval">History units:</label>
+            <select name="interval" id="home_interval" data-native-menu="false">
+                <!--option value="none">none</option-->
+                <option value="hour">hours</option>
+                <option value="day">days</option>
+                <option value="week">weeks</option>
+                <option value="month">months</option>
+            </select>
+        </div>
+        <div class="ui-field-contain no-field-separator">
+            <label for="home_signals">Show signals:</label>
+            <select id="home_signals" data-native-menu="false" multiple="multiple">
+                <option data-placeholder="true">Signals:</option>
+                <option value="stopwatch">stopwatch</option>
+                <option value="counter">counter</option>
+                <option value="timer">timer</option>
+            </select>
+        </div>
+        <div class="buttons"></div>
+    </div>
+
+    <div id="home_help" class="help content">
+        <p><strong>Home</strong></p>
+        <p>The <strong>Home</strong> page displays a summary of your data over the last four weeks.  Two rows of data are displayed: the total amount of time tracked by the stopwatch and your breath counting score.  If you are signed in online, account information is displayed.</p>
+        <p>The settings display your username on psygraph.com, which must be a valid email address.  If you wish to register for an account, please visit <a href="" onclick="return pgUtil.openWeb('https://psygraph.com/register')">psygraph.com</a></p>
+
+        <template>
+            <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/home.png" alt="home" width="300" />
+            <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/home_settings.png" alt="home_settings" width="300" />
+        </template>
+
+    </div>
+
+    <script src="html/home.js"></script>
 </div>

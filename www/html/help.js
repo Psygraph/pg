@@ -1,39 +1,37 @@
 
-function help() {
-    page.call(this, "help");
-    this.intro = true;
+function Help() {
+    Page.call(this, "help");
 }
 
-help.prototype = Object.create(page.prototype);
-help.prototype.constructor = help;
+Help.prototype = Object.create(Page.prototype);
+Help.prototype.constructor = Help;
 
-help.prototype.update = function(show, state) {
-    if(!show) {
-        this.setIntro(false);
-        return {'intro': this.intro};
-    }
-    else {
-        if(typeof(state)!="undefined")
-            this.intro = state.intro;
-        if(this.intro) {
+Help.prototype.update = function(show, data) {
+    if(show) {
+        if(data.intro) {
             // optionally show an intro to the application
-            this.intro = false;
         }
         this.resize();
     }
+    else {
+        data.intro = false;
+        this.setIntro(false);
+    }
+    return data;
 };
 
-help.prototype.settings = function() {
-    if(arguments.length) {
+Help.prototype.settings = function(show, data) {
+    if(show) {
     }
     else {
-        return {version:1};
+        data = {version:1};
     }
+    return data;
 };
 
-help.prototype.resize = function() {
+Help.prototype.resize = function() {
     var head   = this.headerHeight();
-    var win    = getWindowDims();
+    var win    = pgUI.getWindowDims();
     var width  = win.width;
     $("#help_page .content").css({
             'position': "absolute",
@@ -43,11 +41,17 @@ help.prototype.resize = function() {
     );
 };
 
-help.prototype.setIntro = function(value) {
-    this.intro = value;
+Help.prototype.setIntro = function(value) {
     $("#help .scrollable").scrollTop(0);
     PGEN.writePsygraph({'accepted': value});
 };
 
-UI.help = new help();
+Help.prototype.getPageData = function() {
+    var data = pg.getPageData("help", "Uncategorized");
+    if(! ('intro' in data))
+        data.intro = true;
+    return data;
+};
+
+UI.help = new Help();
 //# sourceURL=help.js

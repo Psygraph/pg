@@ -1,83 +1,144 @@
 //"use strict";
 
-var preferences = function () {
-    page.call(this, "preferences");
-    this.userData = {};
-    this.localPG = null;
+var Preferences = function () {
+    Page.call(this, "preferences");
     this.initialized = false;
-    var data = this.getPageData();
     this.setDebug();
-}
+};
 
-preferences.prototype = Object.create(page.prototype);
-preferences.prototype.constructor = preferences;
+Preferences.prototype = Object.create(Page.prototype);
+Preferences.prototype.constructor = Preferences;
 
-preferences.prototype.update = function(show, state) {
-    if(!show) {
-        pgBluetooth.stopScan(function(){});
-    }
-    else {
-        var data = this.getPageData();
-        // pages
-        //var s = "";
-        //var dispPages = pgUtil.deepCopy(pg.allPages);
-        //dispPages.splice( dispPages.indexOf("home"), 1);
-        //if(! pg.getUserDataValue("debug") )
-        //    dispPages.splice( dispPages.indexOf("map"), 1);
-        //s += pgUtil.selectPages("new_pages", "Show tools:", dispPages, pg.pages);
-        //$("#page_select").html(s).trigger("create");
-
+Preferences.prototype.update = function(show, data) {
+    if(show) {
         if(!this.initialized) {
             if(pgUtil.isWebBrowser()) {
                 $("#BTDiv").hide();
             }
             this.initialized = true;
         }
-        
-        /* // swipe
-        if(pgUtil.isWebBrowser())
-            $("#swipeDiv").hide();
-        else
-            $("#swipeSlider").val(data.swipeVal).slider('refresh');
-        */
+        this.settings(show, data);
 
-        // public access and debug
-        $("#preferences_debug").prop('checked', data.debug).checkboxradio("refresh");
-        //$("#publicAccess").prop('checked', data.publicAccess).checkboxradio("refresh");
-        if(pgUtil.isWebBrowser())
-            $("#wifiOnly").parent().hide();
-        else
-            $("#wifiOnly").prop('checked', data.wifiOnly).checkboxradio("refresh");
-        //$("#screenTaps").prop('checked', data.screenTaps).checkboxradio("refresh");
 	    this.resize();
         // Get a location before starting a bluetooth scan
-        pgLocation.getCurrentLocation(posCB);
+        //pgLocation.getCurrentLocation(posCB);
+        posCB();
     }
+    else {
+        pgBluetooth.stopScan(function(){});
+        data = this.settings(show, data);
+    }
+    return data;
+
     function posCB(loc) {
-        showLog("Bluetooth scan starting...");
+        pgUI_showLog("Bluetooth scan starting...");
         var devs   = $("#BTDevices");
         pgBluetooth.startScan(UI.preferences.btCallback);
         UI.preferences.btSetCurrentDevice();
     }
 };
 
-preferences.prototype.resize = function() {
-    page.prototype.resize.call(this, true);
+Preferences.prototype.settings = function(show, data) {
+    if (show) {
+        // public access and debug
+        $("#preferences_debug").prop('checked', data.debug).checkboxradio("refresh");
+        var user = $("#preferences_username");
+        user.val(pg.username);
+        user.prop('readonly', pg.loggedIn);
+
+        if(pg.debug())
+            $("#serverDiv").show();
+        else
+            $("#serverDiv").hide();
+        var server = $("#preferences_server");
+        server.val(pg.server);
+        server.prop('readonly', pg.loggedIn);
+
+        if(pgUtil.isWebBrowser())
+            $("#preferences_wifiOnly").parent().hide();
+        else
+            $("#preferences_wifiOnly").prop('checked', data.wifiOnly).checkboxradio("refresh");
+
+        var loginString;
+        if(pg.loggedIn) {
+            loginString = "Logout";
+            $("#preferences_onlineButtons").show();
+        }
+        else {
+            $("#preferences_onlineButtons").hide();
+            loginString = "Login";
+        }
+        $('#preferences_login').val(loginString).button("refresh");
+    }
+    else {
+        data.debug = $("#preferences_debug")[0].checked ? 1 : 0;
+        this.setDebug( data.debug );
+        if(!pg.loggedIn) {
+            pg.server = $("#preferences_server").val();
+            pg.username = $("#preferences_username").val();
+        }
+        if(!pgUtil.isWebBrowser())
+            data.wifiOnly = $("#preferences_wifiOnly")[0].checked;
+    }
+    return data;
 };
 
-preferences.prototype.btConnect = function() {
-    var name = pgBluetooth.activeDeviceName();
+Preferences.prototype.resize = function() {
+    Page.prototype.resize.call(this, true);
+};
+
+
+Preferences.prototype.getPageData = function() {
+    var data = pg.getPageData("preferences", "Uncategorized");
+    if(! ('debug' in data))
+        data.debug = 0;
+    if(! ('wifiOnly' in data))
+        data.wifiOnly = true;
+    return data;
+};
+
+
+Preferences.prototype.submit = function(doClose) {
+    var data = this.getPageData();
+    data = this.settings(false, data);
+    pmtime = pgUtil.getCurrentTime();
+    pg.setPageData(pmtime, data, "preferences", "Uncategorized");
+    gotoPage( pg.page() );
+};
+
+Preferences.prototype.loginUser = function() {
+    var onSettingsPage = (getPage()==="preferences");
+    var data = this.getPageData();
+    var username = $('#preferences_username').val();
+    var server   = $('#preferences_server').val();
+    var cert     = pg.cert;
+    pgLogin.loginUserAndServer(username, server, true);
+};
+
+Preferences.prototype.setDebug = function(yn) {
+    var data = this.getPageData();
+    yn = (typeof(yn)!=="undefined") ? yn : data.debug;
+    if(yn) {
+        $(".debug").css({'display' : ""});
+    }
+    else {
+        $(".debug").css({'display' : "none"});
+    }
+};
+
+Preferences.prototype.btConnect = function() {
+    var name = pgBluetooth.deviceName();
     var btDev = $("#BTDevices").val();
-    if(name!="none") {
-        showLog("Bluetooth disconnecting from device: " + btDev);
+    if(name!=="none") {
+        pgUI_showLog("Bluetooth disconnecting from device: " + btDev);
         btDev = "none";
     }
     else {
-        showLog("Bluetooth connecting to device: " + btDev);
+        pgUI_showLog("Bluetooth connecting to device: " + btDev);
     }
     pgBluetooth.stopScan(cb);
     function cb() {
-        if(btDev=="none")
+        if(btDev==="none")
             pgBluetooth.disconnect(finish);
         else
             pgBluetooth.connect(btDev, finish);
@@ -87,8 +148,8 @@ preferences.prototype.btConnect = function() {
     }
 };
 
-preferences.prototype.btCallback = function() {
-    showLog("Bluetooth scan found a device");
+Preferences.prototype.btCallback = function() {
+    //showLog("Bluetooth scan found a device");
     var btDevs = pgBluetooth.devices();
     var devs   = $("#BTDevices");
     var v      = devs.val();
@@ -107,7 +168,7 @@ preferences.prototype.btCallback = function() {
     function addDev(nm) {
         var exists = false;
         $('#BTDevices option').each(function(){
-                if (this.value == nm) {
+                if (this.value === nm) {
                     exists = true;
                     return false;
                 }
@@ -117,65 +178,25 @@ preferences.prototype.btCallback = function() {
     }
 };
 
-preferences.prototype.btSetCurrentDevice = function() {
-    var name = pgBluetooth.activeDeviceName();
-    showLog("Bluetooth connected to device: " + name);
+Preferences.prototype.btSetCurrentDevice = function() {
+    var name = pgBluetooth.deviceName();
+    pgUI_showLog("Bluetooth connected to device: " + name);
     var label = "Connect to: ";
-    if(name != "none")
+    var devs     = $("#BTDevices");
+    var settings = $("#BTSettings");
+    if(name !== "none") {
         label = "Disconnect: '"+name+"'";
+        devs.selectmenu('disable');
+        //devs.parent().hide();
+        //settings.parent().show();
+    }
+    else {
+        devs.selectmenu('enable');
+        //devs.parent().show();
+        //settings.parent().hide();
+    }
     $('#BTConnect').val(label).button("refresh");
 };
 
-preferences.prototype.getPageData = function() {
-    var data = pg.getUserData();
-    // Defaults are set in the PG.
-    return data;
-};
-
-preferences.prototype.submit = function(doClose) {
-    var data = this.getPageData();
-    /*
-    var swipeVal = data.swipeVal;
-    if(! pgUtil.isWebBrowser()) {
-        swipeVal = parseInt($("#swipeSlider")[0].value);
-        setSwipe(swipeVal);
-    }
-    */
-    this.userData = {
-        //'swipeVal'    : swipeVal,
-        'debug'       : $("#preferences_debug")[0].checked ? 1 : 0,
-        'wifiOnly'    : data.wifiOnly,
-        'screenTaps'  : false //$("#screenTaps")[0].checked ? true : false,
-    };
-
-    this.setDebug(this.userData.debug);
-    //var pages = $("#new_pages").val();
-    //pages.unshift("home");
-    //var pages = pg.pages.slice(0);
-    //var i = pages.indexOf("map");
-    //if(i != -1) {
-    //    pages.splice(i, 1);
-    //}
-    //if(this.userData.debug) {
-    //    pages.push("map");
-    //}
-    if(!pgUtil.isWebBrowser())
-        this.userData.wifiOnly = $("#wifiOnly")[0].checked ? true : false;
-
-
-    pg.setUserData(this.userData);
-    gotoPage(pg.page());
-};
-
-preferences.prototype.setDebug = function(yn) {
-    yn = (typeof(yn)!="undefined") ? yn : pg.getUserDataValue("debug");
-    if(yn) {
-        $(".debug").css({'display' : ""});
-    }
-    else {
-        $(".debug").css({'display' : "none"});
-    }
-};
-
-UI.preferences = new preferences();
+UI.preferences = new Preferences();
 //# sourceURL=preferences.js

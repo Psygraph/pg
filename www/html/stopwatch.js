@@ -1,82 +1,66 @@
 
-function stopwatch() {
-    page.call(this, "stopwatch");
+function Stopwatch() {
+    ButtonPage.call(this, "stopwatch");
     this.clock = null;
-    // for each category
-    this.startTime = {};
-    this.graph  = null;
-    this.data   = null;
-    this.groups = null;
-    this.graphInterval = 0;
-    this.groupID = { 'acceleration': 1,
-                     'orientation':  2,
-                     'bluetooth':    3
-    };
-};
+    this.graph = null;
+    this.signalStarted = {};
+    this.signalCache = [];
+}
 
-stopwatch.prototype = Object.create(page.prototype);
-stopwatch.prototype.constructor = stopwatch;
+Stopwatch.prototype = Object.create(ButtonPage.prototype);
+Stopwatch.prototype.constructor = Stopwatch;
 
-stopwatch.prototype.update = function(show, state) {
-    if(!show) { // no running in the background.
-        this.clock.stop();
-        return {startTime: this.startTime};
-    }
-    var data = this.getPageData();
-    if(typeof(state)!="undefined")
-        this.startTime = state.startTime;
-    if(!this.clock) {
-        // set up the watch
-        this.widget = $('#clock')[0];
-        this.clock = new Clock(this.watchCallback.bind(this), data.updateInterval);
-    }
-    var e = this.getElapsedStopwatch();
-    if(e.running == 1) { // we are running
-        this.clock.startFromTime(e.startTime - e.duration);
-        $('#stopwatch_start').hide().prop('disabled', true);
-        $('#stopwatch_stop').show().prop('disabled', false);
-    } else { // compute the elapsed duration
-        this.clock.setElapsedMS(e.duration);
-        $('#stopwatch_start').show().prop('disabled', false);
-        $('#stopwatch_stop').hide().prop('disabled', true);
-    }
-    // set up the data graph
-    this.createGraph(data.showGraph);
-    this.resize();
-};
-
-stopwatch.prototype.settings = function() {
-    var data = this.getPageData();
-    if(arguments.length) {
-        $("#stopwatch_location").prop("checked", data.watchLocation).checkboxradio('refresh');
-        $("#stopwatch_continuousLocation").prop("checked", data.continuousLocation).checkboxradio('refresh');
-        if(pgUtil.isWebBrowser()) {
-            $("#stopwatch_acceleration").parent().hide();
-            $("#stopwatch_orientation").parent().hide();
-            $("#stopwatch_bluetooth").parent().hide();
-            $("#stopwatch_showGraph").parent().hide();
+Stopwatch.prototype.update = function(show, data) {
+    ButtonPage.prototype.update.call(this, show, data);
+    if(show) { // no running in the background.
+        if (!this.clock) {
+            this.graph = new GraphComponent('stopwatch_graph', 'lines');
+            this.widget = $('#clock')[0];
+            this.clock = new Clock(this.watchCallback.bind(this), data.updateInterval);
         }
-        else {
-            $("#stopwatch_acceleration").prop("checked", data['watchAcceleration']).checkboxradio('refresh');
-            $("#stopwatch_orientation").prop("checked", data['watchOrientation']).checkboxradio('refresh');
-            $("#stopwatch_bluetooth").prop("checked", data['watchBluetooth']).checkboxradio('refresh');
-            pgAccel.hasCompass(showOrientation);
+        this.createGraph(true);
+        if(this.isRunning()) {
+            this.start(true);
         }
-        $("#stopwatch_updateInterval").val( pgUtil.getStringFromMS(data.updateInterval) );
-        $("#stopwatch_showGraph").prop("checked", data['showGraph']).checkboxradio('refresh');
+        else
+            this.refreshTimer();
+        this.resize();
     }
     else {
-        data.watchLocation  = $("#stopwatch_location")[0].checked;
-        data.continuousLocation  = $("#stopwatch_continuousLocation")[0].checked;
-        if(!pgUtil.isWebBrowser()) {
-            data.watchAcceleration = $("#stopwatch_acceleration")[0].checked;
-            data.watchOrientation  = $("#stopwatch_orientation")[0].checked;
-            data.watchBluetooth    = $("#stopwatch_bluetooth")[0].checked;
-        }
-        data.updateInterval = pgUtil.getMSFromString($("#stopwatch_updateInterval")[0].value);
-        data.showGraph  = $("#stopwatch_showGraph")[0].checked;
-        return data;
+        this.stopGraph();
+        this.clock.stop();
     }
+    return data;
+};
+
+Stopwatch.prototype.settings = function(show, data) {
+    if(show) {
+        $("#stopwatch_signals").val(data.signals).change();
+
+        if(pgUtil.isWebBrowser()) {
+            //$("#stopwatch_signals .nonBrowser").hide();
+            $("#stopwatch_hasBluetooth").parent().hide();
+        }
+        else {
+            pgOrient.hasCompass(showOrientation.bind(this));
+        }
+        if(pgBluetooth.isConnected())
+            $("#stopwatch_BTSettings").parent().show();
+        else
+            $("#stopwatch_BTSettings").parent().hide();
+        //$("#stopwatch_updateInterval").val( pgUtil.getStringFromMS(data.updateInterval) );
+        $("#stopwatch_showGraph").prop("checked", data.showGraph).checkboxradio('refresh');
+        $("#stopwatch_hasBluetooth").prop("checked", data.hasBluetooth).checkboxradio('refresh');
+    }
+    else {
+        data.signals      = $("#stopwatch_signals").val() || [];
+        //data.updateInterval = pgUtil.getMSFromString($("#stopwatch_updateInterval")[0].value);
+        data.showGraph    = $("#stopwatch_showGraph")[0].checked;
+        data.hasBluetooth = $("#stopwatch_hasBluetooth")[0].checked;
+        this.createGraph(data.showGraph);
+    }
+    return data;
+
     function showOrientation(success) {
         if(success)
             $("#stopwatch_orientation").show();
@@ -85,302 +69,291 @@ stopwatch.prototype.settings = function() {
     }
 };
 
-stopwatch.prototype.getPageData = function() {
+Stopwatch.prototype.refreshTimer = function(data) {
+    data = data || this.getPageData();
+    var e = this.getElapsedStopwatch();
+    if(this.isRunning()) {
+        this.clock.startFromTime(e.startTime - e.duration);
+    }
+    else {
+        this.clock.stop();
+        var t = this.getElapsedStopwatch();
+        this.clock.setElapsedMS(e.duration);
+    }
+};
+
+Stopwatch.prototype.deviceSettings = function(dev) {
+    data = this.getPageData();
+    if(dev==="device")
+        pgDevice.settingsDialog(function(){}, data.signals);
+    else if(dev==="bluetooth")
+        pgBluetooth.settingsDialog(function(){});
+};
+
+Stopwatch.prototype.getAllSignals = function(data) {
+    data = def(data, this.getPageData());
+    var signals = data.signals.slice(0);
+    if(pgUtil.isWebBrowser()) {
+        signals = removeElem(signals, "acceleration");
+        signals = removeElem(signals, "orientation");
+    }
+    if(this.hasBluetooth()) {
+        signals = signals.concat(pgBluetooth.getSignals());
+    }
+    return signals;
+
+    function removeElem(array, elem) {
+        var index = array.indexOf(elem);
+        if (index !== -1) {
+            array.splice(index, 1);
+        }
+        return array;
+    }
+};
+Stopwatch.prototype.getPageData = function() {
     var data = pg.getPageData("stopwatch", pg.category());
-    if(! ('watchLocation' in data))
-        data.watchLocation = false;
-    if(! ('continuousLocation' in data))
-        data.continuousLocation = false;
-    if(! ('watchAcceleration' in data))
-        data.watchAcceleration = true;
-    if(! ('watchBluetooth' in data))
-        data.watchBluetooth = false;
+    if(! ('signals' in data))
+        data.signals = ["random"];
+    if(! ('hasBluetooth' in data))
+        data.hasBluetooth = false;
     if(! ('updateInterval' in data))
-        data.updateInterval = 91;
+       data.updateInterval = 91;
     if(! ('showGraph' in data))
         data.showGraph = true;
+    if(! ('startTime' in data))
+        data.startTime = 0;
     return data;
 };
 
-stopwatch.prototype.resize = function() {
-    page.prototype.resize.call(this, false);
+Stopwatch.prototype.resize = function() {
+    Page.prototype.resize.call(this, false);
     var header   = this.headerHeight();
     var subheader = $("#stopwatch_page div.category").outerHeight(true);
     var controls = $("#stopwatch_controls").outerHeight(true);
-    var win     = getWindowDims();
+    var win     = pgUI.getWindowDims();
     var graphHeight  = win.height - (header+subheader+controls);
     var width   = win.width;
 
     $("#stopwatch_graphContainer").outerHeight(graphHeight);
     $("#stopwatch_graphContainer").width(width);
     $("#stopwatch_graph").css("height", "100%");
+    if(this.graph)
+        this.graph.redraw();
 };
 
-stopwatch.prototype.lever = function(arg) {
-    if(arg=="left") {
-        this.reset();
+Stopwatch.prototype.start = function(restart) {
+    restart = restart || false;
+    ButtonPage.prototype.start.call(this, restart);
+    var data = this.getPageData();
+    if(!restart) {
+        data.startTime = pgUtil.getCurrentTime();
+        this.setPageData(data);
     }
-    else if(arg=="right") {
-        this.startStop();
+    this.refreshTimer(data);
+    // start the graph and bluetooth device.
+    //var signals = this.getAllSignals(data);
+    pgDevice.start(restart, data.signals);
+    if(this.hasBluetooth()) {
+        pgBluetooth.reconnect(btCB.bind(this));
+    }
+    else
+        this.startGraph(restart);
+
+    function btCB(tf) {
+        if(tf) {
+            //var signals = this.getAllSignals(data);
+            pgBluetooth.start(restart);
+        }
+        this.startGraph(restart);
     }
 };
 
-stopwatch.prototype.startStop = function() {
+Stopwatch.prototype.hasBluetooth = function() {
+    var data = this.getPageData();
+    return !pgUtil.isWebBrowser() && data.hasBluetooth;
+};
+Stopwatch.prototype.hasDevice = function() {
+    var data = this.getPageData();
+    var tf = this.hasSignal("random",data);
+    if(!pgUtil.isWebBrowser()) {
+        tf |= this.hasSignal("acceleration",data);
+        tf |= this.hasSignal("orientation", data);
+        tf |= this.hasSignal("location",    data);
+    }
+    return tf;
+};
+Stopwatch.prototype.stop = function() {
+    ButtonPage.prototype.stop.call(this);
     var time = pgUtil.getCurrentTime();
     var data = this.getPageData();
-    if(!this.clock.running) {
-        this.clock.start();
-        this.startGraph();
-        $('#stopwatch_start').hide().prop('disabled', true);
-        $('#stopwatch_stop').show().prop('disabled', false);
-        if(!pgUtil.isWebBrowser()) {
-            if(data.watchAcceleration || data.watchOrientation) {
-                pgAccel.start(data);
-            }
-            if(data.watchBluetooth) {
-                pgBluetooth.start(data);
-            }
-            if(data.watchLocation && data.continuousLocation) {
-                UI.map.startMap();
-            }
-        }
-        this.startTime[pg.category()] = time;
-    }
-    else {
-        this.clock.stop();
-        this.stopGraph();
-        $('#stopwatch_start').show().prop('disabled', false);
-        $('#stopwatch_stop').hide().prop('disabled', true);
-        var e = {type: "interval",
-                 start: this.startTime[pg.category()],
-                 duration: time - this.startTime[pg.category()],
-                 data: {}};
-        this.startTime[pg.category()] = 0;
-        if(!pgUtil.isWebBrowser()) {
-            if (data.watchAcceleration || data.watchOrientation) {
-                var acc = pgAccel.getAccelerationData();
-                if(acc.length && data.watchAcceleration)
-                    e.data.acceleration = acc;
-                var orient = pgAccel.getOrientationData();
-                if(orient.length && data.watchOrientation)
-                    e.data.orientation = orient;
-                pgAccel.stop();
-            }
-            if(data.watchBluetooth) {
-                var bt = pgBluetooth.getBluetoothData();
-                if(bt.length)
-                    e.data.bluetooth = bt;
-                pgBluetooth.stop();
-            }
-        }
-        if(data.watchLocation) {
-            if(data.continuousLocation)
-                UI.map.stopMap(mapCB.bind(this,e));
-            else
-                pgLocation.getCurrentLocation(posCB.bind(this,e));
-        }
-        else {
-            pg.addNewEvents(e, true);
-        }
-        var t = this.getElapsedStopwatch();
-        this.clock.setElapsedMS(t.duration);
-    }
-    syncSoon();
-    return false;
+    this.clock.stop();
+    this.stopGraph();
+    this.setRunning(false);
+    var e = {type: "interval",
+             start: data.startTime,
+             duration: time - data.startTime,
+             data: {}};
+    data.startTime = 0;
+    this.setPageData(data);
 
-    function mapCB(e, eMap) {
-        if(eMap.data) {
-            e.data.location   = eMap.data.location;
-            e.data.pathLength = eMap.data.pathLength;
-        }
-        pg.addNewEvents(e, true);
-    }
-    function posCB(e, path) {
-        if(typeof(path)=="string") {
-            // xxx handle error
-        }
-        else if(path.length) {
-            var time= path[path.length-1][0];
-            var lat = path[path.length-1][1];
-            var lng = path[path.length-1][2];
-            var alt = path[path.length-1][3];
-            e.data.location = [[pgUtil.getCurrentTime(), lat, lng, alt]];
-        }
-        pg.addNewEvents(e, true);
-    }
-};
+    pgDevice.stop(dataCB.bind(this,e));
 
-stopwatch.prototype.createGraph = function(show) {
-    if(!show) {
-        if(this.graph) {
-            this.graph.destroy();
-            this.graph = null;
-        }
-        return;
-    }
-    else {
-        if(this.graph || pgUtil.isWebBrowser())
-            return;
-    }
-    this.data = new vis.DataSet();
-    var opts = {
-        width:           '100%',
-        height:          '100%',
-        style:           'line',
-        orientation:     'bottom',
-        clickToUse:      true,
-        sort:            true,
-        autoResize:      true,
-        interpolation:   false,
-        start: vis.moment().add(-10, 'seconds'),
-        end: vis.moment()
-    };
-    this.graph= new vis.Graph2d($('#stopwatch_graph')[0], this.data, opts);
-    this.graph.on('doubleClick', this.onDoubleClick.bind(this));
-    this.groups = new vis.DataSet();
-    // add groups for all graphable data
-    this.groups.update(getOpts("acceleration"));
-    this.groups.update(getOpts("orientation"));
-    this.groups.update(getOpts("bluetooth"));
-    this.graph.setGroups(this.groups);
-
-    function getOpts(grpName) {
-        index = UI.stopwatch.groupID[grpName];
-        opts = {'id': index,
-                'content': 'Group ' + index,
-                'style': "stroke:black; fill:grey; stroke-width:2",
-                'options': {
-                'drawPoints': {
-                    size: 2,
-                    style: "circle",
-                    styles: "stroke: black; fill: black; stroke-width:2"
-                },
-                'shaded': false
-            }
-        };
-        return opts;
-    }
-};
-
-stopwatch.prototype.onDoubleClick = function(e) {
-    if(UI.stopwatch.graph)
-        UI.stopwatch.graph.fit();
-};
-
-stopwatch.prototype.startGraph = function() {
-    if(!UI.stopwatch.graph)
-        return;
-    var data = UI.stopwatch.getPageData();
-    if(data.watchBluetooth || 
-       data.watchAcceleration || 
-       data.watchOrientation) {
-        UI.stopwatch.graphInterval = setInterval(UI.stopwatch.updateGraph, 1000);
-    }
-};
-stopwatch.prototype.stopGraph = function() {
-    if(!UI.stopwatch.graph)
-        return;
-    if(UI.stopwatch.graphInterval)
-        clearInterval(UI.stopwatch.graphInterval);
-    UI.stopwatch.graphInterval = 0;
-    UI.stopwatch.updateGraph();
-};
-stopwatch.prototype.updateGraph = function() {
-    if(!UI.stopwatch.graph)
-        return;
-    var data = UI.stopwatch.getPageData();
-    var lastTime = 0;
-    if(UI.stopwatch.data) {
-        var item = UI.stopwatch.data.max("x");
-        if(item)
-            lastTime = item.x;
-    }
-    // add bluetooth and accelerometer to the dataset
-    if(data.watchBluetooth) {
-        var bt = pgBluetooth.getBluetoothData();
-        var pts = [];
-        for(var i=bt.length-1; i>=0; i--) {
-            if(bt[i][0] <= lastTime)
-                break;
-            pts.push({  x: bt[i][0],
-                        y: bt[i][1],
-                        group: UI.stopwatch.groupID["bluetooth"] });
-        }
-        UI.stopwatch.data.add(pts);
-    }
-    if(data.watchAcceleration) {
-        var acc = pgAccel.getAccelerationData();
-        var pts = [];
-        for(var i=acc.length-1; i>=0; i--) {
-            if(acc[i][0] <= lastTime)
-                break;
-            pts.push({  x: acc[i][0],
-                        y: pgUtil.norm([ acc[i][1], acc[i][2], acc[i][3] ]),
-                        group: UI.stopwatch.groupID["acceleration"] });
-        }
-        UI.stopwatch.data.add(pts);
-    }
-    if(data.watchOrientation) {
-        var orient = pgAccel.getOrientationData();
-        var pts = [];
-        for(var i=orient.length-1; i>=0; i--) {
-            if(orient[i][0] <= lastTime)
-                break;
-            pts.push({  x: orient[i][0],
-                        y: orient[i][1],
-                        group: UI.stopwatch.groupID["orientation"] });
-        }
-        UI.stopwatch.data.add(pts);
-    }
-    // remove all data points which are no longer visible
-    var now      = vis.moment();
-    var range    = UI.stopwatch.graph.getWindow();
-    var interval = range.end - range.start;
-    
-    if(false) {
-        var oldIds   = UI.stopwatch.data.getIds({
-                filter: function (item) {
-                    return item.x < range.start - interval;
+    function dataCB(e) {
+        if(this.hasDevice()) {
+            var d = pgDevice.getData();
+            for (var field in d) {
+                if (d[field].length) {
+                    e.data[field] = d[field];
                 }
-            });
-        UI.stopwatch.data.remove(oldIds);
+            }
+        }
+        if(this.hasBluetooth()) {
+            pgBluetooth.stop(finalDataCB.bind(this,e));
+        }
+        else
+            finalDataCB.call(this,e);
     }
-    // Update the window position
-    UI.stopwatch.graph.setWindow(now - interval, now, {animation: false});
+    function finalDataCB(e) {
+        if(this.hasBluetooth()) {
+            var d = pgBluetooth.getData();
+            for (var field in d) {
+                if (d[field].length) {
+                    e.data[field] = d[field];
+                }
+            }
+        }
+        pg.addNewEvents(e, true);
+        this.refreshTimer();
+    }
 };
 
-
-stopwatch.prototype.reset = function() {
+Stopwatch.prototype.reset = function() {
+    //if(!this.running)
+    //    return;
+    ButtonPage.prototype.reset.call(this);
     var time = pgUtil.getCurrentTime();
-    this.clock.reset();
-    if(this.data)
-        this.data.clear();
+    this.clock.reset(time);
+    this.graph.clearPoints();
     this.watchCallback(this.clock.getElapsed());
-    pg.addNewEvents({type: "reset", time: time}, true);
-    if(this.clock.running)
-        this.startTime[pg.category()] = time;
-    syncSoon();
+    var e = { type: "reset", start: time};
+    pg.addNewEvents(e, true);
+    if(this.clock.running) {
+        var data = this.getPageData();
+        data.startTime = time;
+        this.setPageData(data);
+    }
     return false;
 };
 
-stopwatch.prototype.watchCallback = function(ms) {
+Stopwatch.prototype.createGraph = function(show) {
+    var signals = [];
+    if(show) {
+        signals = this.getAllSignals();
+    }
+    this.signalCache = signals.slice(0);
+    this.graph.create(signals);
+    if(show) {
+        this.graph.clearPoints();
+        // graph the most recent event
+        var e = this.getElapsedStopwatch();
+        for(var i=0; i<e.eventIDs.length; i++) {
+            var event = pg.getEventFromID(e.eventIDs[i]);
+            var d = event[E_DATA];
+            this.addPoints(d);
+        }
+        this.graph.endAddPoints(60*1000);
+    }
+};
+
+Stopwatch.prototype.startGraph = function(restart) {
+    if(!this.graph)
+        return;
+    var data = this.getPageData();
+    var signals = this.getAllSignals(data);
+    if(! pgUtil.equal(this.signalCache, signals))
+        this.createGraph(data.showGraph);
+    this.signalStarted = {};
+    for(var s in signals) {
+        this.signalStarted[signals[s]] = false;
+    }
+    if( this.hasBluetooth()                  ||
+        this.hasSignal("acceleration", data) ||
+        this.hasSignal("orientation", data)  ||
+        this.hasSignal("random", data) ) {
+        this.graphInterval = setInterval(this.updateGraph.bind(this), 1000);
+    }
+};
+Stopwatch.prototype.stopGraph = function() {
+    if(!this.graph)
+        return;
+    clearInterval(this.graphInterval);
+    this.graphInterval = 0;
+    //this.updateGraph();
+};
+
+Stopwatch.prototype.updateGraph = function() {
+    if(!this.graph)
+        return;
+    var data = this.getPageData();
+
+    // add bluetooth and accelerometer to the dataset
+    if (this.hasBluetooth()) {
+        var d = pgBluetooth.getData();
+        addPoints.call(this,d);
+    }
+    if (this.hasSignal("acceleration", data) ||
+        this.hasSignal("orientation", data)  ||
+        this.hasSignal("random", data) )
+    {
+        var d = pgDevice.getData();
+        this.addPoints(d);
+    }
+
+    this.graph.endAddPoints(60*1000); // display a maximum of one minute of data
+};
+Stopwatch.prototype.addPoints = function(d) {
+    for (var field in d) {
+        if (d[field].length) {
+            var data = d[field];
+            var pts = {x: [], y: []};
+            var lastTime = this.graph.lastGroupTime(field);
+            lastTime = lastTime ? lastTime.getTime() : 0;
+            var index;
+            for(index = data.length - 1; index >= 0; index--) {
+                if (data[index][0] <= lastTime)
+                    break;
+            }
+            for( index++; index<data.length-1; index++) {
+                pts.x.push(new Date(data[index][0]));
+                if(field==="acceleration")
+                    pts.y.push(pgUtil.norm(data[index].slice(1)));
+                else
+                    pts.y.push(data[index][1]);
+            }
+            this.graph.addPoints(field, pts, !this.signalStarted[field]);
+            this.signalStarted[field] = true;
+        }
+    }
+};
+
+Stopwatch.prototype.watchCallback = function(ms) {
     this.widget.value = pgUtil.getStringFromMS(ms, true);
 };
 
-
-stopwatch.prototype.getElapsedStopwatch = function() {
+Stopwatch.prototype.getElapsedStopwatch = function() {
     var e              = pg.getEventsInPage("stopwatch");
-    var startTime      = 0;
-    if(this.startTime.hasOwnProperty(pg.category()))
-        startTime = this.startTime[pg.category()];
+    data = this.getPageData();
+    var startTime      = data.startTime;
     var duration       = 0.0;
-    var running        = startTime != 0;
+    var running        = startTime !== 0;
+    var ids            = [];
     for(var i=0; i<e.length; i++) {
         var event = pgUtil.parseEvent(e[i]);
-        if(event.type == "interval") {
+        if(event.type === "interval") {
             duration += event.duration;
+            ids.push(event.id);
         }
-        else if(event.type == "reset") {
+        else if(event.type === "reset") {
             if(!running)
                 startTime = event.start;
             break;
@@ -391,9 +364,8 @@ stopwatch.prototype.getElapsedStopwatch = function() {
     }
     // If we are running, the client should use the start time and duration.
     // otherwise, the client should use the duration.
-    var ans = {startTime: startTime, duration: duration, running: running};
-    return ans;
+    return {startTime: startTime, duration: duration, running: running, eventIDs: ids};
 };
 
-UI.stopwatch = new stopwatch();
+UI.stopwatch = new Stopwatch();
 //# sourceURL=stopwatch.js

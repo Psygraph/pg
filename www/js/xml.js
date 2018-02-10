@@ -22,9 +22,9 @@ UXML.prototype.getChildByName = function(node, name) {
     }
     for(var i=0; i<node.childNodes.length; i++) {
         var c = node.childNodes[i];
-        if(c.nodeName != "#text" &&
-           c.nodeName != "#comment") {
-            if(c.getAttribute("name") == name) {
+        if(c.nodeName !== "#text" &&
+           c.nodeName !== "#comment") {
+            if(c.getAttribute("name") === name) {
                 return c;
             }
         }
@@ -76,7 +76,7 @@ UXML.prototype.getThings = function(node) {
             }
         }
         else {
-            showError("Unknown tag: "+ node.tagName);
+            pgUI_showError("Unknown tag: "+ node.tagName);
         }
     }
     return things;
@@ -104,7 +104,7 @@ function xmlRpcSend(url, args) {
         return str;
     }
     catch (err) {
-        showLog("Error: " + err.name);
+        pgUI_showLog("Error: " + err.name);
         return "";
     }
 

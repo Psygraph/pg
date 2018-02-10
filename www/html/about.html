@@ -1,146 +1,156 @@
 <div id="about_page" class="page" data-role="page" data-fullscreen="true">
 
-  <div id="about_main" class="main content">
 
-    <div id="aboutDiv" class="scrollable">
-      
-      <p><img src="img/logo.png" height="108" width="108"></img></p>
-      <p>Welcome to Psygraph.</p>
-      <div class="help">
-        <p>Psygraph keeps track of your meditation, breathing, and mindfulness through the use of tools such as a timer, counter, periodic gong, and note-taker.  It allows you to visualize your behavior over time, and optionally publish that data to a WordPress site.</p>
-        <p>For more information or to create an account, please visit <a href="" onclick="return pgUtil.openWeb('http://psygraph.com');">Psygraph</a>.</p>
-      </div>
-      <p>Version 0.8.3</p>
-      <hr/>
-      <p><a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">Psygraph</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="http://psygraph.com" property="cc:attributionName" rel="cc:attributionURL">Alec Rogers</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.  The code is on GitHub.  </p>
-      
-      <div class="help">
-        <hr/><br/><br/>
-        <strong>User Agreement (EULA)</strong>    
-        <p><i>Disclaimer</i>: apologies for this legal mumbo-jumbo in advance; please read it, scroll to the bottom, and indicate your assent by clicking the button.</p>
-        <p>This work is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/.</p>
-        <p>This agreement (or "EULA") is a legal agreement between the person, company or organization ("You") that will utilize this software product ("Product"), and the author of the software ("Me").  By installing and/or using any Product provided by Me, You are confirming your acceptance of this agreement.</p>
-        <p>Consent to Use of Data: If, and only if, you choose to store your data on the website of Me (i.e. http://psygraph.com), You agree that Me may collect and use anonymous technical data and related information to facilitate the provision of software updates, product support, and other services to You.</p>
-        <p>No Warranty: Your use of the application is at your sole risk.  The application and any services performed or provided by the licensed application ("services") are provided "as is" and "as available," with all faults and without warranty of any kind.</p>
-        <p>Limitation of Liability: To the extent not prohibited by law, in no event shall Me be liable for personal injury, or any incidental, special, indirect or consequential damages whatsoever.</p>
-      </div>
+    <div id="about_main" class="main content">
 
-      <hr/><br/><br/>
-      <div class="help">
-        <p>For making all of this possible, we would like to thank:</p>
-        <ul>
-          <li><a href="" onclick="return pgUtil.openWeb('http://www.w3.org');">WWW Consortium</a>, because hytelnet has limitations.</li>
-          <li><a href="" onclick="return pgUtil.openWeb('https://jquery.com');">JQuery and JQuery Mobile</a>, for all the $'s.</li>
-          <li><a href="" onclick="return pgUtil.openWeb('http://www.apache.org');">The Apache Foundation</a>, for Cordova and many other beautiful things.</li>
-          <li><a href="" onclick="return pgUtil.openWeb('http://visjs.org');">vis.js</a>, for the technology behind the chart and graph pages.</li>
-          <li><a href="" onclick="return pgUtil.openWeb('http://leafletjs.com');">Leaflet</a>, 
-            <a href="" onclick="return pgUtil.openWeb('https://www.openstreetmap.org');">OpenStreetMap</a>, 
-            and <a href="" onclick="return pgUtil.openWeb('http://www.arcgis.com');">ArcGIS</a> (see attributions on the map page itself).</li>
-          <li>Several Javascript widgets and other code fragments: 
-            <ul> 
-              <li><a href="" onclick="return pgUtil.openWeb('http://www.tinymce.com');">Tiny MCE</a>, a fantastic editor distributed under the <a href="" onclick="return pgUtil.openWeb('https://github.com/tinymce/tinymce/blob/master/LICENSE.TXT');">LGPL license</a>.</li>
-              <li>JQuery Knob, under the MIT License (see below), Copyright (c) 2013 Anthony Terrien</li>
-              <li>Select2, under the MIT License (see below)</li>
-              <li>jQuery Mobile Datebox duration picker, custom license (see below), Copyright (c) 2011 JTSage</li>
-              <li>A Base-64 algorithm, Copyright (c) 2011, Daniel Guerrero</li>
-            </ul>
-          </li>
-        </ul>
-      </div>
+        <div class="scrollbar">
+            <div class="track">
+                <div class="thumb">
+                    <div class="end"></div>
+                </div>
+            </div>
+        </div>
 
-      <p>The MIT License (MIT)</p>
-      <p class="legal">
-        Permission is hereby granted, free of charge, to any person obtaining a copy of
-        this software and associated documentation files (the "Software"), to deal in
-        the Software without restriction, including without limitation the rights to
-        use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-        the Software, and to permit persons to whom the Software is furnished to do so,
-        subject to the following conditions:
+        <div id="aboutDiv" class="viewport">
 
-        The above copyright notice and this permission notice shall be included in all
-        copies or substantial portions of the Software.
+            <div class="overview">
+                <p><img src="images/logo.png" height="108" width="108"/></p>
+                <p>Welcome to Psygraph.</p>
+                <div class="help">
+                    <p>Psygraph keeps track of your meditation, breathing, and mindfulness through the use of tools such as a timer, counter, periodic gong, and note-taker.  It allows you to visualize your behavior over time, and optionally publish that data to a WordPress site.</p>
+                    <p>For more information or to create an account, please visit <a href="" onclick="return pgUtil.openWeb('http://psygraph.com');">Psygraph</a>.</p>
+                </div>
+                <p>Version 0.8.4</p>
+                <hr/>
+                <p><a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">Psygraph</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="http://psygraph.com" property="cc:attributionName" rel="cc:attributionURL">Alec Rogers</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.  The code is on GitHub.  </p>
 
-        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-        FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-        COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-        IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-        CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-      </p>
-      <hr/>
-      <p>The base-64 algorithm license:</p>
-      <p class="legal">
-        All rights reserved.
-        Redistribution and use in source and binary forms, with or without
-        modification, are permitted provided that the following conditions are met:
-        * Redistributions of source code must retain the above copyright
-        notice, this list of conditions and the following disclaimer.
-        * Redistributions in binary form must reproduce the above copyright
-        notice, this list of conditions and the following disclaimer in the
-        documentation and/or other materials provided with the distribution.
-        THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; AND
-        ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-        WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-        DISCLAIMED. IN NO EVENT SHALL DANIEL GUERRERO BE LIABLE FOR ANY
-        DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-        (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-        LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-        ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-        (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-        SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-      </p>
-      <hr/>
-      <p>The datepicker widget:</p>
-      <p class="legal">
-        Permission is hereby granted, free of charge, to any person obtaining
-        a copy of this software and associated documentation files (the
-        "Software"), to deal in the Software without restriction, including
-        without limitation the rights to use, copy, modify, merge, publish,
-        distribute, sublicense, and/or sell copies of the Software, and to
-        permit persons to whom the Software is furnished to do so, subject to
-        the following conditions:
+                <div class="help">
+                    <hr/><br/><br/>
+                    <strong>User Agreement (EULA)</strong>
+                    <p><i>Disclaimer</i>: apologies for this legal mumbo-jumbo in advance; please read it, scroll to the bottom, and indicate your assent by clicking the button.</p>
+                    <p>This work is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/.</p>
+                    <p>This agreement (or "EULA") is a legal agreement between the person, company or organization ("You") that will utilize this software product ("Product"), and the author of the software ("Me").  By installing and/or using any Product provided by Me, You are confirming your acceptance of this agreement.</p>
+                    <p>Consent to Use of Data: If, and only if, you choose to store your data on the website of Me (i.e. http://psygraph.com), You agree that Me may collect and use anonymous technical data and related information to facilitate the provision of software updates, product support, and other services to You.</p>
+                    <p>No Warranty: Your use of the application is at your sole risk.  The application and any services performed or provided by the licensed application ("services") are provided "as is" and "as available," with all faults and without warranty of any kind.</p>
+                    <p>Limitation of Liability: To the extent not prohibited by law, in no event shall Me be liable for personal injury, or any incidental, special, indirect or consequential damages whatsoever.</p>
+                </div>
 
-        The above copyright notice and this permission notice shall be
-        included in all copies or substantial portions of the Software.
+                <hr/><br/><br/>
+                <div class="help">
+                    <p>For making all of this possible, we would like to thank:</p>
+                    <ul>
+                        <li><a href="" onclick="return pgUtil.openWeb('http://www.w3.org');">WWW Consortium</a>, because hytelnet has limitations.</li>
+                        <li><a href="" onclick="return pgUtil.openWeb('https://jquery.com');">JQuery and JQuery Mobile</a>, for all the $'s.</li>
+                        <li><a href="" onclick="return pgUtil.openWeb('http://www.apache.org');">The Apache Foundation</a>, for Cordova and many other beautiful things.</li>
+                        <li><a href="" onclick="return pgUtil.openWeb('http://visjs.org');">vis.js</a>, for the technology behind the chart and graph pages.</li>
+                        <li><a href="" onclick="return pgUtil.openWeb('http://leafletjs.com');">Leaflet</a>,
+                            <a href="" onclick="return pgUtil.openWeb('https://www.openstreetmap.org');">OpenStreetMap</a>,
+                            and <a href="" onclick="return pgUtil.openWeb('http://www.arcgis.com');">ArcGIS</a> (see attributions on the map page itself).</li>
+                        <li>Several Javascript widgets and other code fragments:
+                            <ul>
+                                <li><a href="" onclick="return pgUtil.openWeb('http://www.tinymce.com');">Tiny MCE</a>, a fantastic editor distributed under the <a href="" onclick="return pgUtil.openWeb('https://github.com/tinymce/tinymce/blob/master/LICENSE.TXT');">LGPL license</a>.</li>
+                                <li>JQuery Knob, under the MIT License (see below), Copyright (c) 2013 Anthony Terrien</li>
+                                <li>Select2, under the MIT License (see below)</li>
+                                <li>jQuery Mobile Datebox duration picker, custom license (see below), Copyright (c) 2011 JTSage</li>
+                                <li>A Base-64 algorithm, Copyright (c) 2011, Daniel Guerrero</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
 
-        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-        EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-        MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-        NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-        LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-        OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-        WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-      </p>
-      <hr/>
-      <p><br/></p>
-      <p><br/></p>
-      <p><br/></p>
-      <p><br/></p>
-      <p><br/></p>
-      <p><br/></p>
-      <p><br/></p>
+                <p>The MIT License (MIT)</p>
+                <p class="legal">
+                    Permission is hereby granted, free of charge, to any person obtaining a copy of
+                    this software and associated documentation files (the "Software"), to deal in
+                    the Software without restriction, including without limitation the rights to
+                    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+                    the Software, and to permit persons to whom the Software is furnished to do so,
+                    subject to the following conditions:
+
+                    The above copyright notice and this permission notice shall be included in all
+                    copies or substantial portions of the Software.
+
+                    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+                    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+                    FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+                    COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+                    IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+                    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+                </p>
+                <hr/>
+                <p>The base-64 algorithm license:</p>
+                <p class="legal">
+                    All rights reserved.
+                    Redistribution and use in source and binary forms, with or without
+                    modification, are permitted provided that the following conditions are met:
+                    * Redistributions of source code must retain the above copyright
+                    notice, this list of conditions and the following disclaimer.
+                    * Redistributions in binary form must reproduce the above copyright
+                    notice, this list of conditions and the following disclaimer in the
+                    documentation and/or other materials provided with the distribution.
+                    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; AND
+                    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+                    WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+                    DISCLAIMED. IN NO EVENT SHALL DANIEL GUERRERO BE LIABLE FOR ANY
+                    DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+                    (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+                    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+                    ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+                    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+                    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+                </p>
+                <hr/>
+                <p>The datepicker widget:</p>
+                <p class="legal">
+                    Permission is hereby granted, free of charge, to any person obtaining
+                    a copy of this software and associated documentation files (the
+                    "Software"), to deal in the Software without restriction, including
+                    without limitation the rights to use, copy, modify, merge, publish,
+                    distribute, sublicense, and/or sell copies of the Software, and to
+                    permit persons to whom the Software is furnished to do so, subject to
+                    the following conditions:
+
+                    The above copyright notice and this permission notice shall be
+                    included in all copies or substantial portions of the Software.
+
+                    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+                    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+                    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+                    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+                    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+                    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+                    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+                </p>
+                <hr/>
+                <p><br/></p>
+                <p><br/></p>
+                <p><br/></p>
+                <p><br/></p>
+                <p><br/></p>
+                <p><br/></p>
+                <p><br/></p>
 
 
 
-      <h3 class="center">Be Unpredictable.</h3>
-      
+                <h3 class="center">Be Unpredictable.</h3>
 
-      <div id="levers" data-role="control-group">
-        <input type="image"  class="button fast" id="left"  title="Left"  onClick="return UI.about.press(-1);" src="img/reset.png"/>    
-        <input type="image"  class="button fast" id="right" title="Right" onClick="return UI.about.press(1);"  src="img/start.png"/>
-      </div>
-      
-      <div id="feedback">
-      </div>
 
-      <p><br></p>
-      <p><br></p>
-      <hr/>
-      <p><br></p>
-      
-      
+                <div id="levers" data-role="control-group">
+                    <input type="image"  class="button fast" id="left"  title="Left"  onClick="return UI.about.press(-1);" src="images/white.png"/>
+                    <input type="image"  class="button fast" id="right" title="Right" onClick="return UI.about.press(1);"  src="images/black.png"/>
+                </div>
+
+                <div id="feedback">
+                </div>
+
+                <p><br></p>
+                <p><br></p>
+                <hr/>
+                <p><br></p>
+
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script src="html/about.js"></script>
+    <script src="html/about.js"/>
 </div>

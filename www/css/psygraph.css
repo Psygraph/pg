@@ -9,6 +9,13 @@ basic elements
 */
 
 * {
+    /* prevent copy paste, to allow, change 'none' to 'text' */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-callout: none;
+    -webkit-touch-callout: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 html {
     border:  none; 
@@ -23,14 +30,13 @@ html,body {
     overflow-y: hidden; 
 }
 body {
+    border:  none;
     -webkit-touch-callout: none;                /* prevent callout to copy image, etc when tap to hold */
-    -webkit-user-select:   none;                /* prevent copy paste, to allow, change 'none' to 'text' */
     -webkit-text-size-adjust: none;             /* prevent webkit from resizing text to fit */
     -webkit-backface-visibility:hidden;
-    -webkit-overflow-scrolling: none;
+    -webkit-overflow-scrolling: auto;
     backface-visibility:hidden;
     -ms-content-zooming: none;
-    border:  none; 
 }
 p { 
     text-align: center;
@@ -122,8 +128,6 @@ div.ui-header, div.ui-content, div.ui-footer {
     border-top-width: 0em;
     xxxfont-size: 0.8em;
     overflow: hidden;
-    overflow-x: hidden;
-    overflow-y: hidden
 }
 div.ui-content, div.ui-footer {
     margin:  0em;
@@ -263,13 +267,10 @@ CSS for navbar
 .sidenav a {
     padding: 8px 8px 8px 32px;
     display: block;
-    float:left
-    width:  65%
     text-decoration: none;
     text-align: left;
     font-size: 25px;
     color: #ffffff;
-    transition: 0.3s;
 }
 
 .sidenav a:hover {
@@ -293,7 +294,7 @@ CSS for pages
 
 /* there are a few scrollabe divs: about, list, help pages */
 div.scrollable {
-    overflow: scroll;
+    overflow: auto;
 }
 div.clickarea {
     height: 100%;
@@ -310,7 +311,7 @@ div.page {
 div.content {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
-   box-sizing: border-box;
+   box-sizing:     border-box;
    padding-left:   0.2em;
    padding-right:  0.2em;
    padding-top:    0px;
@@ -322,6 +323,13 @@ div.content {
 
 /* Various widgets
 ============================================================== */
+/* To preserve text selection on text inputs you need to negate the effect of the first rule using this other snippet: */
+input, textarea {
+    -webkit-user-select: text;
+    -webkit-user-callout: default;
+    -webkit-touch-callout: default;
+}
+
 textarea {
     margin:       4px 4px 4px 4px;
     border-width: 0em 0em 0em 0em;
@@ -347,8 +355,9 @@ input.button {
     opacity: 0.99;
     background-color: transparent;
     /* images should not be selectable */
-    user-drag: none; 
+    user-drag: none;
     -moz-user-select: none;
+    -webkit-user-select: none;
     -webkit-user-drag: none;
 }
 div.lever_container {
@@ -373,9 +382,15 @@ div.lever_container {
     width:       1em;
     line-height: 1;
 }
-#buttons_page {
-    height: 100%;
+@media only screen and (orientation: portrait) {
+    #buttons_page {
+        height: 100%;
+    }
 }
+
+@media only screen and (orientation: landscape) {
+}
+
 .inset {
     /* This is to inset the time and stopwatch text input boxes */
     margin-left:    10px;
@@ -383,7 +398,7 @@ div.lever_container {
     margin-top:     0em;
     margin-bottom:  0em;
     padding-top:    0em;
-    padding-bottom: 0px;
+    padding-bottom: 0em;
     border-width:   0em;
 }
 
@@ -397,7 +412,7 @@ div.lever_container {
     text-align:  center;
     margin-top:  20%;
 }
-#modal_page {
+.modal_page {
     position:   fixed;
     width:      100%;
     height:     100%;
@@ -625,12 +640,12 @@ div#mapid {
 
 /* GRAPH, CHART
 ============================================================== */
-#graphContainer {
+.graphContainer {
   width: 10em;
   height: 10em;
   position: relative;
 }
-#graph {
+.graph {
   width: 100%;
   height: 100%;
   position: absolute;
@@ -640,4 +655,10 @@ div#mapid {
 .graphStyle {
   stroke: black;
   fill: grey;
+}
+
+/* PLOT.ly
+============================================================== */
+svg rect.scrollbar {
+    visibility: hidden;
 }

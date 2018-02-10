@@ -1,142 +1,130 @@
 
-function list() {
-    page.call(this, "list");
+function List() {
+    Page.call(this, "list");
     this.initialized = false;
     this.categoryCache = null;
     this.scroll = null;
     this.lastSelected = null;
 };
 
-list.prototype = Object.create(page.prototype);
-list.prototype.constructor = list;
+List.prototype = Object.create(Page.prototype);
+List.prototype.constructor = List;
 
-list.prototype.update = function(show) {
+List.prototype.update = function(show, data) {
     this.lastSelected = null;
-    if(!show) {
-        return;
-    }
+    if(show) {
+        // select according to the selectedEvents list
+        if (!this.initialized || !pgUtil.equal(pg.categories, this.categoryCache)) {
+            this.categoryCache = pgUtil.deepCopy(pg.categories);
+            txt = '<li data-role="list-divider"><i>Select action</i></li>';
+            var click = "return UI.list.selectAction('delete');";
+            txt += '<li data-icon="false"><a href="" onclick="' + click + '">Delete events</a></li>';
+            var click = "return UI.list.selectAction('clearCache');";
+            txt += '<li data-icon="false"><a href="" onclick="' + click + '">Clear cache</a></li>';
+            for (i = pg.categories.length - 1; i >= 0; i--) {
+                if (i === pg.categoryIndex)
+                    continue;
+                click = "return UI.list.selectAction('cat:" + pg.categories[i] + "');";
+                txt += '<li data-icon="false"><a href="" onclick="' + click + '">Move to category: <i>' + pg.categories[i] + '</i></a></li>';
+            }
+            $("#list_eventAction").html(txt).trigger('refresh');
+            $("#list_eventAction").listview().listview("refresh");
 
-    //if($("#list_pageSelect")[0].length > 5)
-    //    $("#list_pageSelect")[0].remove(5);
-    //if(pg.getUserDataValue("debug"))
-    //    $("#list_pageSelect").append(new Option("home","home"));
-    //$("#list_pageSelect").selectmenu('refresh');
-    //$("#list_pageSelect").trigger('change');
-
-    // select according to the selectedEvents list
-    if(!this.initialized || !pgUtil.equal(pg.categories, this.categoryCache) ) {
-        this.categoryCache = pgUtil.deepCopy(pg.categories);
-        txt = '<li data-role="list-divider"><i>Select action</i></li>';
-        var click = "return UI.list.selectAction('delete');";
-        txt += '<li data-icon="false"><a href="" onclick="'+click+'">Delete events</a></li>';
-        var click = "return UI.list.selectAction('clearCache');";
-        txt += '<li data-icon="false"><a href="" onclick="'+click+'">Clear cache</a></li>';
-        for(i=pg.categories.length-1; i>=0; i--) {
-            if(i == pg.categoryIndex)
-                continue;
-            click = "return UI.list.selectAction('cat:"+pg.categories[i]+"');";
-            txt += '<li data-icon="false"><a href="" onclick="'+click+'">Move to category: <i>'+pg.categories[i]+'</i></a></li>';
+            this.initialized = true;
         }
-        $("#list_eventAction").html(txt).trigger('refresh');
-        $("#list_eventAction").listview().listview("refresh");
-        
-        this.initialized = true;
-    }
-    // Add the events
-    //////////////////////////////////////
-    var data = this.getPageData();
-    var events = pg.getEvents();
-    var s = "";
-    s += "<thead><tr>";
-    var nCols = 0;
-    if(data.showID) {
-        s += "<th class=data>ID</th>";
-        nCols ++;
-    }
-    if(data.showDate) {
-        s += "<th class=data>Time</th>";
-        nCols ++;
-    }
-    if(data.showPage) {
-        if(pg.category() == "*")
-            s += "<th class=data>Category, Tool, Type</th>";
-        else
-            s += "<th class=data>Tool, Type</th>";
-        nCols ++;
-    }
-    if(data.showData) {
-        s += "<th class=data>Data</th>";
-        nCols ++;
-    }
-    s += "</tr></thead>";
-    s += "<tbody>";
-    var eventsDisplayed = false;
-    for (var i=0; i<events.length; i++) {
-        var e = pgUtil.parseEvent(events[i]);
-        if(data.pageFilter.indexOf(e.page) == -1)
-            continue;
-        eventsDisplayed = true;
-        s += "<tr class='data eid' id=\""+ e.id.toString() +"\">";
-        if(data.showID) {
-            var id = e.id.toString();
-            s += "<td class=data>"+id+"<input type='checkbox' id=\"cb_" + id + "\" value='";
-            s += "' /></td>";
+        // Add the events
+        //////////////////////////////////////
+        var events = pg.getEvents();
+        var s = "";
+        s += "<thead><tr>";
+        var nCols = 0;
+        if (data.showID) {
+            s += "<th class=data>ID</th>";
+            nCols++;
         }
-        if(data.showDate) {
-            s += "<td class=data>" + pgUtil.getDateString(e.start) + "</td>";
+        if (data.showDate) {
+            s += "<th class=data>Time</th>";
+            nCols++;
         }
-        if(data.showPage) {
-            if(pg.category() == "*")
-                s += "<td class=data>" + e.category + ", "+ e.page + ", " + e.type + "</td>";
+        if (data.showPage) {
+            if (pg.category() === "*")
+                s += "<th class=data>Category, Tool, Type</th>";
             else
-                s += "<td class=data>" + e.page + ", " + e.type + "</td>";
+                s += "<th class=data>Tool, Type</th>";
+            nCols++;
         }
-        if(data.showData) {
-            var edata = pgUtil.displayEventData(e);
-            s += "<td class=data>" + edata + "</td>";
+        if (data.showData) {
+            s += "<th class=data>Data</th>";
+            nCols++;
         }
-        s += "</tr>";
-    }
-    if(!eventsDisplayed) {
-        s += "<tr><td class='fill' height='100%' colspan='" +nCols +"'>No events.</td></tr>";
+        s += "</tr></thead>";
+        s += "<tbody>";
+        var eventsDisplayed = false;
+        for (var i = 0; i < events.length; i++) {
+            var e = pgUtil.parseEvent(events[i]);
+            if (data.pageFilter.indexOf(e.page) === -1)
+                continue;
+            eventsDisplayed = true;
+            s += "<tr class='data eid' id=\"" + e.id.toString() + "\">";
+            if (data.showID) {
+                var id = e.id.toString();
+                s += "<td class=data>" + id + "<input type='checkbox' id=\"cb_" + id + "\" value='";
+                s += "' /></td>";
+            }
+            if (data.showDate) {
+                s += "<td class=data>" + pgUtil.getDateString(e.start) + "</td>";
+            }
+            if (data.showPage) {
+                if (pg.category() === "*")
+                    s += "<td class=data>" + e.category + ", " + e.page + ", " + e.type + "</td>";
+                else
+                    s += "<td class=data>" + e.page + ", " + e.type + "</td>";
+            }
+            if (data.showData) {
+                var edata = pgUtil.displayEventData(e);
+                s += "<td class=data>" + edata + "</td>";
+            }
+            s += "</tr>";
+        }
+        if (!eventsDisplayed) {
+            s += "<tr><td class='fill' height='100%' colspan='" + nCols + "'>No events.</td></tr>";
+        }
+        else {
+            s += "<tr><td class='fill' height='100%' colspan='" + nCols + "'>&nbsp;</td></tr>";
+        }
+        s += "</tbody>";
+        $("#eventlist").html(s);
+
+        // add the onClick listener for event selection
+        $("tr.data").click(this.eventSelected.bind(this));
+
+        this.resize();
+        this.selectEvents("");
     }
     else {
-        s += "<tr><td class='fill' height='100%' colspan='" +nCols +"'>&nbsp;</td></tr>";
     }
-    s += "</tbody>";
-    $("#eventlist").html(s);
-
-    // add the onClick listener for event selection
-    $("tr.data").click(this.eventSelected.bind(this));
-
-    this.resize();
-    this.selectEvents("");
+    return data;
 };
 
-list.prototype.settings = function() {
-    if(arguments.length) {
-        //var data = arguments[0];
-        var data = this.getPageData();
-
+List.prototype.settings = function(show, data) {
+    if (show) {
         $("#list_pageSelect").val(data.pageFilter).trigger("change");
-        $("#list_showID"  ).prop("checked", data.showID  ).checkboxradio("refresh");
+        $("#list_showID").prop("checked", data.showID).checkboxradio("refresh");
         $("#list_showDate").prop("checked", data.showDate).checkboxradio("refresh");
         $("#list_showPage").prop("checked", data.showPage).checkboxradio("refresh");
         $("#list_showData").prop("checked", data.showData).checkboxradio("refresh");
     }
     else {
-        var data = {
-            pageFilter: $("#list_pageSelect").val(),
-            showID:     $("#list_showID")[0].checked,
-            showDate:   $("#list_showDate")[0].checked,
-            showPage:   $("#list_showPage")[0].checked,
-            showData:   $("#list_showData")[0].checked,
-        };
-        return data;
+        data.pageFilter= $("#list_pageSelect").val();
+        data.showID= $("#list_showID")[0].checked;
+        data.showDate= $("#list_showDate")[0].checked;
+        data.showPage= $("#list_showPage")[0].checked;
+        data.showData= $("#list_showData")[0].checked;
     }
+    return data;
 };
 
-list.prototype.getPageData = function() {
+List.prototype.getPageData = function() {
     var data = pg.getPageData("list", pg.category());
     if(! ('pageFilter' in data))
         data.pageFilter = ["stopwatch","timer","counter","note"];
@@ -162,13 +150,12 @@ function menu_listAction() {
     return false;
 }
 
-
-list.prototype.resize = function() {
-    page.prototype.resize.call(this, false);
+List.prototype.resize = function() {
+    Page.prototype.resize.call(this, false);
     var header   = this.headerHeight();
     var subheader = $("#list_page div.category").outerHeight(true);
     var controls = $("#list_controls").outerHeight(true);
-    var win    = getWindowDims();
+    var win    = pgUI.getWindowDims();
     var width  = win.width;
     var scrollDiv  = $("#eventlist");
     var listHeight = 0;
@@ -188,15 +175,15 @@ list.prototype.resize = function() {
     $("#"+this.name+"_page div.main.content").css({'overflow': "hidden"});
 };
 
-list.prototype.eventSelected = function(e) {
+List.prototype.eventSelected = function(e) {
     var id = null;
     var row = null;
-    if(e.target.type == "checkbox") {
+    if(e.target.type === "checkbox") {
         var checkbox = e.target;
         row = checkbox.parentNode.parentNode;
         id = parseInt(checkbox.id);
     }
-    else if(e.target.nodeName == "TD") { //a row was selected, select the checkbox.
+    else if(e.target.nodeName === "TD") { //a row was selected, select the checkbox.
         row = e.target.parentNode;
         id = parseInt(row.id);
     }
@@ -206,7 +193,7 @@ list.prototype.eventSelected = function(e) {
         if(this.lastSelected && e.shiftKey) {
             thisE = pg.getEventFromID(id);
             lastE = pg.getEventFromID(this.lastSelected);
-            if(id == this.lastSelected)
+            if(id === this.lastSelected)
                 return true;
             this.lastSelected = null;
             var nextRow;
@@ -219,11 +206,11 @@ list.prototype.eventSelected = function(e) {
                 nextRow = $("#"+ lastE[E_ID])[0].nextSibling;
                 lastRow = $(row)[0].previousSibling;
             }
-            if(nextRow != lastRow.nextSibling)
+            if(nextRow !== lastRow.nextSibling)
                 while(nextRow) {
                     id = parseInt(nextRow.id);
                     this.listSelectEvent(id);
-                    if(nextRow==lastRow)
+                    if(nextRow===lastRow)
                         break;
                     nextRow = nextRow.nextSibling;
                 }
@@ -235,7 +222,7 @@ list.prototype.eventSelected = function(e) {
     }
 };
 
-list.prototype.listSelectEvent = function(id) {
+List.prototype.listSelectEvent = function(id) {
     var row = $("#" +id);
     var checkbox = null;
     var data = this.getPageData();
@@ -257,15 +244,15 @@ list.prototype.listSelectEvent = function(id) {
     }
 };
 
-list.prototype.selectEvents = function(selection) {
-    if(selection == "") {
+List.prototype.selectEvents = function(selection) {
+    if(selection === "") {
         var ids = pg.getSelectedEventIDs();
         var list = $(".eid");
         for(var i=0; i<list.length; i++) {
             var row = list[i];
             var id  = row.id;
             var checkbox = $("#cb_" + id);
-            if(ids.indexOf(parseInt(id)) == -1) {
+            if(ids.indexOf(parseInt(id)) === -1) {
                 checkbox.checked = false;
                 $(row).removeClass("selected");
             }
@@ -275,18 +262,18 @@ list.prototype.selectEvents = function(selection) {
             }
         }
     }
-    else if(selection == "all") { // select all
+    else if(selection === "all") { // select all
         pg.selectEvents("*");
         this.selectEvents("");
     }
-    else if(selection.substring(0,5) == "tool:") { // select events for a particular page
+    else if(selection.substring(0,5) === "tool:") { // select events for a particular page
         var page = selection.substring(5,selection.length);
         var ids = pg.getEventIDsInPage(page);
         if(ids.length)
             pg.selectEvents(ids);
         this.selectEvents("");
     }
-    else if(selection == "duplicates") { // select duplicates
+    else if(selection === "duplicates") { // select duplicates
         var id = [];
         var list = $(".eid");
         for(var i=0; i<list.length; i++) {
@@ -297,7 +284,7 @@ list.prototype.selectEvents = function(selection) {
             pg.selectEvents(ids);
         this.selectEvents("");
     }
-    else if(selection == "none") { // select none
+    else if(selection === "none") { // select none
         pg.unselectEvents(pg.category());
         this.selectEvents("");
     }
@@ -308,27 +295,27 @@ list.prototype.selectEvents = function(selection) {
     return false;
 };
 
-list.prototype.selectAction = function(selection) {
+List.prototype.selectAction = function(selection) {
     var list = $(".eid.selected");
     var id = [];
     for(var i=0; i<list.length; i++) {
         newids = parseInt(list[i].id);
         id[id.length] = newids;
     }
-    if(selection == "") {
+    if(selection === "") {
         // no-op.
     }
-    else if(selection.substring(0,4) == "cat:") {
+    else if(selection.substring(0,4) === "cat:") {
         var cat = selection.substring(4,selection.length);
         pg.changeEventCategory(id, cat);
         this.update(true);
     }
-    else if(selection == "delete") {
+    else if(selection === "delete") {
         pg.deleteEventIDs(id);
         syncSoon();
         this.update(true);
     }
-    else if(selection == "clearCache") {
+    else if(selection === "clearCache") {
         pg.deleteEventIDs(id, false);
         syncSoon();
         this.update(true);
@@ -340,5 +327,5 @@ list.prototype.selectAction = function(selection) {
     return false;
 };
 
-UI.list = new list();
+UI.list = new List();
 //# sourceURL=list.js

@@ -13,30 +13,30 @@ var pgAudio = {
     getAudioExt: function() {
         if(pgUtil.isWebBrowser())
             ext = "wav";
-        else if(device.platform=="iOS")
+        else if(device.platform==="iOS")
             ext = "m4a"; // wav
-        else if(device.platform=="Android")
+        else if(device.platform==="Android")
             ext = "aac"; // amr
         else
-            showLog("Error: unkonwn platform");
+            pgUI_showLog("Error: unkonwn platform");
         return ext;
     },
     getRecordFilename: function(eid, ext) {
-        ext = typeof(ext)!="undefined" ? ext : pgAudio.getAudioExt();
-        eid = typeof(eid)!="undefined" ? eid : pg.uniqueEventID();
+        ext = typeof(ext)!=="undefined" ? ext : pgAudio.getAudioExt();
+        eid = typeof(eid)!=="undefined" ? eid : pg.uniqueEventID();
         var audioFilename = "pg" +eid +"." +ext;
         return audioFilename;
     },
     isRecordedFile: function(src) {
         var pre = src.substr(0,2);
         var ext = pgFile.getFileExt(src).toLowerCase();
-        if( pre=="pg" && (ext == "wav" || ext == "m4a" || ext == "aac"))
+        if( pre==="pg" && (ext === "wav" || ext === "m4a" || ext === "aac"))
             return true;
         return false;
     },
     mkNiceDir: function(dir) {
         // on Mac, the audio player wants absolute directories, not file:// URL's
-        if(device.platform == "iOS" && dir.slice(0,7)=="file://")
+        if(device.platform === "iOS" && dir.slice(0,7)==="file://")
             dir = dir.slice(7);
         return dir;
     },
@@ -78,18 +78,20 @@ var pgAudio = {
     playRecorded: function(id, fn) {
         if(pgUtil.isWebBrowser()) {
             var src = wpURL(id);
-            if(pg.username == "") {
-                showAlert("You are not logged in, audio file access is not possible.");
+            if(pg.username === "") {
+                pgUI.showAlert("You are not logged in, audio file access is not possible.");
             }
-            if(!$("#record")[0].paused) {
-                $("#recordSrc")[0].src = "";
-                $("#record")[0].pause();
+            var rec    = $("#record")[0];
+            var recSrc = $("#recordSrc")[0];
+            if(!rec.paused) {
+                recSrc.src = "";
+                rec.pause();
             }
             else {
-                $("#record")[0].onerror = function() {audioCB(false, src);};
-                $("#recordSrc")[0].src = src;
-                $("#record")[0].load();
-                $("#record")[0].play();
+                rec.onerror = function() {audioCB(false, src);};
+                recSrc.src = src;
+                rec.load();
+                rec.play();
             }
         }
         else {
@@ -105,7 +107,7 @@ var pgAudio = {
                     playRecordedSrc( wpURL(id), fn);
                 }
                 else
-                    showAlert("No local audio file for event " +id);
+                    pgUI.showAlert("No local audio file for event " +id);
             }
         }
         function playRecordedSrc(src, fn) {
@@ -118,7 +120,7 @@ var pgAudio = {
         }
         function audioCB(fn, success, src) {
             if(!success) {
-                showAlert("Could not play audio file: " + fn);
+                pgUI.showAlert("Could not play audio file: " + fn);
             }
             else {
                 if(pgUtil.isWebBrowser()) {
@@ -147,17 +149,17 @@ var pgAudio = {
     getCategorySound: function(category, forNotification, callback) {
         //callback = typeof(callback)!="undefined" ? callback : false;
         var src = pg.getCategoryData(category).sound;
-        if(!pgUtil.isWebBrowser() && src.indexOf("http") == 0) {
+        if(!pgUtil.isWebBrowser() && src.indexOf("http") === 0) {
             // try to cache a local version.
-            if(device.platform=="iOS") {
+            if(device.platform==="iOS") {
                 var tempFN = pgFile.getFileName(src);
                 pgFile.copySoundFile(src, foundLocalFile, tempFN);
                 return;
             }
         }
-        if(src.indexOf("http") != 0 &&
-           src.indexOf("file") != 0 &&
-           src.indexOf("data:") != 0) {
+        if(src.indexOf("http") !== 0 &&
+           src.indexOf("file") !== 0 &&
+           src.indexOf("data:") !== 0) {
             if(forNotification)
                 src = "file://media/" + src;
             else
@@ -166,39 +168,41 @@ var pgAudio = {
         }
         //if(callback)
         callback(src);
-        return;
+
+
         function foundLocalFile(success, url) {
             if(success) {
                 if(forNotification) { // ios needs relative paths.
-                    if(device.platform=="iOS")
+                    if(device.platform==="iOS")
                         url = "res:/" +pgFile.getFileName(url);
                     //else
                     //    url = "file://data/data/com.psygraph.pg/files/Sounds/" +pgFile.getFileName(url);
                 }
                 callback(url);
-                showLog("Created local audio file ("+url+") from ("+src+").");
+                pgUI_showLog("Created local audio file ("+url+") from ("+src+").");
             }
             else {
-                showWarn("Could not create local audio file ("+url+") from ("+src+").");
+                pgUI_showWarn("Could not create local audio file ("+url+") from ("+src+").");
                 callback(src);
             }
         }
     },
     
-    alarm: function(category, shakeToStop) {
-        category = typeof(category)!="undefined" ? category : pg.category();
-	    shakeToStop = typeof(shakeToStop)!="undefined" ? shakeToStop : true;
-        var index = -1;
+    alarm: function(category, shakeToStop, callback) {
+        category = typeof(category)!=="undefined" ? category : pg.category();
+        shakeToStop = typeof(shakeToStop)!=="undefined" ? shakeToStop : true;
+        callback = typeof(callback)!=="undefined" ? callback : function(){};
         pgAudio.getCategorySound(category, false, cb);
         function cb(src) {
+            var index = -1;
             if(!pgUtil.isWebBrowser()) {
                 // play the file
                 index = pgAudio.nextPlayerIndex();
-                var id = pgAudio.play(index, src);
+                pgAudio.play(index, src);
                 // enable shake-to-stop
                 if(shakeToStop) {
                     pgAccel.start();
-                    pgAccel.onShake( pgAudio.stop.bind(this,-1) );
+                    pgAccel.onShake("audio", pgAudio.stop.bind(this,index) );
                 }
             }
             // next try using HTML5
@@ -207,13 +211,13 @@ var pgAudio = {
                 if (pgAudio.alarmer == null) {
                     pgAudio.alarmer = $("#alarm")[index];
                     pgAudio.alarmer.addEventListener("error",
-                                                     function(err){showLog("Cannot alarm: " + err.message)}
+                                                     function(err){pgUI_showLog("Cannot alarm: " + err.message)}
                     );
                 }
                 else {
                     pgAudio.alarmer.pause();
                 }
-                if($("#alarmSrc")[0].src != src) {
+                if($("#alarmSrc")[0].src !== src) {
                     $("#alarmSrc")[0].src = src;
                     pgAudio.alarmer.load();
                 }
@@ -226,12 +230,12 @@ var pgAudio = {
                 // Play audio
                 var promise = pgAudio.alarmer.play();
                 if (promise !== undefined) {
-                    promise.catch(error => {
-                            showLog("Cannot create alarm (audio autoplay disabled?)");
+                    promise.catch(function() {
+                            pgUI_showLog("Cannot create alarm (audio autoplay disabled?)");
                         });
                 }
             }
-            return index;
+            callback(index);
         }
     },
     playSuccess: function(index) {
@@ -245,73 +249,41 @@ var pgAudio = {
         // pgAudio.beep(); We are getting a weird non-error
         if(!err.hasOwnProperty("message")) {
             if(err.hasOwnProperty("code") && err.code)
-                showLog("Error playing recorded file");
+                pgUI_showLog("Error playing recorded file");
             return;
         }
         if(pgAudio.player[index]) {
             pgAudio.player[index].release();
             pgAudio.player[index] = null;
         }
-        showLog("Error playing file: " + err.message);
+        pgUI_showLog("Error playing file: " + err.message);
     },
     beep: function() {
         if(navigator.notification) {
-            navigator.notification.vibrate(500);
+            navigator.vibrate(500);
             navigator.notification.beep(1);
         }
     },
-    giveFeedback: function(correct) {
+    reward: function(correct) {
         // create audio feedback signals
         if(! pgAudio.feedback) {
             pgAudio.feedback = new Array();
-            var wave = [];
-            var data = [];
-            var sampleRate = 11025;
-            var len = 1024;
-            for(var i=0; i<=1; i++) {
-                pgAudio.feedback[i] = new Audio();     // create the HTML5 audio element
-                data[i]       = new Float32Array(len); // yes, it's an array
-            }
-            var hz = 220;
-            var freqMult = 1 /(2*Math.PI) /sampleRate *hz;
-            var tone  = function(i) {
-                return 0.9 * Math.sin( i *(2*Math.PI) /sampleRate *hz);
-            };
-            var noise = function(i){
-                return 0.22 * (Math.random()*2-1);
-            };
-            var env   = function(i) {
-                return (1+Math.sin( i /len *(2*Math.PI) - Math.PI/2))/2;
-            };
-            for(var i=0; i<len; i++) {
-                data[0][i] = env(i) * noise(i);
-                data[1][i] = env(i) * tone(i);
-            }
-            
-            pgRecorder.numChannels = 1;
-            pgRecorder.sampleRate  = sampleRate;
-            
-            for(var i=0; i<=1; i++) {
-                var view = pgRecorder.encodeWAV(data[i]);
-                var rawData = new Uint8Array(view.buffer);
-                pgAudio.feedback[i].src = pgRecorder.getURI(rawData);
-            }
+            pgAudio.feedback[0] = new Audio();     // create the HTML5 audio element
+            pgAudio.feedback[1] = new Audio();     // create the HTML5 audio element
+            pgAudio.feedback[0].src = "media/punish.mp3";
+            pgAudio.feedback[1].src = "media/reward.mp3";
         }
-        if(correct) {
-            pgAudio.feedback[1].play();
-        }
-        else {
-            pgAudio.feedback[0].play();
-        }
+        var index = correct ? 1 : 0;
+        pgAudio.feedback[index].play();
     },
     buzz: function() {
         if(navigator.notification) {
-            navigator.notification.vibrate(240);
+            navigator.vibrate(240);
         }
     },
     getRecordPermissions: function() {
         if(!pgUtil.isWebBrowser()     && 
-           device.platform=="Android" &&
+           device.platform==="Android" &&
            !pgAudio.permCheck) {
             var permissions = cordova.plugins.permissions;
             permissions.checkPermission(permissions.RECORD_AUDIO, 
@@ -334,12 +306,12 @@ var pgAudio = {
             }
         }
         function errorCallback(perm) {
-            showWarn('Audio permission not turned on');
+            pgUI_showWarn('Audio permission not turned on');
         }
     },
     record: function(callback, filename) {
         if(pgAudio.recorder) {
-            showAlert("You can only record one thing at a time", "Error");
+            pgUI.showAlert("You can only record one thing at a time", "Error");
             callback(false);
             return;
         }
@@ -351,11 +323,11 @@ var pgAudio = {
                         pgAudio.recorder.release();
                         pgAudio.recorder = null;
                     }
-                    showLog('Recording file error');
+                    pgUI_showLog('Recording file error');
                 }
                 else {
                     path = pgAudio.mkNiceDir(path);
-                    showLog("Recording filename: " + path);
+                    pgUI_showLog("Recording filename: " + path);
                     // Record audio
                     pgAudio.recorder = new Media(path, deviceSuccess.bind(this), deviceFail.bind(this));
                     pgAudio.recorder.startRecord();
@@ -370,7 +342,7 @@ var pgAudio = {
                                       navigator.mediaDevices.getUserMedia);
             
             if(!navigator.getUserMedia) {
-                showAlert('Recording unavailable on this browser.');
+                pgUI.showAlert('Recording unavailable on this browser.');
                 return callback(false);
             }
             navigator.getUserMedia( {audio:true, video: false}, 
@@ -391,14 +363,14 @@ var pgAudio = {
 	        recordCallback(callback, 200);
         }
         function webFail(callback, error) {
-            showLog('Recording failed (error code ' + error.code + ')');
+            pgUI_showLog('Recording failed (error code ' + error.code + ')');
             callback(false);
         }
         function deviceSuccess(e){
             callback(true);
         }
         function deviceFail(e){
-            showError("Recording failed: "+JSON.stringify(e)); 
+            pgUI_showError("Recording failed: "+JSON.stringify(e));
             callback(false);
         }
 	    // Periodically make callbacks with amplitude information.
@@ -411,13 +383,13 @@ var pgAudio = {
 		        setTimeout(function(){recordCallback(callback,ms);}, ms);
             }
             function error(err) {
-                showLog(err);
+                pgUI_showLog(err);
             }
 	    }
     },
     
     stop: function(index) {
-        if(index==-1) {
+        if(index===-1) {
             for(var j=0; j<pgAudio.player.length; j++) {
                 stopIndex(j);
             }
@@ -439,7 +411,7 @@ var pgAudio = {
         }
     },
     stopAlarm: function(index) {
-        if(index==0) {
+        if(index===0) {
             pgAudio.alarmer.pause();
             //pgAudio.alarmer = null;
         }
@@ -465,10 +437,10 @@ var pgAudio = {
                 pgRecorder.callback(true);
             }
             pgAudio.recorder = null;
-            showLog("Finished recording");
+            pgUI_showLog("Finished recording");
         }
     }
-}
+};
 
 var pgRecorder = {
     bufferLen   : 4096,
@@ -581,7 +553,7 @@ var pgRecorder = {
         }
     },
     getURI: function (samples) {
-        var encData = pgFile.base64.encode(samples);
+        var encData = pgUtil.base64.encode(samples);
         return 'data:audio/wav;base64,' +encData;
     }
     

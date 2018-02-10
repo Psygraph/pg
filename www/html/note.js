@@ -1,57 +1,65 @@
 
-function note() {
-    page.call(this, "note");
-    this.initialized = false;
-    this.lastText = {};
-    
+function Note() {
+    ButtonPage.call(this, "note");
     // audio recording
-    this.recording     = false;
     this.eid           = 0;
     this.audioFilename = "";
 }
 
-note.prototype = Object.create(page.prototype);
-note.prototype.constructor = note;
+Note.prototype = Object.create(ButtonPage.prototype);
+Note.prototype.constructor = Note;
 
-note.prototype.update = function(show, state) {
-    var data = this.getPageData();
-    if(!show) {
+Note.prototype.update = function(show, data) {
+    ButtonPage.prototype.update.call(this, show, data);
+    if(show) {
+        //this.createEnhancedEditor(data.enhancedEditor);
+        this.updateText();
+        this.updateAudio();
+        this.resize();
+    }
+    else {
         var noteText = this.getNoteText();
-        this.lastText[pg.category()] = {'title': $("#noteTitle").val(),
-                                        'text':  noteText};
-        if(this.recording)
-            this.annotate(); // stop recording if we leave the page.
+        // stop recording if we leave the page.
+        if(this.running)
+            this.stop();
         //if(tinyMCE.activeEditor)
         //    tinyMCE.activeEditor.selection.collapse();
-        return {lastText: this.lastText};
     }
-    if(typeof(state)!="undefined") {
-        this.lastText = state.lastText;
-    }
-    else { // set an initial value
-        this.lastText[pg.category()] = {'title': "Title",
-                                        'text':  "Text"};
-    }
-    if(!this.initialized) {
-        $('#note_stop').hide().prop('disabled', true);
-        $('#note_start').show().prop('disabled', false);
-        this.initialized = true;
-    }
-    //this.createEnhancedEditor(data.enhancedEditor);
-    this.updateText();
-    this.updateAudio();
-    this.resize();
+    return data;
 };
 
-note.prototype.resize = function() {
-    page.prototype.resize.call(this, false);
+Note.prototype.settings = function(show, data) {
+    if(show) {
+        $("#note_addText").prop("checked", data['addText']).checkboxradio("refresh");
+        $("#note_addLocation").prop("checked", data['addLocation']).checkboxradio("refresh");
+        $("#note_showConfirmation").prop("checked", data['showConfirmation']).checkboxradio("refresh");
+        //$("#note_enhancedEditor").prop("checked", data['enhancedEditor']).checkboxradio("refresh");
+    }
+    else {
+        data.addText=          $("#note_addText")[0].checked;
+        data.addLocation=      $("#note_addLocation")[0].checked;
+        data.showConfirmation= $("#note_showConfirmation")[0].checked;
+        //data.enhancedEditor=   $("#note_enhancedEditor")[0].checked
+        //this.createEnhancedEditor(data.enhancedEditor);
+    }
+    return data;
+};
+Note.prototype.resize = function() {
+    Page.prototype.resize.call(this, false);
     var header = this.headerHeight();
     var subheader = $("#note_page div.category").outerHeight(true);
-    var win    = getWindowDims();
+    var win    = pgUI.getWindowDims();
     var titleHeight  = $("#noteTitleDiv").outerHeight(true);
     var buttonHeight = $("#note_submit").outerHeight(true);
     var textContainerHeight = win.height - (header+subheader+titleHeight+buttonHeight+12);
     var textContainerHeight = Math.max(textContainerHeight, 240);
+    var data = this.getPageData();
+    if(data.addText) {
+        $("#noteTextContainer").show();
+    }
+    else {
+        $("#noteTextContainer").hide();
+    }
     $("#noteTextContainer").outerHeight(textContainerHeight);
     $("#noteText").outerHeight(textContainerHeight-12);
     var width  = win.width;
@@ -64,23 +72,6 @@ note.prototype.resize = function() {
                 });
 };
 
-note.prototype.settings = function() {
-    if(arguments.length) {
-        var data = this.getPageData();
-        $("#note_addLocation").prop("checked", data['addLocation']).checkboxradio("refresh");
-        $("#note_showConfirmation").prop("checked", data['showConfirmation']).checkboxradio("refresh");
-        //$("#note_enhancedEditor").prop("checked", data['enhancedEditor']).checkboxradio("refresh");
-    }
-    else {
-        var data = { 
-            addLocation:      $("#note_addLocation")[0].checked,
-            showConfirmation: $("#note_showConfirmation")[0].checked,
-            //enhancedEditor:   $("#note_enhancedEditor")[0].checked
-        };
-        //this.createEnhancedEditor(data.enhancedEditor);
-        return data;
-    }
-};
 /*
 note.prototype.createEnhancedEditor = function(show) {
     if(show) {
@@ -133,64 +124,44 @@ note.prototype.createEnhancedEditor = function(show) {
     this.resize();
 };
 */
-note.prototype.updateText = function() {
-    var s = {'title':"", 'text':""};
-    if(typeof(this.lastText[pg.category()])!="undefined") {
-        s = this.lastText[pg.category()];
-    }
-    $("#noteTitle").val(s.title);
+Note.prototype.updateText = function() {
     var data = this.getPageData();
+    $("#noteTitle").val(data.lastText.title);
     //if(data.enhancedEditor)
     //    tinyMCE.activeEditor.setContent(s.text, {format : 'raw'});
     //else
-        $("#noteText").val(s.text);
+    $("#noteText").val(data.lastText.text);
 };
 
-note.prototype.getPageData = function() {
+Note.prototype.getPageData = function() {
     var data = pg.getPageData("note", pg.category());
-    if(! ('showConfirmation' in data))
-        data.showConfirmation = true;
+    if(! ('addText' in data))
+        data.addText          = false;
     if(! ('addLocation' in data))
         data.addLocation      = false;
+    if(! ('showConfirmation' in data))
+        data.showConfirmation = true;
+    if(! ('lastText' in data))
+        data.lastText = {'title': "Title", 'text':  "Text"};
     //if(! ('enhancedEditor' in data))
     //    data.enhancedEditor   = false;
     return data;
 };
 
-note.prototype.lever = function(arg) {
-    if(arg=="right") {
-        this.annotate();
-    }
-    else if(arg=="left") {
-        this.submit();
-    }
-};
-
-note.prototype.audioFileUploaded = function(filename) {
+Note.prototype.audioFileUploaded = function(filename) {
     var data = this.getPageData();
     if(data.showConfirmation)
-        showAlert("Uploaded file: "+filename+", removed from local file system.");
+        pgUI.showAlert("Uploaded file: "+filename+", removed from local file system.");
 };
 
-note.prototype.annotate = function() {
+Note.prototype.start = function(restart) {
+    ButtonPage.prototype.start.call(this,restart);
     // get audio recording permissions
     pgAudio.getRecordPermissions();
-
-    if(this.recording) {
-        pgAudio.stopRecord();
-        // hide the stop button
-        $('#note_stop').hide().prop('disabled', true);
-        $('#note_start').show().prop('disabled', false);
+    if(UI.note.eid !== 0) {
+        pgUI.showAlert("You must delete the current audio attachment before recording another attachment");
         return false;
     }
-    else if(UI.note.eid != 0) {
-        showAlert("You must delete the current audio attachment before recording another attachment");
-        return false;
-    }
-    // toggle the status
-    $('#note_start').hide().prop('disabled', true);
-    $('#note_stop').show().prop('disabled', false);
-
     // logic here to wait for audio to complete.
     this.recording      = true;
     this.eid            = pg.uniqueEventID();
@@ -199,7 +170,7 @@ note.prototype.annotate = function() {
     return false;
 
     function audioCB(success, meter) {
-        if(typeof(meter)!="undefined") {
+        if(typeof(meter)!=="undefined") {
             // display metering information
             $('#note_stop').fadeTo(meter.sec, 0.4 + 0.6*meter.max);
             return;
@@ -215,38 +186,37 @@ note.prototype.annotate = function() {
     }
 };
 
-note.prototype.deleteAudio = function() {
+Note.prototype.stop = function() {
+    ButtonPage.prototype.stop.call(this);
+    if(this.recording) {
+        pgAudio.stopRecord();
+    }
+};
+
+Note.prototype.updateAudio = function() {
+    if(UI.note.eid)
+        $("#note_audio").show();
+    else
+        $("#note_audio").hide();
+};
+
+Note.prototype.playRecorded = function() {
+    var fn  = pgAudio.getRecordFilename(this.eid);
+    pgAudio.playRecorded(this.eid, fn);
+};
+Note.prototype.deleteRecorded = function() {
     if(!this.recording) {
         UI.note.eid=0;
         UI.note.updateAudio();
     }
 };
 
-note.prototype.updateAudio = function() {
-    var txt = "";
-    if(UI.note.eid!=0) {
-        var fn  = pgAudio.getRecordFilename(UI.note.eid);
-        txt += '<div class="ui-grid-b">';
-        txt += ' <div class = "ui-hide-label ui-block-a">';
-        txt += '   <p>Audio:</p>';
-        txt += ' </div><div class = "ui-hide-label ui-block-b">';
-        txt += '   <input type="button" onclick="return pgAudio.playRecorded(\''+UI.note.eid+'\', \''+fn+'\');" value="Listen" />';
-        txt += ' </div><div class = "ui-hide-label ui-block-c">';
-        txt += '   <input type="button" onclick="return UI.note.deleteAudio();" value="Delete" />';
-        txt += ' </div>';
-        txt += '</div>';
-    }
-    $("#note_audio").html(txt);
-    $("#note_audio input").button();
-};
-
-note.prototype.getNoteText = function() {
+Note.prototype.getNoteText = function() {
     var data = this.getPageData();
     var noteText = "";
-    //if(! data.enhancedEditor) {
+    if(data.addText)
         noteText = $("#noteText").val();
-    //}
-    //else {
+    //if(data.enhancedEditor) {
     //    this.createEnhancedEditor(true);
     //    if(tinyMCE.activeEditor.getContent({format : 'text'}) != "")
     //        noteText = tinyMCE.activeEditor.getContent({format : 'raw'});
@@ -254,7 +224,8 @@ note.prototype.getNoteText = function() {
     return noteText;
 };
 
-note.prototype.submit = function() {
+Note.prototype.reset = function() {
+    ButtonPage.prototype.reset.call(this);
     if(this.recording) {    // wait for the user to stop recording.
         return false;
     }
@@ -262,10 +233,14 @@ note.prototype.submit = function() {
     var noteTitle     = $("#noteTitle").val();
     var noteText      = this.getNoteText();
     var eventData     = {'title': noteTitle};
-    
-    var hasText     = (noteText != "");
-    var hasAudio    = this.eid != 0;
+
+    var hasTitle    = (noteTitle !== "");
+    var hasText     = (noteText !== "");
+    var hasAudio    = this.eid !== 0;
     var hasLocation = false;
+
+    if(!hasTitle && !hasText && !hasAudio)
+        return;
 
     // logic here to wait for both location and audio to complete.
     if(!this.eid) {
@@ -316,7 +291,8 @@ note.prototype.submit = function() {
 
         // erase the data, since it has been submitted.
         this.eid = 0;
-        this.lastText[pg.category()] = {'title': "", 'text': ""};
+        data.lastText = {'title': "", 'text': ""};
+        this.setPageData(data);
         this.updateText();
         this.updateAudio();
         
@@ -334,11 +310,10 @@ note.prototype.submit = function() {
             s += "none";
         s += ".</p>";
         if(data.showConfirmation)
-            showDialog( {'title': "Note created", true: "OK"},
+            pgUI.showDialog( {'title': "Created note: "+eventData.title, true: "OK"},
                         s, function(ok){} );
-        syncSoon();
     }
 };
 
-UI.note = new note();
+UI.note = new Note();
 //# sourceURL=note.js

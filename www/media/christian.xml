@@ -1,32 +1,71 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE U SYSTEM "U.dtd" >
 <U>
-<thing id="Various">
-  <thing><p>Therefore all things whatsoever ye would that men should do to you: do ye even so to them: for this is the law and the prophets<br/>&#8212; Matthew 7:12</p></thing>
-  <thing><p>Lord, make me an instrument of Your peace. Where there is hatred, let me sow love; where there is injury, pardon; where there is doubt, faith; where there is despair, hope; where there is darkness, light; where there is sadness, joy.<br/>&#8212; St. Francis</p></thing>
-  <thing><p>Evil has no positive nature; but the loss of good has received the name &quot;evil&quot;.<br/>&#8212; St Augustine</p></thing>
-  <thing><p>In the beginning was the Word, and the Word was with God, and the Word was God.<br/>&#8212; John 1:1</p></thing>
-  <thing><p>There is no Jew or Greek, slave or free, male or female; for you are all one in Christ Jesus.<br/>&#8212; Galatians 3:28</p></thing>
-  <thing><p>Make every effort to live in peace with everyone and to be holy; without holiness no one will see the Lord.<br/>&#8212; Hebrews 12:14</p></thing>
-  <thing><p>His disciples asked him and said to him, &quot;Do you want us to fast? How should we pray? Should we give to charity? What diet should we observe?&quot; Jesus said, &quot;Don't lie, and don't do what you hate, because all things are disclosed before heaven. After all, there is nothing hidden that will not be revealed, and there is nothing covered up that will remain undisclosed&quot;. <br/>&#8212; Thomas 6</p></thing>
-  <thing><p>Jesus said, &quot;I am the light that is over all things. I am all: from me all came forth, and to me all attained.  Split a piece of wood; I am there.  Lift up the stone, and you will find me there&quot;. <br/>&#8212; Thomas 77</p></thing>
-  <thing><p>Human rights are not only violated by terrorism, repression or assassination, but also by unfair economic structures that creates huge inequalities.<br/>&#8212; Pope Francis</p></thing>
-  <thing><p>It is not fitting, when one is in God's service, to have a gloomy face or a chilling look.<br/>&#8212; St Francis of Assisi</p></thing>
-  <thing><p>Holy wisdom confounds Satan and all his wickednesses.<br/>&#8212; St Francis of Assisi</p></thing>
-  <thing><p>The world is a book, and those who do not travel read only a page.<br/>&#8212; St Augustine</p></thing>
-  <thing><p>O Lord, help me to be pure, but not yet.<br/>&#8212; St Augustine</p></thing>
-  <thing><p>This world's a bubble.<br/>&#8212; St Augustine</p></thing>
-  <thing><p>More tears are shed over answered prayers than unanswered ones.<br/>&#8212; St Teresaof Avila</p></thing>
-  <thing><p>Christianity's goal is not escape from this world. It loves this world and seeks to change it for the better.<br/>&#8212; Marcus Borg</p></thing>
-  <thing><p>Beauty saves. Beauty heals. Beauty motivates. Beauty unites. Beauty returns us to our origins, and here lies the ultimate act of saving, of healing, of overcoming dualism.<br/>&#8212; Matthew Fox</p></thing>
-  <thing><p>Jesus called for nonviolent resistance to Rome and just distribution of land and food. He was crucified because he threatened Roman stability - not as a sacrifice to God for humanity's sins.<br/>&#8212; John Dominic Crossan</p></thing>
-  <thing><p>Jesus is what God looks like in sandals.<br/>&#8212; John Dominic Crossan</p></thing>
-  <thing><p>The most important hour is always the present.<br/>The most significant person is precisely the one sitting across from you right now.<br/>The most necessary work is always love..<br/>&#8212; Meister Eckhart</p></thing>
-  <thing><p>There is a huge silence inside each of us that beckons us into itself, and the recovery of our own silence can begin to teach us the language of heaven.<br/>&#8212; Meister Eckhart</p></thing>
-  <thing><p>Apprehend God in all things, for God is in all things. Every single creature is full of God and is a book about God. Every creature is a word of God.<br/>&#8212; Meister Eckhart</p></thing>
-  <thing><p>When a man sees the one in all things, he is above mere understanding.<br/>&#8212; Meister Eckhart</p></thing>
-</thing>
+    <thing id="Various">
+        <thing><p>Therefore all things whatsoever ye would that men should do to you: do ye even so to them: for this is the law and the prophets<br/>&#8212; Matthew 7:12</p></thing>
+        <thing><p>Lord, make me an instrument of Your peace. Where there is hatred, let me sow love; where there is injury, pardon; where there is doubt, faith; where there is despair, hope; where there is darkness, light; where there is sadness, joy.<br/>&#8212; St. Francis</p></thing>
+        <thing><p>Evil has no positive nature; but the loss of good has received the name &quot;evil&quot;.<br/>&#8212; St Augustine</p></thing>
+        <thing><p>In the beginning was the Word, and the Word was with God, and the Word was God.<br/>&#8212; John 1:1</p></thing>
+        <thing><p>There is no Jew or Greek, slave or free, male or female; for you are all one in Christ Jesus.<br/>&#8212; Galatians 3:28</p></thing>
+        <thing><p>Make every effort to live in peace with everyone and to be holy; without holiness no one will see the Lord.<br/>&#8212; Hebrews 12:14</p></thing>
+        <thing><p>His disciples asked him and said to him, &quot;Do you want us to fast? How should we pray? Should we give to charity? What diet should we observe?&quot; Jesus said, &quot;Don't lie, and don't do what you hate, because all things are disclosed before heaven. After all, there is nothing hidden that will not be revealed, and there is nothing covered up that will remain undisclosed&quot;. <br/>&#8212; Thomas 6</p></thing>
+        <thing><p>Jesus said, &quot;I am the light that is over all things. I am all: from me all came forth, and to me all attained.  Split a piece of wood; I am there.  Lift up the stone, and you will find me there&quot;. <br/>&#8212; Thomas 77</p></thing>
+        <thing><p>Human rights are not only violated by terrorism, repression or assassination, but also by unfair economic structures that creates huge inequalities.<br/>&#8212; Pope Francis</p></thing>
+        <thing><p>It is not fitting, when one is in God's service, to have a gloomy face or a chilling look.<br/>&#8212; St Francis of Assisi</p></thing>
+        <thing><p>Holy wisdom confounds Satan and all his wickednesses.<br/>&#8212; St Francis of Assisi</p></thing>
+        <thing><p>The world is a book, and those who do not travel read only a page.<br/>&#8212; St Augustine</p></thing>
+        <thing><p>This world's a bubble.<br/>&#8212; St Augustine</p></thing>
+        <thing><p>More tears are shed over answered prayers than unanswered ones.<br/>&#8212; St Teresaof Avila</p></thing>
+        <thing><p>Christianity's goal is not escape from this world. It loves this world and seeks to change it for the better.<br/>&#8212; Marcus Borg</p></thing>
+        <thing><p>Beauty saves. Beauty heals. Beauty motivates. Beauty unites. Beauty returns us to our origins, and here lies the ultimate act of saving, of healing, of overcoming dualism.<br/>&#8212; Matthew Fox</p></thing>
+        <thing><p>Jesus called for nonviolent resistance to Rome and just distribution of land and food. He was crucified because he threatened Roman stability - not as a sacrifice to God for humanity's sins.<br/>&#8212; John Dominic Crossan</p></thing>
+        <thing><p>Jesus is what God looks like in sandals.<br/>&#8212; John Dominic Crossan</p></thing>
+        <thing><p>The most important hour is always the present.<br/>The most significant person is precisely the one sitting across from you right now.<br/>The most necessary work is always love..<br/>&#8212; Meister Eckhart</p></thing>
+        <thing><p>There is a huge silence inside each of us that beckons us into itself, and the recovery of our own silence can begin to teach us the language of heaven.<br/>&#8212; Meister Eckhart</p></thing>
+        <thing><p>Apprehend God in all things, for God is in all things. Every single creature is full of God and is a book about God. Every creature is a word of God.<br/>&#8212; Meister Eckhart</p></thing>
+        <thing><p>When a man sees the one in all things, he is above mere understanding.<br/>&#8212; Meister Eckhart</p></thing>
+        <thing><p>The kingdom of God is within you.<br/>&#8212;Jesus</p></thing>
+        <thing><p>Holy Spirit, you are the mighty way in which everything that is in the heavens, on the earth, and under the earth is penetrated with connectedness, is penetrated with relatedness.<br/>&#8212;Hildegard</p></thing>
+        <thing><p>It is no longer I who live but Christ who lives within me... And we, with our unveiled faces reflecting like mirrors the glory of the Lord, all grow brighter and brighter as we are turned into the image that we reflect.<br/>&#8212;</p>Paul, Galatians 2:20</thing>
+        <thing><p>Divinity is in its omniscience and omnipotence like a wheel, a circle, a whole that can neither be understood, nor divided, nor begun nor ended... God hugs you. You are encircled by the arms of the mystery of God.<br/>&#8212;Hildegard</p></thing>
+        <thing><p>The awe of God is the beginning of wisdom.<br/>&#8212;Proverbs 9:10</p></thing>
+        <thing><p>Our soul must perform two duties. The one is we must reverently wonder and be surprised; the other is we must gently let go and let be always taking pleasure in God.<br/>&#8212;Julian of Norwich</p></thing>
+        <thing><p>If the only prayer you say in your whole life is &quot;Thank you&quot;, that would suffice.<br/>&#8212;Meister Eckhart</p></thing>
+        <thing><p>To be genuinely spiritual is to have great respect for the possibilities and presence of silence.<br/>&#8212;John O’Donohue</p></thing>
+        <thing><p>Nothingness is the sister of possibility.<br/>&#8212;John O’Donohue</p></thing>
+        <thing><p>When time is reduced to linear progress, it is emptied of presence.<br/>&#8212;John O’Donohue</p></thing>
+        <thing><p>The day of my spiritual awakening was the day I saw and knew I saw all things in God and God in all things.<br/>&#8212;Mechtild of Magdeburg</p></thing>
+        <thing><p>Truly I tell you, whatever you did for one of the least of these brothers and sisters of mine, you did for me.<br/>&#8212;Jesus, Matthew 25:40</p></thing>
+        <thing><p>When I gave food to the poor, they called me a saint; when I asked why there were so many poor, they called me a communist.<br/>&#8212;Dom Helder Camara</p></thing>
+        <thing><p>One meditates on creation in order to view and marvel at divine wisdom.<br/>&#8212;Thomas Aquinas</p></thing>
+        <thing><p>Not only is God within all things but God is intimately within all things, the active power within all things—giving them their being and existence... Experiencing this realization takes practice and meditation.<br/>&#8212;Matthew Fox</p></thing>
+        <thing><p>God is the Source who has no Source.<br/>&#8212;Thomas Aquinas</p></thing>
+        <thing><p>God is not found in the soul by adding anything but by a process of subtraction.<br/>&#8212;Meister Eckhart</p></thing>
+        <thing><p>What good is it to me if Mary gave birth to the Son of God 1400 years ago and I do not give birth to the Son of God in my own person and time and culture?<br/>&#8212;Meister Eckhart</p></thing>
+        <thing><p>Be compassionate just as your Father is compassionate.<br/>&#8212;Luke 6:36</p></thing>
+        <thing><p>The Holy Spirit, whom the Father will send in my name, will teach you everything, and remind you of all that I have said to you.<br/>&#8212;Jesus, John 14:26</p></thing>
+        <thing><p>Christianity's goal is not escape from this world. It loves this world and seeks to change it for the better.<br/>&#8212;Marcus Borg</p></thing>
+        <thing><p>How many times do we lose an occasion for soul work by leaping ahead to final solutions without pausing to savor the undertones.<br/>&#8212;Thomas Moore</p></thing>
+        <thing><p>Often care of the soul means not taking sides when there is a conflict at a deep level. It may be necessary to stretch the heart wide enough to embrace contradiction and paradox.<br/>&#8212;Thomas Moore</p></thing>
+        <thing><p>Spirituality is seeded, germinates, sprouts and blossoms in the mundane. It is to be found and nurtured in the smallest of daily activities.<br/>&#8212;Thomas Moore</p></thing>
+        <thing><p>Christ wears &quot;two shoes&quot; in the world: Scripture and nature. Both are necessary to understand the Lord, and at no stage can creation be seen as a separation of things from God.<br/>&#8212;John Scotus Eriungena</p></thing>
+        <thing><p>If you have men who will exclude any of God’s creatures from the shelter of compassion and pity; you will have men who will deal likewise with their fellow men.<br/>&#8212;St Francis of Assisi</p></thing>
+        <thing><p>Jesus was from the peasant class... His use of language was remarkable and poetic, filled with images and stories... He was not an ascetic, but world-affirming, with a zest for life. There was a sociopolitical passion to him... he challenged the domination system of his day. He was a religious ecstatic, a Jewish mystic, for whom God was an experiential reality... Jesus was an ambiguous figure—you could experience him and conclude that he was insane, as his family did [Mark 3:21], or that he was simply eccentric or that he was a dangerous threat—or you could conclude that he was filled with the Spirit of God.<br/>&#8212;Marcus Borg</p></thing>
+        <thing><p>The whole course of human history may depend on a change of heart in one solitary and even humble individual - for it is in the solitary mind and soul of the individual that the battle between good and evil is waged and ultimately won or lost.<br/>&#8212;M. Scott Peck</p></thing>
+        <thing><p>When I say that evil has to do with killing, I do not mean to restrict myself to corporeal murder. Evil is that which kills spirit.<br/>&#8212;M. Scott Peck</p></thing>
+        <thing><p>The way of Jesus was both personal and political. It was about personal transformation. And it was political, a path of [nonviolent] resistance to the domination system and advocacy of an alternative vision of life together under God.<br/>&#8212;Marcus Borg</p></thing>
+        <thing><p>Christianity isn’t a failure; it just hasn’t been tried yet.<br/>&#8212;G.K. Chesterton</p></thing>
+        <thing><p>For Jesus, there are no countries to be conquered, no ideologies to be imposed, no people to be dominated. There are only children, women and men to be loved.<br/>&#8212;Henri Nouwen</p></thing>
+        <thing><p>Ministers are powerless people who have nothing to boast of except their weaknesses. But when the Lord whom they serve fills them with His blessing they will move mountains and change the hearts of people wherever they go.<br/>&#8212;Henri Nouwen</p></thing>
+        <thing><p>A real Christian is a person who can give his pet parrot to the town gossip.<br/>&#8212;Billy Graham</p></thing>
+        <thing><p>Joy is that kind of happiness that does not depend on what happens.<br/>&#8212;David Steindl-Rast</p></thing>
+        <thing><p>As I express my gratitude, I become more deeply aware of it. And the greater my awareness, the greater my need to express it. What happens here is a spiraling ascent, a process of growth in ever expanding circles around a steady center.<br/>&#8212;David Steindl-Rast</p></thing>
+        <thing><p>We can't really waste our time; we have to see that we are all in the same boat and that different religious traditions point in the same direction, and now let's get moving together, doing something for peace.<br/>&#8212;</p>David Steindl-Rast</thing>
+        <thing><p>Blessed are the peacemakers, for they will be recognized as children of God.<br/>&#8212;Matthew 5:9</p></thing>
+        <thing><p>If you want peace, work for justice.<br/>&#8212;Pope Paul VI</p></thing>
 
-<ref name="text" src="//U/thing[@id='Various']"></ref>
+    </thing>
+
+    <ref name="text" src="//U/thing[@id='Various']"></ref>
 
 </U>

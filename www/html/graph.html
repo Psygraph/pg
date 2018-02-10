@@ -1,71 +1,56 @@
 <div id="graph_page" class="page" data-role="page" data-fullscreen="true">
 
-  <div id="graph_main" class="main content">
-    
-    <div id="subheader_graph" data-role="control-group">
-      <div class="category">Loading...</div>
-    </div>
-    
-    <div id="graphContainer">
-      <div id="graph"></div>
-    </div>
-    
-  </div>
-  
-  <div id="graph_settings" class="settings content">
-    
-    <div class="ui-field-contain no-field-separator">
-      <label for="graph_category">Category:</label>
-      <select id="graph_category" data-native-menu="false"></select>
-    </div>
-    
-    <div class="ui-field-contain no-field-separator">
-      <label for="signal">Signal to analyse:</label>
-      <select name="signal" id="graph_signal" data-native-menu="false">
-        <option value="accelerationNorm">acceleration norm</option>
-        <option value="bluetooth">bluetooth</option>
-        <option value="correctCount">correct/incorrect count</option>
-        <option value="count">count</option>
-        <option value="orientation">orientation</option>
-        <option value="totalTime">total time</option>
-      </select>
-    </div>
-    
-    <div class="ui-field-contain no-field-separator">
-      <label for="interval">Data aggregation interval:</label>
-      <select name="interval" id="graph_interval" data-native-menu="false">
-        <option value="none">none</option>
-        <option value="hour">hour</option>
-        <option value="day">day</option>
-        <option value="week">week</option>
-        <option value="month">month</option>
-      </select>
-    </div>
-    
-    <div data-role="fieldcontain">
-	  <input type="button" onClick="gotoPageMain(); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"></input>
-	  <input type="button" onClick="UI.graph.submitSettings('apply'); return false;" class="btn fast" value="Apply" title="apply" data-inline="true"></input>
-	  <input type="button" onClick="UI.graph.submitSettings('OK'); return false;" class="btn fast" value="OK" title="OK" data-inline="true"/></input>
-    </div>
-  </div>
-  
-  <div id="graph_help" class="help content">
+    <div id="graph_main" class="main content">
 
-    <p><strong>Graph</strong></p>
-    <p>The <strong>Graph</strong> tool displays selected events or the signals from those events as a function of time (you select events with the <strong>List</strong> tool).  Tap one on the graph to select it, and then pinch, zoom, or triple click to alter the graph axes.  Different signals can be displayed, such as the amount of movement over time or your mindfulness when counting breaths.</p>
-    <p>The settings let you control which signals to display:
-    <ul>
-      <li>Choose signals such as accelerometer or bluetooth data, stopwatch time, or correct/incorrect breath count.</li>
-      <li>Specify the width of the bars in the bar chart (i.e. the aggregation interval).</li>
-    </ul>
-    </p>
-    
-    <template>    
-      <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/graph.png" alt="graph" width="300" />
-      <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/graph_settings.png" alt="graph_settings" width="300" />
-    </template>
+        <div id="subheader_graph" data-role="control-group">
+            <div class="category">Loading...</div>
+        </div>
 
-  </div>
-  
-  <script src="html/graph.js"></script>
+        <div id="graph_graphContainer" class="graphContainer">
+            <div id="graph_graph" class="graph"></div>
+        </div>
+
+    </div>
+
+    <div id="graph_settings" class="settings content">
+
+        <div class="ui-field-contain no-field-separator">
+            <label for="graph_category">Category:</label>
+            <select id="graph_category" data-native-menu="false"></select>
+        </div>
+
+        <div class="ui-field-contain no-field-separator">
+            <label for="graph_signals">Show Signals:</label>
+            <select name="signal" id="graph_signals" data-native-menu="false" multiple="multiple">
+                <option value="acceleration">acceleration</option>
+                <option value="orientation">orientation</option>
+                <option value="temperature">temperature</option>
+                <option value="heartRate">heart rate</option>
+                <option value="analog1">analog1</option>
+                <option value="analog2">analog2</option>
+                <option value="random">random</option>
+            </select>
+        </div>
+        <div class="buttons"></div>
+    </div>
+
+    <div id="graph_help" class="help content">
+
+        <p><strong>Graph</strong></p>
+        <p>The <strong>Graph</strong> tool displays selected events or the signals from those events as a function of time (you select events with the <strong>List</strong> tool).  Tap one on the graph to select it, and then pinch, zoom, or triple click to alter the graph axes.  Different signals can be displayed, such as the amount of movement over time or your mindfulness when counting breaths.</p>
+        <p>The settings let you control which signals to display:</p>
+        <ul>
+            <li>Choose signals such as accelerometer or bluetooth data, stopwatch time, or correct/incorrect breath count.</li>
+            <li>Specify the width of the bars in the bar chart (i.e. the aggregation interval).</li>
+        </ul>
+
+
+        <template>
+            <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/graph.png" alt="graph" width="300" />
+            <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/graph_settings.png" alt="graph_settings" width="300" />
+        </template>
+
+    </div>
+
+    <script src="html/graph.js"></script>
 </div>

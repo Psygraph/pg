@@ -1,7 +1,6 @@
 
-var counter = function () {
-    page.call(this, "counter");
-    this.count = 0;
+var Counter = function () {
+    ButtonPage.call(this, "counter");
     this.initialized = false;
     this.knobOpts = {min:      0,
                      max:      100, 
@@ -14,64 +13,45 @@ var counter = function () {
                     };
     this.knobOptsAtTarget   = {fgColor:  "rgba(  0, 215, 0, 1)"};
     this.knobOptsOverTarget = {fgColor:  "rgba(215,   0, 0, 1)"};
-}
+    this.enso = $("#counter_enso");
+    this.edit = $("#counter_edit");
+};
 
-counter.prototype = Object.create(page.prototype);
-counter.prototype.constructor = counter;
+Counter.prototype = Object.create(ButtonPage.prototype);
+Counter.prototype.constructor = Counter;
 
-counter.prototype.update = function(show, state) {
-    if(!show) {
-        this.setMotionResponse("none");
-        return {};
-    }
-    if(!this.initialized) {
-        this.initialized = true;
-        $("#counter_enso").knob(this.knobOpts);
-        $("#counter_enso").trigger('configure', this.knobOpts);
-    }
-    // nothing to do for state
-    // show the last count in this category.
-    var e = pg.mostRecentEvent(pg.category(), "counter");
-    if(e) {
-        if(e.type=="reset")
-            this.count = 0;
-        else
-            this.count = e.data.count;
-    }
-    else {
+Counter.prototype.update = function(show, data) {
+    ButtonPage.prototype.update.call(this, show, data);
+    if(show) {
+        if (!this.initialized) {
+            this.initialized = true;
+            this.enso.knob(this.knobOpts);
+            this.enso.trigger('configure', this.knobOpts);
+        }
         this.count = 0;
-    }
-    var data = this.getPageData();
-    this.setValue();
-    this.resize();
-    this.setMotionResponse(data.motionAlarm, data.motionVal);
-};
-
-counter.prototype.setValue = function() {
-    var data = this.getPageData();
-    $("#counter_edit").val(this.count);
-    if(!data.showEnso) {
-        $("#counter_enso").trigger('configure', {fgColor: "rgba(0,0,0,0)"});
+        var e = pg.mostRecentEvent(pg.category(), "counter");
+        if (e) {
+            if (e.type === "reset")
+                this.count = 0;
+            else
+                this.count = e.data.count;
+        }
+        this.setValue();
+        this.setMotionResponse(data.motionAlarm, data.motionVal);
+        this.resize();
     }
     else {
-        if(this.count < data.countTarget-1)
-            $("#counter_enso").trigger('configure', this.knobOpts);
-        else if(this.count == data.countTarget-1)
-            $("#counter_enso").trigger('configure', this.knobOptsAtTarget);
-        else
-            $("#counter_enso").trigger('configure', this.knobOptsOverTarget);
-        var frac = 100 * (this.count) / data.countTarget;
-        $('#counter_enso').val(frac).trigger('change');
+        this.setMotionResponse("none");
     }
+    return data;
 };
 
-counter.prototype.settings = function() {
-    var data = this.getPageData();
-    if(arguments.length) {
+Counter.prototype.settings = function(show, data) {
+    if(show) {
         $("#counter_target").val(data.countTarget).change();
         $("#counter_motionSlider").val(data.motionVal).change();
         $("#counter_motionAlarm").val(data.motionAlarm).change();
-        $("#counter_showEnso").prop("checked", data.showEnso).checkboxradio('refresh');
+        //$("#counter_showEnso").prop("checked", data.showEnso).checkboxradio('refresh');
         $("#counter_targetBehavior").val(data.countTargetBehavior).change();
         if(pgUtil.isWebBrowser()) {
             $("#counter_motion").hide();
@@ -82,42 +62,70 @@ counter.prototype.settings = function() {
             data.motionAlarm  = $("#counter_motionAlarm").val();
             data.motionVal    = parseFloat($("#counter_motionSlider").val());
         }
-        data.showEnso           = $("#counter_showEnso")[0].checked;
+        //data.showEnso            = $("#counter_showEnso")[0].checked;
         data.countTarget         = parseInt($("#counter_target").val());
         data.countTargetBehavior = $("#counter_targetBehavior").val();
-        return data;
+    }
+    return data;
+};
+
+Counter.prototype.resize = function() {
+    Page.prototype.resize.call(this, false);
+};
+
+Counter.prototype.setValue = function() {
+    var data = this.getPageData();
+    var countTarget = data.countTarget;
+    //var category = pg.category();
+    //var count = 0;
+    //if(this.event[category]) {
+    //    count = this.event[category].data.count;
+    //}
+    var count = this.count;
+
+    this.edit.val(count);
+    if(!data.showEnso || !countTarget) {
+        this.enso.trigger('configure', {fgColor: "rgba(0,0,0,0)"});
+    }
+    else {
+        if(count < countTarget)
+            this.enso.trigger('configure', this.knobOpts);
+        else if(count === countTarget)
+            this.enso.trigger('configure', this.knobOptsAtTarget);
+        else
+            this.enso.trigger('configure', this.knobOptsOverTarget);
+        var frac = 100 * (this.count) / data.countTarget;
+        this.enso.val(frac).trigger('change');
     }
 };
 
-counter.prototype.resize = function() {
-    page.prototype.resize.call(this, false);
-};
-
-counter.prototype.setMotionResponse = function(response, val) {
-    pgAccel.stop();
-    if(response != "none" && ! pgUtil.isWebBrowser()) {
-        pgAccel.onShake(onMotion, val);
-        pgAccel.start({"updateInterval" : 200});
+Counter.prototype.setMotionResponse = function(response, val) {
+    pgAccel.offShake("accel");
+    if(response !== "none" && ! pgUtil.isWebBrowser()) {
+        pgAccel.onShake("accel", onMotion.bind(this), val);
+        pgAccel.start();
     }
-    function onMotion() {
+    function onMotion(motion) {
         var data = UI.counter.getPageData();
-        if(data.motionAlarm=="beep") {
+        if(data.motionAlarm==="beep") {
             pgAudio.beep();
         }
-        else if(data.motionAlarm=="sound") {
-            var idx = pgAudio.alarm(false);
-            setTimeout(pgAudio.stopAlarm.bind(idx),60);
+        else if(data.motionAlarm==="sound") {
+            pgAudio.alarm(pg.category(), false, cb);
         }
-        else if(data.motionAlarm=="silent") {
+        else if(data.motionAlarm==="silent") {
         }
         else {
-            showLog("Error in motion callback");
+            pgUI_showLog("Error in motion callback");
         }
-        UI.counter.startStop("motion");
+        UI.counter.start();
+        function cb(idx) {
+            //setTimeout(pgAudio.stopAlarm.bind(pgAudio, idx), 4000);
+        }
     }
 };
 
-counter.prototype.getPageData = function() {
+Counter.prototype.getPageData = function() {
     var data = pg.getPageData("counter", pg.category());
     if(! ('motionAlarm' in data))
         data.motionAlarm = "none";
@@ -132,51 +140,94 @@ counter.prototype.getPageData = function() {
     return data;
 };
 
-counter.prototype.lever = function(arg) {
-    if(arg=="left") {
+Counter.prototype.start = function(restart, cause) {
+    restart = restart || false;
+    cause = (typeof(cause)!=="undefined") ? cause : 'button';
+    ButtonPage.prototype.start.call(this,restart);
+    var data = this.getPageData();
+    var category = pg.category();
+    this.count ++;
+    var eventData = {countTarget: data.countTarget,
+        count: this.count};
+    var event = {page: "counter",
+        type: "count",
+        category: category,
+        start: pgUtil.getCurrentTime(),
+        data: eventData
+    };
+    this.setPageDataField("event",event);
+    pg.addNewEvents(event, true);
+    this.setValue();
+    this.stop();
+};
+
+Counter.prototype.stop = function() {
+    ButtonPage.prototype.stop.call(this);
+    /*
+    var data = this.getPageData();
+    var time = pgUtil.getCurrentTime();
+    var category = pg.category();
+    var event = this.event[category];
+    event.data.duration = time - event.data.start;
+    var target = this.event[category].data.countTarget;
+    var length = this.event[category].data.count.length;
+    if(length) {
+        pg.addNewEvents(event, true);
+        syncSoon();
+        this.feedback(length, target);
+    }
+    this.event[category] = null;
+    */
+};
+
+Counter.prototype.reset = function() {
+    ButtonPage.prototype.reset.call(this);
+    var data = this.getPageData();
+    var category = pg.category();
+    var target = data.countTarget;
+    var count = this.count;
+
+    this.feedback(count, target);
+    var eventData = {countTarget: target,
+                     count: count};
+    var event = {page: "counter",
+        type: "reset",
+        category: category,
+        start: pgUtil.getCurrentTime(),
+        data: eventData
+    };
+    pg.addNewEvents(event, true);
+    this.count = 0;
+    this.setValue();
+    /*
+    if(this.running) {
+        var data = this.getPageData();
+        var category = pg.category();
+        this.count += 1;
+        var val = [pgUtil.getCurrentTime(), cause];
+        this.event[category].data.count.push(val);
+        this.setValue();
+    }
+    */
+};
+
+Counter.prototype.feedback = function(count, target) {
+    var data = this.getPageData();
+    if(count && target) {
+        var correct = (count === target);
+        if(data.countTargetBehavior === "sound")
+            pgAudio.reward(correct);
+    }
+};
+
+Counter.prototype.lever = function(arg) {
+    if(arg==="left") {
         this.reset();
     }
-    else if(arg=="right") {
-        this.startStop();
+    else if(arg==="right") {
+        this.start();
     }
 };
 
-counter.prototype.startStop = function(trigger) {
-    var data = this.getPageData();
-    this.count += 1;
-    var time = pgUtil.getCurrentTime();
-    var eventData = {count: this.count};
-    if(trigger)
-        data.trigger = trigger;
-    pg.addNewEvents({page: "counter", type: "count", start: time, data: eventData}, true);
-    syncSoon();
-    this.setValue();
-    return false; // prevent click from being handled elsewhere
-};
-
-counter.prototype.reset = function() {
-    var data = this.getPageData();
-    this.count += 1;
-    var giveFeedback = false;
-    var correct = false;
-    if(data.countTarget != 0) {
-        correct = (this.count == data.countTarget);
-        if(data.countTargetBehavior == "sound")
-            giveFeedback = true;
-    }
-    var time = pgUtil.getCurrentTime();
-    var eventData = {count: this.count}
-    if(data.countTarget)
-        eventData.target = data.countTarget;
-    this.count = 0;
-    pg.addNewEvents({page: "counter", type: "reset", start: time, data: eventData}, true);
-    syncSoon();
-    if(giveFeedback)
-        pgAudio.giveFeedback(correct);
-    this.setValue();
-    return false; // prevent click from being handled elsewhere
-};
-
-
-UI.counter = new counter();
+UI.counter = new Counter();
 //# sourceURL=counter.js

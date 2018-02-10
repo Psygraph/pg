@@ -44,8 +44,13 @@ Clock.prototype.startFromTime = function(startTime) {
     this.timerID = setInterval(delegate(this, this.onTick.bind(this)), this.tickResolution);
 };
 Clock.prototype.stop = function() {
-    var stopTime = new Date().getTime();
-    if(this.running) {
+    var finished = false;
+    if(finished) {
+        // set to make sure that any subsequent calls to getRemaining return zero
+        this.countdownTime = 0;
+    }
+    else if(this.running) {
+        var stopTime = new Date().getTime();
         if(this.timerID != null) {
             clearInterval(this.timerID);
             this.timerID = null;
@@ -60,10 +65,10 @@ Clock.prototype.stop = function() {
 Clock.prototype.running = function() {
     return this.timerID != null;
 };
-Clock.prototype.reset = function() {
+Clock.prototype.reset = function(startTime) {
+    this.startTime = startTime || pgUtil.getCurrentTime();
     this.totalElapsed = 0;
-    // * if watch is running, reset it to current time
-    this.startTime = new Date().getTime();
+    // if watch is running, reset it to current time
     this.onTick();
 };
 Clock.prototype.restart = function() {
@@ -81,14 +86,14 @@ Clock.prototype.getElapsed = function() {
 };
 Clock.prototype.getRemaining = function() {
     if(!this.countdownMode())
-        showError("Call to remaining time in stopwatch mode.");
+        pgUI_showError("Call to remaining time in stopwatch mode.");
     var elapsed = this.getElapsed();    
     var remain = this.countdownTime - elapsed;
     remain = Math.max(0, remain);
     return remain;
 };
 Clock.prototype.finished = function() {
-    return this.getRemaining() == 0;
+    return this.getRemaining() === 0;
 };
 
 Clock.prototype.setElapsed = function(days, hours, mins, secs) {

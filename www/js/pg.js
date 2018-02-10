@@ -22,7 +22,6 @@ function PG() {
     this.pages          = null;
     this.categoryData   = null;
     this.pageData       = null;
-    this.userData       = null;
     this.online         = null;
     this.background     = null;
     this.server         = null;
@@ -46,7 +45,6 @@ function PG() {
         this.pages          = ["home","stopwatch","counter","timer","note","list","graph","map"];
         this.categoryData   = {"Uncategorized": nd()};
         this.pageData       = {"home": nd(), "stopwatch": nd(),"counter": nd(),"timer": nd(),"note": nd(),"list": nd(),"map": nd(),"graph": nd(),"categories": nd(),"prefs": nd() };
-        this.userData       = {};
         this.online         = true;
         this.background     = false;
         this.server         = "";
@@ -61,7 +59,7 @@ function PG() {
         }
     };
     this.dirty = function(set) {
-        if(typeof(set) != "undefined") {
+        if(typeof(set) !== "undefined") {
             if(set) {
                 this.mtime = pgUtil.getCurrentTime();
             }
@@ -90,7 +88,6 @@ function PG() {
         this.lastSync       = opg.lastSync;
         this.categoryData   = pgUtil.deepCopy(opg.categoryData);
         this.pageData       = pgUtil.deepCopy(opg.pageData);
-        this.userData       = pgUtil.deepCopy(opg.userData);
         if(copyEvents)
             this.copyEvents(opg);
     };
@@ -98,7 +95,7 @@ function PG() {
         this.events        = pgUtil.deepCopy(opg.events);
         this.deletedEvents = pgUtil.deepCopy(opg.deletedEvents);
         this.selectedEvents= pgUtil.deepCopy(opg.selectedEvents);
-    }
+    };
     this.copySettings = function(opg) {
         if(this.mtime <= opg.mtime) {
             // don't over-write new information
@@ -115,6 +112,30 @@ function PG() {
             this.certExpiration = certExpiration;
             this.loggedIn       = loggedIn;
             this.useServer      = useServer;
+        }
+    };
+    this.updatePageData = function() {
+        for(var p in this.pages) {
+            var page = this.pages[p];
+            if(this.allPages.indexOf(page)<0) { // found obsolete page!!!
+                delete(this.pages[p]);
+                continue;
+            }
+            var pd = this.pageData[page];
+            for(var cat in pd.data) { //[category]
+                var pdDefault = UI[page].getPageData(cat);
+                var pdThis = pd.data[cat];
+                // add missing fields to pdThis that are present in pdDefault
+                for(var f in pdDefault) {
+                    if(!pdThis.hasOwnProperty(f))
+                        this.pageData[page].data[cat][f] = pdDefault[f];
+                }
+                // remove fields in pdThis that are not present in pdDefault
+                for(var f in pdThis) {
+                    if(!pdDefault.hasOwnProperty(f))
+                        delete(pdThis[f]);
+                }
+            }
         }
     };
     this.initializeEvents = function() {
@@ -183,7 +204,7 @@ function PG() {
             data = {};  // xxx we should fully initialize categoryData
         var index = this.categories.indexOf(cat);
         if(index==-1)
-            showLog("Non-existent category");
+            pgUI_showLog("Non-existent category");
         index++;
         if(! ('description' in data)) {
             if(cat=="Uncategorized")
@@ -196,6 +217,9 @@ function PG() {
         }
         if(! ('style' in data)) {
             data.style = "default.css";
+        }
+        if(! ('color' in data)) {
+            data.color = "#CCCCCC";
         }
         if(! ('text' in data)) {
             data.text  = "default.xml";
@@ -225,7 +249,7 @@ function PG() {
             this.categories = categories.concat(Array());
             this.dirty(true);
         }
-    }
+    };
     this.getPageData = function(page, category) {
         var data = this.pageData[page];
         if(!data || !data.data)
@@ -241,6 +265,13 @@ function PG() {
         }
         return pgUtil.deepCopy( ans );
     };
+    this.getPageDataValue = function(page, category, value) {
+        var data = this.getPageData(page, category);
+        return data[value];
+    };
+    this.debug = function() {
+        return this.getPageDataValue("preferences", "Uncategorized", "debug");
+    };
     this.getPageMtime = function(page) {
         var data = this.pageData[page];
         if(!data) {
@@ -249,7 +280,7 @@ function PG() {
         return data['mtime'];
     };
     this.setPageData = function(mtime, data, page, category) {
-        if(typeof(this.pageData[page])=="undefined")
+        if(typeof(this.pageData[page])==="undefined")
             this.pageData[page] = {'mtime': 0, 'data': {}};
         this.pageData[page].mtime = mtime;
         if(category==undefined)
@@ -267,40 +298,12 @@ function PG() {
             this.dirty(true);
         }
     };
-    this.getUserData = function() {
-        data = pgUtil.deepCopy(this.userData);
-        if(typeof(data.debug)=="undefined")
-            data.debug = 0;
-        if(typeof(data.publicAccess)=="undefined")
-            data.publicAccess = 0;
-        //if(typeof(data.swipeVal)=="undefined")
-        //    data.swipeVal = 64;
-        if(typeof(data.wifiOnly)=="undefined")
-            data.wifiOnly = true;
-        if(typeof(data.screenTaps)=="undefined")
-            data.screenTaps = false;
-        return data;
-    };
-    this.getUserDataValue = function(name) {
-        var data = this.getUserData();
-        return data[name];
-    }
-    this.setUserData = function(userData) {
-        if(!pgUtil.equal(this.userData, userData)) {
-            this.userData = pgUtil.deepCopy(userData);
-            this.dirty(true);
-        }
-    };
-    this.setUserDataValue = function(name, value) {
-        var data = this.getUserData();
-        data[name] = value;
-    }
     this.canUploadFiles = function() {
         if(pgUtil.isWebBrowser())
             return true;
         return ( pg.loggedIn && pg.online &&
                  (navigator.connection.type == Connection.WIFI ||
-                  pg.getUserDataValue("wifiOnly") == false) );
+                  pg.getPageDataValue("preferences","Uncategorized","wifiOnly") == false) );
     };
     this.category = function() {
         if(arguments.length)
@@ -349,7 +352,7 @@ function PG() {
             var event = this.getEventFromID(this.selectedEvents[i]);
             if(!event) {
                 var id = this.selectedEvents[i];
-                showLog("CANNOT FIND SELECTED EVENT: " +id);
+                pgUI_showLog("CANNOT FIND SELECTED EVENT: " +id);
                 this.unselectEvent(id);
             }
             else if(pgUtil.sameType(event[E_CAT], cat))
@@ -373,7 +376,7 @@ function PG() {
             else
                 break;
         }
-    }
+    };
     this.isEventSelected = function(id) {
         return this.selectedEvents.indexOf(id) != -1;
     };
@@ -395,6 +398,7 @@ function PG() {
     };
     this.selectEvent = function(id) {
         if(this.selectedEvents.indexOf(id) == -1) {
+            this.dirty(true);
             this.selectedEvents[this.selectedEvents.length] = id;
         }
     };
@@ -418,6 +422,7 @@ function PG() {
     this.unselectEvent = function(id) {
         var i = this.selectedEvents.indexOf(id);
         if(i != -1) {
+            this.dirty(true);
             this.selectedEvents.splice(i, 1);
             return true;
         }
@@ -532,16 +537,15 @@ function PG() {
     };
     this.getEventsAtTime = function(time) {
         if(time < 0) {
-            showError("Invalid query at a negative time.");
+            pgUI_showError("Invalid query at a negative time.");
             return [];
         }
         var cat = pg.category();
         var e = [];
         for(var i=this.events.length-1; i>=0;  i--) {
             if(this.events[i][E_START] >= time &&
-               pgUtil.sameType(this.events[i][E_CAT], cat) &&
-               pgUtil.isCompleteEvent(this.events[i][E_TYPE])
-            ) {
+               pgUtil.sameType(this.events[i][E_CAT], cat))
+            {
                 if(e.length &&
                    (e[0].start != this.events[i][E_START])) {
                     break;
@@ -598,7 +602,7 @@ function PG() {
     this.changeEventAtID = function(id, e, changeID) {
         changeID = changeID!=undefined ? changeID : true;
         for(var i=0; i<this.events.length; i++) {
-            if(this.events[i][E_ID] == id) {
+            if(this.events[i][E_ID] === id) {
                 this.events[i] = e;
                 if(changeID)
                     this.eventChanged(i);
@@ -606,6 +610,11 @@ function PG() {
             }
         }
         return false;
+    };
+    this.addEventDataField = function(id, name, value) {
+        var e = this.getEventFromID(id);
+        e[E_DATA][name] = value;
+        this.changeEventAtID(id,e);
     };
     // this method should be used to trigger a server update.
     // It is currently implemented by on the server by deleting and creating an event.
@@ -618,7 +627,7 @@ function PG() {
         this.dirty(true);
     };
     this.addEventArray = function(a, selected, serverUpdate) { // a 2D array
-        serverUpdate = (typeof(serverUpdate)=="undefined") ? false : serverUpdate;
+        serverUpdate = (typeof(serverUpdate)==="undefined") ? false : serverUpdate;
         for(var j=0; j<a.length; j++) {
             event = a[j];
             if(this.changeEventAtID(event[E_ID], event, !serverUpdate)) {
@@ -633,7 +642,7 @@ function PG() {
                     break;
                 }
             }
-            if(i == this.events.length) {
+            if(i === this.events.length) {
                 //showLog("Adding event: " +event[E_ID] + ", " + event[E_TYPE]);
                 this.events[i] = event;
             }
@@ -644,14 +653,18 @@ function PG() {
     };
 }
 
+function def(a,b) {
+    return (typeof(a) !== 'undefined') ?  a : b;
+};
+
 var pgUtil = {
     //timezoneOffset: (new Date()).getTimezoneOffset() * 60 * 1000,
     hex_chr: '0123456789abcdef'.split(''),
 
     getDateString: function(date, showMS) {
-        showMS = typeof(showMS)!="undefined" ? showMS : true;
+        showMS = typeof(showMS)!=="undefined" ? showMS : true;
         var dateString = "";
-        if(typeof(date)=="number")
+        if(typeof(date)==="number")
             date = new Date(date);
         dateString = date.getFullYear() + '-' +
         (date.getMonth() < 9 ? '0' : '')    + (date.getMonth()+1) + '-' +
@@ -704,7 +717,7 @@ var pgUtil = {
     //    return s;
     //},
     getStringFromMS: function(ms, displayMillis) {
-        displayMillis = (typeof(displayMillis)!="undefined") ? displayMillis : false;
+        displayMillis = (typeof(displayMillis)!=="undefined") ? displayMillis : false;
         var zpad = function(no, digits) {
             no = no.toString();
             while(no.length < digits)
@@ -776,7 +789,7 @@ var pgUtil = {
         return ans;
         function getValFromField(field) {
             var val = 0;
-            if(field!="")
+            if(field!=="")
                 val = parseInt(field);
             return val;
         }
@@ -796,12 +809,13 @@ var pgUtil = {
     },
     arraysIdentical: function(a, b) {
         var i = a.length;
-        if (i != b.length) return false;
+        if (i !== b.length) return false;
         while (i--) {
             if (a[i] !== b[i]) return false;
         }
         return true;
     },
+    /*
     equal: function(a, b, skipFields, report) {
         skipFields = (typeof(skipFields)!="undefined") ? skipFields : [];
         report = (typeof(report)!="undefined") ? report : false;
@@ -826,12 +840,12 @@ var pgUtil = {
                     continue;
                 if(bKeys.indexOf(i) == -1) { // missing field
                     if(report)
-                        showLog("Missing field: " + i);
+                        pgUI_showLog("Missing field: " + i);
                     return false;
                 }
                 else if(!pgUtil.equal(a[i],b[i],[])) {
                     if(report)
-                        showLog("Unequal field: " + i + " a: " +a[i]+ " b: "+b[i]);
+                        pgUI_showLog("Unequal field: " + i + " a: " +a[i]+ " b: "+b[i]);
                     return false;
                 }
             }
@@ -846,9 +860,71 @@ var pgUtil = {
                 return false;
         }
         else {
-            showAlert("UnknownType: " + typeof(a));
+            pgUI.showAlert("UnknownType: " + typeof(a));
         }
         return true;
+    },
+    */
+    equal : function (value, other) {
+
+        // Get the value type
+        var type = Object.prototype.toString.call(value);
+
+        // If the two objects are not the same type, return false
+        if (type !== Object.prototype.toString.call(other)) return false;
+
+        // If items are not an object or array, return false
+        if (['[object Array]', '[object Object]'].indexOf(type) < 0) return false;
+
+        // Compare the length of the length of the two items
+        var valueLen = type === '[object Array]' ? value.length : Object.keys(value).length;
+        var otherLen = type === '[object Array]' ? other.length : Object.keys(other).length;
+        if (valueLen !== otherLen) return false;
+
+        // Compare two items
+        var compare = function (item1, item2) {
+
+            // Get the object type
+            var itemType = Object.prototype.toString.call(item1);
+
+            // If an object or array, compare recursively
+            if (['[object Array]', '[object Object]'].indexOf(itemType) >= 0) {
+                if (!pgUtil.equal(item1, item2)) return false;
+            }
+
+            // Otherwise, do a simple comparison
+            else {
+
+                // If the two items are not the same type, return false
+                if (itemType !== Object.prototype.toString.call(item2)) return false;
+
+                // Else if it's a function, convert to a string and compare
+                // Otherwise, just compare
+                if (itemType === '[object Function]') {
+                    if (item1.toString() !== item2.toString()) return false;
+                } else {
+                    if (item1 !== item2) return false;
+                }
+
+            }
+        };
+
+        // Compare properties
+        if (type === '[object Array]') {
+            for (var i = 0; i < valueLen; i++) {
+                if (compare(value[i], other[i]) === false) return false;
+            }
+        } else {
+            for (var key in value) {
+                if (value.hasOwnProperty(key)) {
+                    if (compare(value[key], other[key]) === false) return false;
+                }
+            }
+        }
+
+        // If nothing failed, return true
+        return true;
+
     },
     encode: function(pgo, doMD5) {
         var s = {"username":       pgo.username,
@@ -863,7 +939,6 @@ var pgUtil = {
                  "loggedIn":       pgo.loggedIn,
                  "categoryData":   encodeData(pgo.categoryData, doMD5),
                  "pageData":       encodeData(pgo.pageData, doMD5),
-                 "userData":       pgo.userData,
                  "dirtyFlag":      pgo.dirtyFlag,
                  "mtime":          pgo.mtime,
                  "version":        pgo.version
@@ -903,7 +978,6 @@ var pgUtil = {
         mypg.loggedIn        = s.loggedIn;
         mypg.categoryData    = s.categoryData;
         mypg.pageData        = s.pageData;
-        mypg.userData        = s.userData;
         mypg.dirtyFlag       = s.dirtyFlag;
         mypg.mtime           = s.mtime;
         mypg.setCurrentCategory(s.category);
@@ -952,15 +1026,15 @@ var pgUtil = {
     },
     isWebBrowser: function() {
         var browser = true; //document.URL.match(/^https?:/);
-        if((typeof(device) != "undefined") &&
-           (device.platform=="Android" || device.platform=="iOS"))
+        if((typeof(device) !== "undefined") &&
+           (device.platform==="Android" || device.platform==="iOS"))
             browser = false;
         return browser;
     },
     openWeb: function(url) {
         if(pgUtil.isWebBrowser()) {
             var w = window.open(url, '_blank');//, 'location=no');
-            if(url.substr(url.length-4, url.length-1) == ".mp3") {
+            if(url.substr(url.length-4, url.length-1) === ".mp3") {
                 html = "<html><head><style type=\"text/css\">" +
                     "body {background-color: transparent;" +
                     "color: white;}" +
@@ -994,15 +1068,9 @@ var pgUtil = {
             });
     },
     sameType: function(a,b) {
-        if(a == "*" || b == "*" || a == b)
+        if(a === "*" || b === "*" || a === b)
             return true;
         return false;
-    },
-    isCompleteEvent: function(type) {
-        return type == "interval" ||
-        type == "note" ||
-        type == "count" ||
-        type == "marker";
     },
     displayEventData: function(e) {
         return UI[pg.page()].displayEventData(e);
@@ -1157,44 +1225,119 @@ var pgUtil = {
             //}
         }
     },
-    /*    
-    selectPages: function(id, title, allPages, selectedPages) {
-        var s = "";
-        s += "<legend>"+title+"</legend>";
-        s += '<select id="'+id+'" class="needsclick" data-native-menu="false" multiple="multiple">\n';
-        s += '<option data-placeholder="true">'+title+'</option>\n';
-        for(var i=0; i<allPages.length; i++) {
-            s += "<option value='"+ allPages[i] +"' ";
-            if(selectedPages.indexOf(allPages[i]) != -1)
-                s += 'selected="selected" ';
-            s += ">"+ allPages[i] +"</option>\n";            
-        }
-        s += "</select>\n";
-        return s;
-    },
-    */
-    closePopup: function(sourceElement, onswitched) {
-        var afterClose = function() {
-            sourceElement.off("popupafterclose", afterClose);  
-            if (onswitched && typeof onswitched === "function"){
-                onswitched();
-            }
-        };    
-        sourceElement.on("popupafterclose", afterClose);
-        sourceElement.popup("close");
-    },
-    switchPopup: function(sourceElement, destinationElement, onswitched) {
-        var afterClose = function() {
-            destinationElement.popup("open").trigger("create");
-            sourceElement.off("popupafterclose", afterClose);  
-            if (onswitched && typeof onswitched === "function"){
-                onswitched();
-            }
-        };    
-        sourceElement.on("popupafterclose", afterClose);
-        sourceElement.popup("close");
-    }
+    // The following base64 code is a combination of an encoder and decoder.
+    // The decoder piece needs the following copyright. -arogers
 
+    /*
+      Copyright (c) 2011, Daniel Guerrero
+      All rights reserved.
+      Redistribution and use in source and binary forms, with or without
+      modification, are permitted provided that the following conditions are met:
+      * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+      * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+      THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+      ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+      WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+      DISCLAIMED. IN NO EVENT SHALL DANIEL GUERRERO BE LIABLE FOR ANY
+      DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+      (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+      LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+      ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+      (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+      SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    */
+
+    base64: {
+
+        chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+        encLookup: [],
+
+        init: function() {
+            if(this.encLookup.length == 0) {
+                for (var i=0; i<4096; i++) {
+                    this.encLookup[i] = this.chars[i >> 6] + this.chars[i & 0x3F];
+                }
+            }
+        },
+        encode: function(src) {
+            this.init();
+            var len = src.length;
+            var dst = '';
+            var i = 0;
+            while (len > 2) {
+                var n = (src[i] << 16) | (src[i+1]<<8) | src[i+2];
+                dst+= this.encLookup[n >> 12] + this.encLookup[n & 0xFFF];
+                len-= 3;
+                i+= 3;
+            }
+            if (len > 0) {
+                var n1= (src[i] & 0xFC) >> 2;
+                var n2= (src[i] & 0x03) << 4;
+                if (len > 1) n2 |= (src[++i] & 0xF0) >> 4;
+                dst+= this.chars[n1];
+                dst+= this.chars[n2];
+                if (len == 2) {
+                    var n3= (src[i++] & 0x0F) << 2;
+                    n3 |= (src[i] & 0xC0) >> 6;
+                    dst+= this.chars[n3];
+                }
+                if (len == 1) dst+= '=';
+                dst+= '=';
+            }
+            return dst;
+        },
+        // will return a  Uint8Array type
+        decodeArrayBuffer: function(input) {
+            var bytes = (input.length/4) * 3;
+            var ab = new ArrayBuffer(bytes);
+            this.decode(input, ab);
+
+            return ab;
+        },
+        decode: function(input, arrayBuffer) {
+            this.init();
+            //get last chars to see if are valid
+            var lkey1 = this.chars.indexOf(input.charAt(input.length-1));
+            var lkey2 = this.chars.indexOf(input.charAt(input.length-2));
+
+            var bytes = (input.length/4) * 3;
+            if (lkey1 == 64) bytes--; //padding chars, so skip
+            if (lkey2 == 64) bytes--; //padding chars, so skip
+
+            var uarray;
+            var chr1, chr2, chr3;
+            var enc1, enc2, enc3, enc4;
+            var i = 0;
+            var j = 0;
+
+            if (arrayBuffer)
+                uarray = new Uint8Array(arrayBuffer);
+            else
+                uarray = new Uint8Array(bytes);
+
+            input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+
+            for (i=0; i<bytes; i+=3) {
+                //get the 3 octects in 4 ascii chars
+                enc1 = this.chars.indexOf(input.charAt(j++));
+                enc2 = this.chars.indexOf(input.charAt(j++));
+                enc3 = this.chars.indexOf(input.charAt(j++));
+                enc4 = this.chars.indexOf(input.charAt(j++));
+
+                chr1 = (enc1 << 2) | (enc2 >> 4);
+                chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+                chr3 = ((enc3 & 3) << 6) | enc4;
+
+                uarray[i] = chr1;
+                if (enc3 != 64) uarray[i+1] = chr2;
+                if (enc4 != 64) uarray[i+2] = chr3;
+            }
+            return uarray;
+        }
+    }
 };
 
 function nl2br (str, is_xhtml) {

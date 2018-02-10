@@ -15,7 +15,7 @@ div.header .ui-bar-b .ui-btn, html .ui-bar-b .ui-btn {
 /* text color for main menu */
 .ui-bar-b
 {
-    color: rgb(0,0,0,1);
+    color: rgba(0,0,0,1);
 }
 /* navbar */
 div.header .ui-navbar .ui-btn.ui-btn-b {
@@ -39,12 +39,12 @@ div.header .ui-navbar .ui-btn.ui-btn-b.ui-btn-active {
 
 /* links chould be styled differently from bold text */
 a, a:visited, a:hover {
-    color: rgb(0,0,0,1) !important;
+    color: rgba(0,0,0,1) !important;
 }
 
 /* navmenu should have white text */
 .sidenav a, .sidenav a:visited, sidenav a:hover {
-    color: rgb(240,240,240,1) !important;
+    color: rgba(240,240,240,1) !important;
 }
 
 /* text color on pages */

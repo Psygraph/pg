@@ -1,23 +1,24 @@
 
-function about() {
-    page.call(this, "about");
+function About() {
+    Page.call(this, "about");
 
     // create the guesser
     this.AI = new pSeries([new pTDL(1,4), new pARMA(4,1)]);
     this.trials = new Arr();
-};
+    //this.scrollbar = tinyscrollbar($("#about_main")[0]);
+}
 
-about.prototype = Object.create(page.prototype);
-about.prototype.constructor = about;
+About.prototype = Object.create(ButtonPage.prototype);
+About.prototype.constructor = About;
 
-about.prototype.update = function(show) {
+About.prototype.update = function(show) {
     if(!show)
         return;
     this.trials = new Arr();
     this.resize();
 };
 
-about.prototype.settings = function() {
+About.prototype.settings = function() {
     if(arguments.length) {
     }
     else {
@@ -25,29 +26,31 @@ about.prototype.settings = function() {
     }
 };
 
-about.prototype.resize = function() {
+About.prototype.resize = function() {
     var head    = this.headerHeight();
     var foot    = 0;//$("#" + this.name + "_footer").outerHeight(true);
-    var win     = getWindowDims();
+    var win     = pgUI.getWindowDims();
     var height  = win.height - (head);
     var width   = win.width;
     $("#aboutDiv").css({
-            top:    head-1, 
-                height: height,
-                position: "absolute"
-                });
+            top:    head-1,
+            height: height,
+            position: "absolute"
+    });
+    //this.scrollbar.update();
 };
 
-about.prototype.lever = function(arg) {
-    if(arg=="left") {
-        this.press(-1);
-    }
-    else if(arg=="right") {
-        this.press(1);
-    }
+About.prototype.start = function(restart) {
+    //buttonPage.prototype.start.call(this,restart);
+    this.press(1);
+};
+//about.prototype.stop = function() {
+//};
+About.prototype.reset = function() {
+    this.press(-1);
 };
 
-about.prototype.press = function(value) {
+About.prototype.press = function(value) {
     var guess = this.AI.roundedOutput()[0];
     this.AI.input([value]);
     var correct = (guess == value);
@@ -62,11 +65,11 @@ about.prototype.press = function(value) {
     }
     if(correct) {
         setFeedbackText("PREDICTED", ratio);
-        pgAudio.giveFeedback(false);
+        pgAudio.reward(false);
     }
     else {
         setFeedbackText("RANDOM", ratio);
-        pgAudio.giveFeedback(true);
+        pgAudio.reward(true);
     }    
     function setFeedbackText(txt, ratio) {
         var html = "<p><h2>" + txt + "</h2></p>";
@@ -77,5 +80,5 @@ about.prototype.press = function(value) {
     }
 };
 
-UI.about = new about();
+UI.about = new About();
 //# sourceURL=about.js
