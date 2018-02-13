@@ -12,11 +12,12 @@ Home.prototype.update = function(show, data) {
     if(show) {
         if (!this.graph) {
             this.graph = new GraphComponent("home_graph", "bar");
-            this.graph.create(data.signals);
+            var interval   = this.graph.computeNumericInterval(data.interval);
+            this.graph.create(data.signals, interval);
         }
         this.status();
-        this.updateGraph();
         this.resize();
+        setTimeout(this.updateGraph.bind(this), 280);
     }
     else {
     }
@@ -30,10 +31,10 @@ Home.prototype.settings = function(show, data) {
         $("#home_signals").val(data.signals).change();
     }
     else {
-        data.history   = parseInt($("#home_history").val());
-        data.interval  = $("#home_interval").val();
-        data.signals   = $("#home_signals").val();
-        this.graph.create(data.signals);
+        data.history  = parseInt($("#home_history").val());
+        data.interval = $("#home_interval").val();
+        data.signals  = $("#home_signals").val();
+        this.graph.create(data.signals, this.graph.computeNumericInterval(data.interval));
     }
     return data;
 };
@@ -64,14 +65,14 @@ Home.prototype.getPageData = function() {
     if(! ('interval' in data))
         data.interval = "day";
     if(! ('signals' in data))
-        data.signals = ["stopwatch","counter","timer"];
+        data.signals = ["home"];
     return data;
 };
 
 Home.prototype.getOptions = function() {
-    var data = this.getPageData();
+    var data     = this.getPageData();
     var interval = this.graph.computeNumericInterval(data.interval);
-    var options = {
+    var options  = {
         orientation:   'bottom',
         timeAxis: {scale: interval, step: 1},
         dataAxis: {visible: false}
@@ -86,12 +87,31 @@ Home.prototype.updateGraph = function() {
     var now        = pgUtil.getCurrentTime();
     //var cutoff = now  - interval * nIntervals;
 
-    var timerPts;
-    var counterPts;
+    var homePts;
     var stopwatchPts;
-    var showTimer     = this.hasSignal("timer",data);
-    var showCounter   = this.hasSignal("counter",data);
+    var counterPts;
+    var timerPts;
+    var notePts;
+    var showHome      = this.hasSignal("home",data);
     var showStopwatch = this.hasSignal("stopwatch",data);
+    var showCounter   = this.hasSignal("counter",data);
+    var showTimer     = this.hasSignal("timer",data);
+    var showNote      = this.hasSignal("note",data);
+    // Total time
+    if(showHome) {
+        var pts = {x:[],y:[]};
+        var events = pg.getEventsInPage("home");
+        for (var i=0; i<events.length; i++) {
+            var e = pgUtil.parseEvent(events[i]);
+            //if(e.start < cutoff)
+            //    break;
+            if(e && e.type==="login") {
+                pts.x.push(new Date(e.start));
+                pts.y.push(e.duration / (60*60*1000.0));
+            }
+        }
+        homePts = this.computeIntervals(pts, now, interval, nIntervals, "sum");
+    }
     // Total time
     if(showStopwatch) {
         var pts = {x:[],y:[]};
@@ -134,7 +154,7 @@ Home.prototype.updateGraph = function() {
             var e = pgUtil.parseEvent(events[i]);
             //if(e.start < cutoff)
             //    break;
-            if(e.type==="reset" && typeof(e.data['mindful'])!=="undefined") {
+            if(e.type==="response" && typeof(e.data['mindful'])!=="undefined") {
                 var val = e.data.mindful ? 1 : 0;
                 pts.x.push(new Date(e.start));
                 pts.y.push(val);
@@ -142,27 +162,53 @@ Home.prototype.updateGraph = function() {
         }
         timerPts = this.computeIntervals(pts, now, interval, nIntervals, "mean");
     }
-
+    // analytic
+    if(showNote) {
+        var pts = {x:[],y:[]};
+        var events = pg.getEventsInPage("note", pg.category());
+        for (var i=0; i<events.length; i++) {
+            var e = pgUtil.parseEvent(events[i]);
+            //if(e.start < cutoff)
+            //    break;
+            var val = 1;
+            pts.x.push(new Date(e.start));
+            pts.y.push(val);
+        }
+        notePts = this.computeIntervals(pts, now, interval, nIntervals, "binary");
+    }
 
     // make count bar height equal to time bar height
-    if(showStopwatch) {
-        for (var i = 0; i < counterPts.y.length; i++) {
-            var correct = counterPts.y[i];
-            counterPts.y[i] = (correct) * stopwatchPts.y[i];
-        }
-        for (var i = 0; i < timerPts.y.length; i++) {
-            var correct = timerPts.y[i];
-            timerPts.y[i] = (correct) * stopwatchPts.y[i];
+    if(showHome || showStopwatch) {
+        var scalePts = showHome ? homePts : stopwatchPts;
+        for (var i = 0; i < scalePts.y.length; i++) {
+            if(showCounter) {
+                var correct = counterPts.y[i];
+                counterPts.y[i] = (correct) * scalePts.y[i];
+            }
+            if(showTimer) {
+                var correct = timerPts.y[i];
+                timerPts.y[i] = (correct) * scalePts.y[i];
+            }
+            if(showNote) {
+                var correct = notePts.y[i];
+                notePts.y[i] = (correct) * scalePts.y[i];
+            }
         }
     }
+    if(showHome) {
+        this.graph.addBars("home", this.graph.flipPoints(homePts));
+    }
     if(showStopwatch) {
-        this.graph.addBars("stopwatch", this.graph.flipPoints(stopwatchPts), interval / data.signals.length);
+        this.graph.addBars("stopwatch", this.graph.flipPoints(stopwatchPts));
     }
     if(showCounter) {
-        this.graph.addBars("counter", this.graph.flipPoints(counterPts), interval / data.signals.length);
+        this.graph.addBars("counter", this.graph.flipPoints(counterPts));
     }
     if(showTimer) {
-        this.graph.addBars("timer", this.graph.flipPoints(timerPts), interval / data.signals.length);
+        this.graph.addBars("timer", this.graph.flipPoints(timerPts));
+    }
+    if(showNote) {
+        this.graph.addBars("note", this.graph.flipPoints(notePts));
     }
     //this.graph.changeLabels(["stopwatch","counter"], ["time","correct count"]);
     //this.graph.redraw(new Date(now -nIntervals*interval), new Date(now));
@@ -201,6 +247,9 @@ Home.prototype.computeIntervals = function(points, now, interval, nIntervals, in
         if (j) {
             if (intervalMethod === "mean") {
                 val = val / j;
+            }
+            else if(intervalMethod === "binary") {
+                val = val ? 1 : 0;
             }
             pts.x.push( new Date(nextTime + interval));
             pts.y.push(val);

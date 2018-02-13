@@ -14,16 +14,15 @@ Stopwatch.prototype.update = function(show, data) {
     ButtonPage.prototype.update.call(this, show, data);
     if(show) { // no running in the background.
         if (!this.clock) {
-            this.graph = new GraphComponent('stopwatch_graph', 'lines');
+            this.graph  = new GraphComponent('stopwatch_graph', 'lines');
             this.widget = $('#clock')[0];
-            this.clock = new Clock(this.watchCallback.bind(this), data.updateInterval);
+            this.clock  = new Clock(this.watchCallback.bind(this), data.updateInterval);
         }
         this.createGraph(true);
         if(this.isRunning()) {
-            this.start(true);
+            this.startGraph(true);
         }
-        else
-            this.refreshTimer();
+        this.refreshTimer();
         this.resize();
     }
     else {
@@ -262,20 +261,16 @@ Stopwatch.prototype.createGraph = function(show) {
             this.addPoints(d);
         }
         this.graph.endAddPoints(60*1000);
+        this.signalStarted = {};
+        for (var s in signals) {
+            this.signalStarted[signals[s]] = false;
+        }
     }
 };
 
 Stopwatch.prototype.startGraph = function(restart) {
     if(!this.graph)
         return;
-    var data = this.getPageData();
-    var signals = this.getAllSignals(data);
-    if(! pgUtil.equal(this.signalCache, signals))
-        this.createGraph(data.showGraph);
-    this.signalStarted = {};
-    for(var s in signals) {
-        this.signalStarted[signals[s]] = false;
-    }
     if( this.hasBluetooth()                  ||
         this.hasSignal("acceleration", data) ||
         this.hasSignal("orientation", data)  ||
@@ -299,7 +294,7 @@ Stopwatch.prototype.updateGraph = function() {
     // add bluetooth and accelerometer to the dataset
     if (this.hasBluetooth()) {
         var d = pgBluetooth.getData();
-        addPoints.call(this,d);
+        this.addPoints(d);
     }
     if (this.hasSignal("acceleration", data) ||
         this.hasSignal("orientation", data)  ||
@@ -313,7 +308,7 @@ Stopwatch.prototype.updateGraph = function() {
 };
 Stopwatch.prototype.addPoints = function(d) {
     for (var field in d) {
-        if (d[field].length) {
+        if (this.signalCache.indexOf(field)>=0 && d[field].length) {
             var data = d[field];
             var pts = {x: [], y: []};
             var lastTime = this.graph.lastGroupTime(field);

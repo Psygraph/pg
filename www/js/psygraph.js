@@ -24,13 +24,9 @@ var UI = {
     dialog:      null,
 
     state:      {accel: {}, orient: {}, location: {}, notify: {}, random: {}, device: {}, bluetooth: {}},
-    window:     {t: null, currentPage: null, alertCallback: null}
+    window:     {t: null, currentPage: null, alertCallback: null, sidenav: null}
 };
 
-function UIinitialize() {
-    if(UI.window.t)
-        clearTimeout(UI.window.t);
-}
 // update page, accel and location state
 function updateState(tf) {
     //var page = getPage();
@@ -73,38 +69,66 @@ function onPause() {
     pg.background = true;
     pgUI_showLog("Entering pause state...");
     showPage(false);
-    //UI.home.logEvent("pause");
+    //logEvent("pause");
 }
 function onResume() {
     pg.background = false;
     pgUI_showLog("Resuming...");
     showPage(true);
     syncSoon();
-    //UI.home.logEvent("resume");
+    //logEvent("resume");
 }
 function onBackKeyDown() {
     gotoPage(pg.page());
 }
 
 function onError(err) {
-    var event = {'start': pgUtil.getCurrentTime(),
-                 'page': "home",
-                 'type': "error"};
-    event.data = {'text': err.message};
-    event.data.title = "Error: " +pgFile.basename(err.filename) +":" +err.lineno;
+    var text  = err.message;
+    var title = "Error: " +pgFile.basename(err.filename) +":" +err.lineno;
+    logEvent("error", {text: text, title: title});
     if(pgLogin.loggingIn) {
-        pgFile.writeFile("com.psygraph.lastError", event);
-        pgUI.showAlert(event.data.text, event.data.title);
+        pgUI.showAlert(text, title);
     }
-    if(pg.debug()) {
-        pg.addNewEvents(event, true);
-        syncSoon();
-        pgUI.showAlert(event.data.text, event.data.title);
+    else if(pg.debug()) {
+        pgUI.showAlert(text, title);
     }
     // returning true overrides the default window behaviour (i.e. we handled the error).
     return true;
 }
 
+function logEvent(type, data) {
+    data = data || {};
+    var startTime = pgLogin.getStartTime();
+    var event = {
+        page: "home",
+        type: type,
+        start: startTime,
+        duration: pgUtil.getCurrentTime() - startTime,
+        data: data
+    };
+    if (type === "exit") { // write a file for later.
+        pgFile.writeFile("com.psygraph.exit", event);
+    }
+    else if (type === "login" || type === "logout" || type === "update") {
+        event.type = "login";
+        pg.updateLoginEvent(event);
+    }
+    else if (type === "error") {
+        if (pgLogin.loggingIn) {
+            pgFile.writeFile("com.psygraph.lastError", event);
+        }
+        if (pg.debug()) {
+            pg.addNewEvents(event, true);
+            syncSoon();
+        }
+        else {
+            if (pg.debug()) {
+                pg.addNewEvents(event, true);
+                syncSoon();
+            }
+        }
+    }
+}
 var mouse_clicks = 0, mouse_timer = null;
 function singleClick(ev) {
     if(! $(ev.target).hasClass("leftMenuButton") && pgUI.isSlideNavOpen()) {
@@ -118,24 +142,24 @@ function singleClick(ev) {
     var page = getPage();
     // we only look for triple click on the about or counter pages.
     if(! (page==="counter" ||
-          page==="about")) {
+            page==="about")) {
         return true;
     }
     var DELAY = 400;
     mouse_clicks++;
     if(mouse_clicks === 1) {
         mouse_timer = setTimeout(function() {
-                onSingleTap(ev);
-                mouse_clicks = 0;
-            }, DELAY);
-    } 
+            onSingleTap(ev);
+            mouse_clicks = 0;
+        }, DELAY);
+    }
     else if(mouse_clicks === 2) {
         clearTimeout(mouse_timer);
         mouse_timer = setTimeout(function() {
-                onDoubleTap(ev);
-                mouse_clicks = 0;
-            }, DELAY);
-    } 
+            onDoubleTap(ev);
+            mouse_clicks = 0;
+        }, DELAY);
+    }
     else {
         clearTimeout(mouse_timer);
         UI[pg.page()].tripleClick();
@@ -152,11 +176,11 @@ function onDoubleTap(ev) {
 function isInInputArea(e) {
     var isInput = false;
     isInput |= (e.target.type === "text"     ||
-                e.target.type === "textarea" ||
-                e.target.type === "search"   ||
-                e.target.type === "input"    ||
-                e.target.type === "password" ||
-                e.target.type === "select");
+        e.target.type === "textarea" ||
+        e.target.type === "search"   ||
+        e.target.type === "input"    ||
+        e.target.type === "password" ||
+        e.target.type === "select");
     isInput |= $(e.target).closest(".select2").length;
     return isInput;
 }
@@ -171,40 +195,40 @@ function onKeyDown(e) {
         var key=(evt.charCode)?evt.charCode:
             ((evt.keyCode)?evt.keyCode:((evt.which)?evt.which:0));
         switch(key) {
-        case 37: // left arrow
-            goLeft(e);
-            break;
-        case 39: // right arrow
-            goRight(e);
-            break;
-        case 38: // up arrow
-            goUp(e);
-            break;
-        case 40: // down arrow
-            goDown(e);
-            break;
-        case 27: // "ESC"
-            gotoPage(pg.page());
-            break;
-        case 83: // "s"
-            gotoPageSettings();
-            break;
-        case 72: // "h"
-            gotoPageHelp();
-            break;
-        case 80: // "p"
-            gotoPage("preferences");
-            break;
-        //case 16: // shift
-        case 188: // ",", hopefully less than without shift
-            lever("left");
-            break;
-        //case 32: // space
-        case 190: // ".", hopefully greater than without shift
-            lever("right");
-            break;
-        default:
-            return false;
+            case 37: // left arrow
+                goLeft(e);
+                break;
+            case 39: // right arrow
+                goRight(e);
+                break;
+            case 38: // up arrow
+                goUp(e);
+                break;
+            case 40: // down arrow
+                goDown(e);
+                break;
+            case 27: // "ESC"
+                gotoPage(pg.page());
+                break;
+            case 83: // "s"
+                gotoSectionSettings();
+                break;
+            case 72: // "h"
+                gotoSectionHelp();
+                break;
+            case 80: // "p"
+                gotoPage("preferences");
+                break;
+            //case 16: // shift
+            case 188: // ",", hopefully less than without shift
+                lever("left");
+                break;
+            //case 32: // space
+            case 190: // ".", hopefully greater than without shift
+                lever("right");
+                break;
+            default:
+                return false;
         }
         pgAudio.stopAlarm();
         return true;
@@ -219,15 +243,15 @@ function onKeyPress(e) {
         var key=(evt.charCode)?evt.charCode:
             ((evt.keyCode)?evt.keyCode:((evt.which)?evt.which:0));
         switch(key) {
-        case 13: // return key
-            var def = $('.default');
-            if(def.length===1)
-                def.click();
-            else
-                pgUI_showLog("Too many defaults");
-            break;
-        default:
-            return true;
+            case 13: // return key
+                var def = $('.default');
+                if(def.length===1)
+                    def.click();
+                else
+                    pgUI_showLog("Too many defaults");
+                break;
+            default:
+                return true;
         }
         return false;
     }
@@ -255,8 +279,10 @@ function syncSoon() {
     clearTimeout(UI.window.t);
     UI.window.t = setTimeout(timeout, 4000);
     function timeout() {
-        if(pgLogin.hasFinishedLogin())
+        if(pgLogin.hasFinishedLogin()) {
+            logEvent("update");
             PGEN.synchronize();
+        }
     }
 }
 
@@ -291,40 +317,7 @@ function goDown(event) {
 function getPage() {
     return UI.window.currentPage;
 }
-function gotoLoadedPage(page) {
-    if(! UI[page]) {
-        setTimeout(gotoLoadedPage.bind(this,page), 200);
-    }
-    else {
-        gotoPage(page);
-        gotoCategory(pg.category());
-    }
-}
-function gotoPageMain() {
-    var page = getPage();
-    $("#"+page+"_main").show();
-    $("#"+page+"_settings").hide();
-    $("#"+page+"_help").hide();
-    $(".navbar_link").removeClass("ui-btn-active");
-    $("#"+page+"_page .navbar_link_left").addClass("ui-btn-active");
-    UI[page].resize();
-}
-function gotoPageSettings() {
-    var page = getPage();
-    $("#"+page+"_main").hide();
-    $("#"+page+"_settings").show();
-    $("#"+page+"_help").hide();
-    UI[page].createSettings();
-    UI[page].resize();
-}
-function gotoPageHelp() {
-    var page = getPage();
-    $("#"+page+"_main").hide();
-    $("#"+page+"_settings").hide();
-    $("#"+page+"_help").show();
-    UI[page].resize();
-}
-function getSubPage() {
+function getSection() {
     var page = getPage();
     if($("#"+page+"_main").is(':visible'))
         return "main";
@@ -335,11 +328,47 @@ function getSubPage() {
     else
         return "";
 }
+function gotoSection(section) {
+    if(section==="main")
+        gotoSectionMain();
+    else if(section==="settings")
+        gotoSectionSettings();
+    else if(section==="help")
+        gotoSectionHelp();
+    else if(section==="")
+        ;
+    else
+        pgUI_showError("Unknown section: " + section);
+}
+function gotoSectionMain() {
+    var page = getPage();
+    $("#"+page+"_main").show();
+    $("#"+page+"_settings").hide();
+    $("#"+page+"_help").hide();
+    $(".navbar_link").removeClass("ui-btn-active");
+    $("#"+page+"_page .navbar_link_left").addClass("ui-btn-active");
+    UI[page].resize();
+}
+function gotoSectionSettings() {
+    var page = getPage();
+    $("#"+page+"_main").hide();
+    $("#"+page+"_settings").show();
+    $("#"+page+"_help").hide();
+    UI[page].createSettings();
+    UI[page].resize();
+}
+function gotoSectionHelp() {
+    var page = getPage();
+    $("#"+page+"_main").hide();
+    $("#"+page+"_settings").hide();
+    $("#"+page+"_help").show();
+    UI[page].resize();
+}
 function gotoPage(newPage) {
     var oldPage = getPage();
     UI.lastPage = oldPage;
     var opts = {'changeHash': false,
-                'role': "page"
+        'role': "page"
     };
     // update old state
     if(oldPage && UI[oldPage]) {
@@ -365,7 +394,7 @@ function gotoPage(newPage) {
     UI.window.currentPage = newPage;
     if(ONSEN) {
         //$(".page").hide();
-        //$("#"+newPage+"_page").show();        
+        //$("#"+newPage+"_page").show();
         var lopts = {
             'animation' : "slide"
         };
@@ -387,8 +416,9 @@ function gotoPage(newPage) {
     //    UI.onPageChange = null;
     //}
     pgAudio.stopAlarm(-1);
+    logEvent("update");
     //updateSubheader(); // updating the page does not change the header, which currently has only category info
-    gotoPageMain();
+    gotoSectionMain();
     pgUI.slideNav(false);
 }
 function showPage(update) {
@@ -404,7 +434,7 @@ function showPage(update) {
 }
 function resetPage() {
     var page = getPage();
-    if(UI[page]) {
+    if(UI[page] && page==="list") { // only refresh pages that cache event IDs
         UI.state[page] = UI[page].update(false, UI[page].getPageData());
         UI[page].update(true, UI.state[page]);
     }
@@ -420,7 +450,7 @@ function updateSubheader() {
     var catName = pg.category();
     if(catName === "Uncategorized")
         catName = "&nbsp;";
-    $(".category").html(catName);    
+    $(".category").html(catName);
     menus.empty();
     for(var i=pg.numCategories()-1; i>=0; i--) {
         var cat = pg.categories[i];
@@ -452,8 +482,8 @@ function gotoCategory(num) {
     $("html").css('backgroundColor', cd.color);
     updateSubheader();
     // reload the settings if the cateogry has changed
-    if(getSubPage()==="settings")
-        gotoPageSettings();
+    if(getSection()==="settings")
+        gotoSectionSettings();
 }
 /*
 function setPageChangeCallback(cb) {
@@ -478,7 +508,7 @@ function postData(data, callback, isAsync) {
         url = data.server + "/server.php";
         if(!pg.online) {
             pgUI_showLog("Not online, but tried: "+data.action);
-            return callback(false, null);   
+            return callback(false, null);
         }
     }
     else {
@@ -491,17 +521,17 @@ function postData(data, callback, isAsync) {
     data.version  = pg.version;
     var dat = JSON.stringify(data);
     $.ajax({    url:         url,
-                type:        "POST",
-                async:       isAsync,
-                timeout:     data.timeout,
-                crossDomain: true,
-                contentType: "application/json; charset=utf-8",
-                dataType:    "json",
-                data:        dat,
-                cache:       false,
-                success:     ajaxSuccess,
-                error:       ajaxError
-                });
+        type:        "POST",
+        async:       isAsync,
+        timeout:     data.timeout,
+        crossDomain: true,
+        contentType: "application/json; charset=utf-8",
+        dataType:    "json",
+        data:        dat,
+        cache:       false,
+        success:     ajaxSuccess,
+        error:       ajaxError
+    });
     function ajaxSuccess(d) {
         if(d.error) {
             pgUI_showLog(d.error);
@@ -594,7 +624,7 @@ var PGEN = {
         pgUI_showLog("Attempted server login: " + server);
         var loginSuccess = false;
         postData({'action': "login", 'server': server, 'username': username, 'cert': cert, 'password': password}, validated);
-        
+
         function finishLogin(success) {
             if(success) {
                 PGEN.updateSettings(pg, function(success){PGEN.writePG(pg)});
@@ -694,7 +724,7 @@ var PGEN = {
                     else if(s[i]==="false")
                         s[i] = false;
                     else if(typeof(s[i])==="string" &&
-                            s[i].substring(0,5) === "data:") {
+                        s[i].substring(0,5) === "data:") {
                         s[i] = pgFile.saveDataURI(field, s[i]);
                     }
                 }
@@ -728,7 +758,7 @@ var PGEN = {
 
         // Update the pg, do the callback
         PGEN.writePG(pg, cb);
-        
+
         if(!pg.dirty())
             return;
 
@@ -737,7 +767,7 @@ var PGEN = {
         pgFile.writeFile("com.psygraph.state", UI.state);
         //if(!quick) // Doing this on the settings pages will blow away any of the user's changes.
         //    resetPage();
-        
+
         PGEN.writeEvents(pg, moreSync);  // write the events locally
         function cb() {
             UI.home.status();
@@ -799,17 +829,15 @@ var PGEN = {
         }
     },
     readEvents: function(callback) {
-        pgFile.readFile("com.psygraph.events", cb);
-        pgFile.readFile("com.psygraph.state", cbState);
-
-        function cb(success, data) {
+        pgFile.readFile("com.psygraph.events", cbEvents);
+        function cbEvents(success, data) {
             if(success) {
                 pg.events         = data.events;
                 pg.deletedEvents  = data.deletedEvents;
                 if(data.selectedEvents)
                     pg.selectedEvents = data.selectedEvents;
             }
-            if(callback) callback(success);
+            pgFile.readFile("com.psygraph.state", cbState);
         }
         function cbState(success, data) {
             if(success) {
@@ -819,6 +847,8 @@ var PGEN = {
             else {
                 showLog("Could not read state file.");
             }
+            if(callback)
+                callback(success);
         }
     },
     deleteFiles: function() {
@@ -830,7 +860,7 @@ var PGEN = {
             pgUI.showBusy(true);
             pgUI_showLog("Writing settings to the server");
             postData({'action': "settings", 'pg': pgUtil.encode(newPG, true) },
-                     function(success, request){getDataURL(success, request, newPG, callback)});
+                function(success, request){getDataURL(success, request, newPG, callback)});
         }
         else {
             callback(false);
@@ -916,12 +946,12 @@ var PGEN = {
                 var startIndex = i;
                 var endIndex   = Math.min(i+nEvents-1, pg.deletedEvents.length-1);
                 var toDelete = { events:    pg.deletedEvents.slice(startIndex, endIndex+1),
-                                 startTime: pg.deletedEvents[endIndex][1],
-                                 endTime:   pg.deletedEvents[startIndex][1]
+                    startTime: pg.deletedEvents[endIndex][1],
+                    endTime:   pg.deletedEvents[startIndex][1]
                 };
                 cbCount ++;
                 postData({action: "deleteEventArray", data: toDelete},
-                         function(tf,dat){deleteDeletedEventIDs(tf,dat)});
+                    function(tf,dat){deleteDeletedEventIDs(tf,dat)});
             }
             function deleteDeletedEventIDs(success, data) {
                 if(success) {
@@ -945,11 +975,11 @@ var PGEN = {
                 }
                 if(newE.length) {
                     var toSet = { events:    newE,
-                                  startTime: pg.events[endIndex][1],
-                                  endTime:   pg.events[startIndex][1]
+                        startTime: pg.events[endIndex][1],
+                        endTime:   pg.events[startIndex][1]
                     };
                     postData({action: "setEventArray", data: toSet, timeout: 16000},
-                             function(tf,dat){cbAfterCount(tf,dat)} );
+                        function(tf,dat){cbAfterCount(tf,dat)} );
                 }
             }
             function cbAfterCount(success, data) {
@@ -992,17 +1022,17 @@ var PGEN = {
             }
             else {
                 text = "<p>Do you wish to delete all events from this device?</p>" +
-                "<p>(You can log in to delete events on the server).</p>";
+                    "<p>(You can log in to delete events on the server).</p>";
             }
             pgUI.showDialog({title: "Delete events?", true: "Delete", false: "Cancel"},
-                       text, deleteEventsCB.bind(this));
+                text, deleteEventsCB.bind(this));
         }
         else if(selection === "deleteEverything") {
             pgUI.showDialog({title: "Delete all data?", true: "Delete", false: "Cancel"},
-                       "<p>Do you wish to delete all data and preferences from this device" +
-                       (pg.loggedIn ? " <b>AND the server</b> (because you are currently logged in)" : "") +
-                       "?</p><p>This action cannot be undone.</p>",
-                       deleteEverythingCB.bind(this));
+                "<p>Do you wish to delete all data and preferences from this device" +
+                (pg.loggedIn ? " <b>AND the server</b> (because you are currently logged in)" : "") +
+                "?</p><p>This action cannot be undone.</p>",
+                deleteEverythingCB.bind(this));
         }
         else {
             pgUI_showLog ("Unknown selection: " + selection);

@@ -33,6 +33,7 @@ var app = {
     // Application Constructor
     initialize: function(callback) {
         window.addEventListener("error",    onError,    false);
+        window.skipLocalNotificationReady = true; // defer localNotification
         // device ready
         var browser = document.URL.match(/^https?:/);
         if(browser) {

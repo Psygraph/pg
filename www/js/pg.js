@@ -34,6 +34,7 @@ function PG() {
     this.deletedEvents  = null;
     this.selectedEvents = null;
     this.version        = 0.5;
+    this.loginEventID   = 0;
 
     this.init = function() {
         this.username       = "";
@@ -164,19 +165,19 @@ function PG() {
         return this.pages[this.pageIndex]
     };
     this.getCategoryText = function(cat, reset) {
-        cat = (typeof(cat) != "undefined") ? cat: this.category();
-        reset = (typeof(reset) != "undefined") ? reset: false;
-        if(reset || !this.xml || typeof(this.xml[cat])=="undefined") {
+        cat = (typeof(cat) !== "undefined") ? cat: this.category();
+        reset = (typeof(reset) !== "undefined") ? reset: false;
+        if(reset || !this.xml || typeof(this.xml[cat])==="undefined") {
             var data = this.getCategoryData(cat);
             var url = data.text;
-            if(url.indexOf("http") != 0) {
+            if(url.indexOf("http") !== 0) {
                 if(pgUtil.isWebBrowser())
                     url = pgFile.getAppURL() + "/media/" + url;
                 else
                     url = pgFile.getAppURL() + "/www/media/" + url;
             }
             var U = new UXML(url);
-            if(typeof(this.xml) == "undefined")
+            if(typeof(this.xml) === "undefined")
                 this.xml = {};
             this.xml[cat]       = {};
             this.xml[cat].title = cat;
@@ -194,7 +195,7 @@ function PG() {
         return this.xml[cat];
     };
     this.getCategoryData = function(cat) {
-        cat = (typeof(cat) != "undefined") ? cat: this.category();
+        cat = (typeof(cat) !== "undefined") ? cat: this.category();
         // return the specified category
         if(!this.categoryData[cat]) {
             this.categoryData[cat] = {'mtime': 0, 'data': {}};
@@ -203,11 +204,11 @@ function PG() {
         if(!data)
             data = {};  // xxx we should fully initialize categoryData
         var index = this.categories.indexOf(cat);
-        if(index==-1)
+        if(index===-1)
             pgUI_showLog("Non-existent category");
         index++;
         if(! ('description' in data)) {
-            if(cat=="Uncategorized")
+            if(cat==="Uncategorized")
                 data.description = "Default category";
             else
                 data.description = "";
@@ -242,7 +243,7 @@ function PG() {
     };
     this.setCategories = function(categories) {
         for(i=0; i<categories.length; i++) {
-            if(this.categories.indexOf(categories[i])==-1)
+            if(this.categories.indexOf(categories[i])===-1)
                 this.setCategoryData(categories[i], 0, {});
         }
         if(!pgUtil.equal(this.categories, categories)) {
@@ -255,7 +256,7 @@ function PG() {
         if(!data || !data.data)
             data = {'mtime': 0, 'data': {}};
         var ans;
-        if(category==undefined)
+        if(category===undefined)
             ans = data.data;
         else {
             if(!data.data[category]) {
@@ -283,7 +284,7 @@ function PG() {
         if(typeof(this.pageData[page])==="undefined")
             this.pageData[page] = {'mtime': 0, 'data': {}};
         this.pageData[page].mtime = mtime;
-        if(category==undefined)
+        if(category===undefined)
             this.pageData[page].data = pgUtil.deepCopy(data);
         else
             this.pageData[page].data[category] = pgUtil.deepCopy(data);
@@ -292,18 +293,20 @@ function PG() {
             this.mtime = Math.max(this.mtime, mtime);
         }
     };
+    /*
     this.setPages = function(pages) {
         if(!pgUtil.equal(this.pages, pages)) {
             this.pages = pgUtil.deepCopy(pages);
             this.dirty(true);
         }
     };
+    */
     this.canUploadFiles = function() {
         if(pgUtil.isWebBrowser())
             return true;
         return ( pg.loggedIn && pg.online &&
-                 (navigator.connection.type == Connection.WIFI ||
-                  pg.getPageDataValue("preferences","Uncategorized","wifiOnly") == false) );
+                 (navigator.connection.type === Connection.WIFI ||
+                  pg.getPageDataValue("preferences","Uncategorized","wifiOnly") === false) );
     };
     this.category = function() {
         if(arguments.length)
@@ -314,7 +317,7 @@ function PG() {
         return this.events[n];
     };
     this.getEvents = function(cat) {
-        cat = cat!=undefined ? cat : this.category();
+        cat = cat!==undefined ? cat : this.category();
         var e = new Array();
         for(var i=0; i<this.events.length; i++) {
             if(pgUtil.sameType(this.events[i][E_CAT], cat)) {
@@ -324,29 +327,29 @@ function PG() {
         return e;
     };
     this.getEventsInPage = function(page, cat) {
-        cat = cat!=undefined ? cat : this.category();
+        cat = cat!==undefined ? cat : this.category();
         var e = new Array();
         for(var i=0; i<this.events.length; i++) {
             if (pgUtil.sameType(this.events[i][E_CAT],cat) &&
-                this.events[i][E_PAGE] == page) {
+                this.events[i][E_PAGE] === page) {
                 e.push(this.events[i]);
             }
         }
         return e;
     };
     this.getEventIDsInPage = function(page, cat) {
-        cat = cat!=undefined ? cat : this.category();
+        cat = cat!==undefined ? cat : this.category();
         var e = new Array();
         for(var i=0; i<this.events.length; i++) {
             if (pgUtil.sameType(this.events[i][E_CAT],cat) &&
-                this.events[i][E_PAGE] == page) {
+                this.events[i][E_PAGE] === page) {
                 e.push(this.events[i][E_ID]);
             }
         }
         return e;
     };
     this.getSelectedEvents = function(cat) {
-        cat = cat!=undefined ? cat : this.category();
+        cat = cat!==undefined ? cat : this.category();
         var events = new Array();
         for(var i=0; i<this.selectedEvents.length; i++) {
             var event = this.getEventFromID(this.selectedEvents[i]);
@@ -361,7 +364,7 @@ function PG() {
         return events;
     };
     this.getSelectedEventIDs = function(cat) {
-        cat = cat!=undefined ? cat : this.category();
+        cat = cat!==undefined ? cat : this.category();
         var ids = [];
         var events = this.getSelectedEvents(cat);
         for(var i=0; i<events.length; i++) {
@@ -378,10 +381,10 @@ function PG() {
         }
     };
     this.isEventSelected = function(id) {
-        return this.selectedEvents.indexOf(id) != -1;
+        return this.selectedEvents.indexOf(id) !== -1;
     };
     this.selectEvents = function(ids) {
-        if(typeof(ids) == "string") {
+        if(typeof(ids) === "string") {
             for(var i=0; i<this.events.length; i++) {
                 if(pgUtil.sameType(this.events[i][E_CAT], ids))
                     this.selectEvent(this.events[i][E_ID]);
@@ -397,13 +400,13 @@ function PG() {
         }
     };
     this.selectEvent = function(id) {
-        if(this.selectedEvents.indexOf(id) == -1) {
+        if(this.selectedEvents.indexOf(id) === -1) {
             this.dirty(true);
             this.selectedEvents[this.selectedEvents.length] = id;
         }
     };
     this.unselectEvents = function(ids) {
-        if(typeof(ids) == "string") {
+        if(typeof(ids) === "string") {
             var type = ids;
             for(var i=0; i<this.events.length; i++) {
                 if(pgUtil.sameType(this.events[i][E_CAT], type))
@@ -421,7 +424,7 @@ function PG() {
     };
     this.unselectEvent = function(id) {
         var i = this.selectedEvents.indexOf(id);
-        if(i != -1) {
+        if(i !== -1) {
             this.dirty(true);
             this.selectedEvents.splice(i, 1);
             return true;
@@ -430,20 +433,20 @@ function PG() {
     };
     this.changeEventCategory = function(ids, cat) {
         for(var i=this.events.length-1; i>=0; i--) {
-            if (ids.indexOf(this.events[i][E_ID]) != -1) {
+            if (ids.indexOf(this.events[i][E_ID]) !== -1) {
                 this.events[i][E_CAT] = cat;
                 this.eventChanged(i);
             }
         }
     };
     this.deleteEventIDs = function(ids, deleteOnServer) {
-        deleteOnServer = deleteOnServer!=undefined ? deleteOnServer : true;
+        deleteOnServer = deleteOnServer!==undefined ? deleteOnServer : true;
         for(var j=0; j<ids.length; j++) {
             for(var i=this.events.length-1; i>=0; i--) {
-                if (this.events[i][E_ID] == ids[j]) {
+                if (this.events[i][E_ID] === ids[j]) {
                     //showLog("Deleting event: " +this.events[i][3] + ", " + ids[j].toString());
                     this.unselectEvent(this.events[i][E_ID]);
-                    if(this.events[i][E_PAGE] == "note" &&
+                    if(this.events[i][E_PAGE] === "note" &&
                        this.events[i][E_DATA].audio) {
                         pgFile.deleteAudioFile(pgAudio.getRecordFilename(
                             this.events[i][E_ID], this.events[i][E_DATA].audio));
@@ -460,7 +463,7 @@ function PG() {
     this.deleteDeletedEventIDs = function(ids) {
         for(var j=0; j<ids.length; j++) {
             for(var i=this.deletedEvents.length-1; i>=0; i--) {
-                if (this.deletedEvents[i][E_ID] == ids[j]) {
+                if (this.deletedEvents[i][E_ID] === ids[j]) {
                     this.deletedEvents.splice(i,1);
                     break;
                 }
@@ -471,7 +474,7 @@ function PG() {
 
     this.isIDUnique = function(id) {
         for(var i=0; i<this.events.length; i++) {
-            if(id==this.events[i][E_ID])
+            if(id===this.events[i][E_ID])
                 return false;
         }
         return true;
@@ -485,6 +488,45 @@ function PG() {
                 break;
         }
         return id;
+    };
+    this.updateLoginEvent = function(event) { // modify the event that corresponds to this session
+        if(!this.loginEventID) {
+            this.loginEventID = pg.uniqueEventID();
+            event.id = this.loginEventID;
+            this.addNewEvents(event, true);
+        }
+        else {
+            event.id = this.loginEventID;
+            var eventA = this.createEventA(this.addEventDefaults(event));
+            this.changeEventAtID(this.loginEventID, eventA, false);
+        }
+    };
+    this.addEventDefaults = function(event) {
+        if(!("category" in event))
+            event.category = this.category();
+        if(!("page" in event))
+            event.page = this.page();
+        if(!("duration" in event))
+            event.duration = 0;
+        if(!("data" in event))
+            event.data = {};
+        return event;
+    };
+    this.createEventA = function(e) {
+        var eventA = [e.id, e.start, e.duration, e.category, e.page, e.type, e.data];
+        return eventA;
+    };
+    this.createEventS = function(e) {
+        var eventS = {
+            id:       e[E_ID],
+            start:    e[E_START],
+            duration: e[E_DUR],
+            category: e[E_CAT],
+            page:     e[E_PAGE],
+            type:     e[E_TYPE],
+            data:     e[E_DATA]
+        };
+        return eventS;
     };
     this.addEvents = function(events, selected) { // an array of structures
         var out = [];
@@ -514,6 +556,7 @@ function PG() {
         }
         pg.addEvents(e, selected);
     };
+    /*
     this.getEventIDsInRange = function(startTime, endTime) {
         var list = [];
         for(var i=0; i<this.events.length; i++) {
@@ -524,11 +567,12 @@ function PG() {
         }
         return list;
     };
+    */
     this.mostRecentEvent = function(category, page) {
         var e = null;
         for(var i=0; i<this.events.length; i++) {
             if(pgUtil.sameType(this.events[i][E_CAT], category) &&
-               this.events[i][E_PAGE] == page) {
+               this.events[i][E_PAGE] === page) {
                 e = pgUtil.parseEvent(this.events[i]);
                 break;
             }
@@ -547,7 +591,7 @@ function PG() {
                pgUtil.sameType(this.events[i][E_CAT], cat))
             {
                 if(e.length &&
-                   (e[0].start != this.events[i][E_START])) {
+                   (e[0].start !== this.events[i][E_START])) {
                     break;
                 }
                 else {
@@ -569,22 +613,25 @@ function PG() {
         var fnChanged = false;
         for(var j=0; j<ids.length; j++) {
             for(var i=0; i<this.events.length; i++) {
-                if(this.events[i][E_ID] == ids[j][0]) {
+                if(this.events[i][E_ID] === ids[j][0]) {
                     changed = true;
                     // change the ID
                     this.events[i][E_ID] = ids[j][1];
                     // change the selected ID
                     var selIndex = this.selectedEvents.indexOf(ids[j][0]);
-                    if(selIndex != -1) {
+                    if(selIndex !== -1) {
                         this.selectedEvents[selIndex] = ids[j][1];
                     }
                     // change any other date based on the ID
-                    if(this.events[i][E_PAGE] == "note" &&
+                    if(this.events[i][E_PAGE] === "note" &&
                        this.events[i][E_DATA].audio) {
                         fnChanged = true;
                     }
                 }
             }
+            // check if we changed the login event
+            if(this.loginEventID === ids[j][0])
+                this.loginEventID = ids[j][1];
         }
         if(changed) {
             this.dirty(true);
@@ -594,13 +641,13 @@ function PG() {
     };
     this.getEventFromID = function(id) {
         for(var i=0; i<this.events.length; i++) {
-            if(this.events[i][E_ID] == id) {
+            if(this.events[i][E_ID] === id) {
                 return this.events[i];
             }
         }
     };
     this.changeEventAtID = function(id, e, changeID) {
-        changeID = changeID!=undefined ? changeID : true;
+        changeID = changeID!==undefined ? changeID : true;
         for(var i=0; i<this.events.length; i++) {
             if(this.events[i][E_ID] === id) {
                 this.events[i] = e;
@@ -614,6 +661,7 @@ function PG() {
     this.addEventDataField = function(id, name, value) {
         var e = this.getEventFromID(id);
         e[E_DATA][name] = value;
+        pgUI_showLog(JSON.stringify(e[E_DATA]));
         this.changeEventAtID(id,e);
     };
     // this method should be used to trigger a server update.
@@ -655,7 +703,7 @@ function PG() {
 
 function def(a,b) {
     return (typeof(a) !== 'undefined') ?  a : b;
-};
+}
 
 var pgUtil = {
     //timezoneOffset: (new Date()).getTimezoneOffset() * 60 * 1000,
@@ -671,7 +719,7 @@ var pgUtil = {
         (date.getDate() < 10 ? '0' : '')    + date.getDate()      + ' ' +
         (date.getHours() < 10 ? '0' : '')   + date.getHours()     + ':' +
         (date.getMinutes() < 10 ? '0' : '') + date.getMinutes()   + ':' +
-        (date.getSeconds() < 10 ? '0' : '') + date.getSeconds();;
+        (date.getSeconds() < 10 ? '0' : '') + date.getSeconds();
         if(showMS) {
             dateString += '.' +(date.getMilliseconds() < 100 ? '0' : '') +
                 (date.getMilliseconds() < 10  ? '0' : '') +
@@ -723,7 +771,7 @@ var pgUtil = {
             while(no.length < digits)
                 no = '0' + no;
             return no;
-        }
+        };
         var e = {};
         e.milliseconds = ms % 1000;
         ms = Math.floor(ms / 1000);
@@ -815,89 +863,30 @@ var pgUtil = {
         }
         return true;
     },
-    /*
-    equal: function(a, b, skipFields, report) {
-        skipFields = (typeof(skipFields)!="undefined") ? skipFields : [];
-        report = (typeof(report)!="undefined") ? report : false;
-        if(typeof(a) == "undefined") {
-            return (typeof(b) == "undefined");
-        }
-        else if(a==null && b==null) {
-            return true;
-        }
-        else if(typeof(a) == "object") {
-            if(typeof(b) != "object")
-                return false;
-            if(typeof(a.length)!="undefined" &&
-               (typeof(b.length)!="undefined" || a.length != b.length))
-                return false;
-            var aKeys = Object.keys(a);
-            var bKeys = Object.keys(b);
-            if(!pgUtil.equal(aKeys, bKeys, skipFields, report))
-                return false;
-            for(var i in a) {
-                if(skipFields.indexOf(i) != -1)
-                    continue;
-                if(bKeys.indexOf(i) == -1) { // missing field
-                    if(report)
-                        pgUI_showLog("Missing field: " + i);
-                    return false;
-                }
-                else if(!pgUtil.equal(a[i],b[i],[])) {
-                    if(report)
-                        pgUI_showLog("Unequal field: " + i + " a: " +a[i]+ " b: "+b[i]);
-                    return false;
-                }
-            }
-        }
-        else if(typeof(a) == "function") {
-            return true;
-        }
-        else if(typeof(a)== "string" ||
-                typeof(a)== "number" ||
-                typeof(a)== "boolean" ) {
-            if(a != b)
-                return false;
-        }
-        else {
-            pgUI.showAlert("UnknownType: " + typeof(a));
-        }
-        return true;
-    },
-    */
-    equal : function (value, other) {
 
+    equal : function (value, other) {
         // Get the value type
         var type = Object.prototype.toString.call(value);
-
         // If the two objects are not the same type, return false
         if (type !== Object.prototype.toString.call(other)) return false;
-
         // If items are not an object or array, return false
         if (['[object Array]', '[object Object]'].indexOf(type) < 0) return false;
-
         // Compare the length of the length of the two items
         var valueLen = type === '[object Array]' ? value.length : Object.keys(value).length;
         var otherLen = type === '[object Array]' ? other.length : Object.keys(other).length;
         if (valueLen !== otherLen) return false;
-
         // Compare two items
         var compare = function (item1, item2) {
-
             // Get the object type
             var itemType = Object.prototype.toString.call(item1);
-
             // If an object or array, compare recursively
             if (['[object Array]', '[object Object]'].indexOf(itemType) >= 0) {
                 if (!pgUtil.equal(item1, item2)) return false;
             }
-
             // Otherwise, do a simple comparison
             else {
-
                 // If the two items are not the same type, return false
                 if (itemType !== Object.prototype.toString.call(item2)) return false;
-
                 // Else if it's a function, convert to a string and compare
                 // Otherwise, just compare
                 if (itemType === '[object Function]') {
@@ -905,10 +894,8 @@ var pgUtil = {
                 } else {
                     if (item1 !== item2) return false;
                 }
-
             }
         };
-
         // Compare properties
         if (type === '[object Array]') {
             for (var i = 0; i < valueLen; i++) {
@@ -921,10 +908,8 @@ var pgUtil = {
                 }
             }
         }
-
         // If nothing failed, return true
         return true;
-
     },
     encode: function(pgo, doMD5) {
         var s = {"username":       pgo.username,
@@ -973,8 +958,8 @@ var pgUtil = {
         mypg.email           = s.email;
         mypg.categories      = s.categories;
         mypg.pages           = s.pages;
-        mypg.server          = s.server,
-        mypg.useServer       = s.useServer,
+        mypg.server          = s.server;
+        mypg.useServer       = s.useServer;
         mypg.loggedIn        = s.loggedIn;
         mypg.categoryData    = s.categoryData;
         mypg.pageData        = s.pageData;
@@ -990,8 +975,8 @@ var pgUtil = {
         //mypg.selectedEvents  = s.selectedEvents;
     },
     escape: function(str, encodeForJS, encodeForText) {
-        encodeForJS = encodeForJS!=undefined ? encodeForJS : false;
-        encodeForText = encodeForText!=undefined ? encodeForText : true;
+        encodeForJS = encodeForJS!==undefined ? encodeForJS : false;
+        encodeForText = encodeForText!==undefined ? encodeForText : true;
         var div = $.parseHTML('<div></div>');
         if(encodeForText)
             $(div).append(document.createTextNode(str));

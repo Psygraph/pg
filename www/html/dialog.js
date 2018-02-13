@@ -27,9 +27,8 @@ Dialog.prototype.help = function() {
     return "Modal dialog.";
 };
 
-Dialog.prototype.showDialog = function(s, message, callback, nextPage) {
+Dialog.prototype.showDialog = function(s, message, callback) {
     this.callback = callback;
-    this.nextPage = nextPage;
     this.dlgTitle.text(s.title);
     this.dlgText.html(message);
     this.dlgText.find("select").trigger("refresh");
@@ -65,7 +64,7 @@ Dialog.prototype.showDialog = function(s, message, callback, nextPage) {
         this.dlgOther.hide();
         this.dlgOther.html(".");
     }
-
+    this.pushPage();
     gotoPage("dialog");
     this.dlgPage.trigger("create");
 
@@ -78,23 +77,34 @@ Dialog.prototype.showDialog = function(s, message, callback, nextPage) {
     }
 };
 
+Dialog.prototype.pushPage = function() {
+    this.nextPage = pageChange.bind(this, getPage(), getSection());
+
+    function pageChange(page, section) {
+        gotoPage(page);
+        gotoSection(section);
+    }
+};
+Dialog.prototype.popPage = function() {
+    this.nextPage();
+    this.nextPage = null;
+};
+
+
 Dialog.prototype.onCancel = function(e) {
-    if(this.nextPage!=="NOP")
-        gotoPage(this.nextPage);
+    this.popPage();
     if(this.callback)
         this.callback(0);
     return false;
 };
 Dialog.prototype.onOK = function(e) {
-    if(this.nextPage!=="NOP")
-        gotoPage(this.nextPage);
+    this.popPage();
     if(this.callback)
         this.callback(1);
     return false;
 };
 Dialog.prototype.onOther = function(e) {
-    if(this.nextPage!=="NOP")
-        gotoPage(this.nextPage);
+    this.popPage();
     if(this.callback)
         this.callback(2);
     return false;

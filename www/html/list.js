@@ -308,17 +308,17 @@ List.prototype.selectAction = function(selection) {
     else if(selection.substring(0,4) === "cat:") {
         var cat = selection.substring(4,selection.length);
         pg.changeEventCategory(id, cat);
-        this.update(true);
+        this.update(true, this.getPageData());
     }
     else if(selection === "delete") {
         pg.deleteEventIDs(id);
         syncSoon();
-        this.update(true);
+        this.update(true, this.getPageData());
     }
     else if(selection === "clearCache") {
         pg.deleteEventIDs(id, false);
         syncSoon();
-        this.update(true);
+        this.update(true, this.getPageData());
     }
     else {
         console.log ("Unknown selection: " + selection);

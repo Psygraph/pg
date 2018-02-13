@@ -24,19 +24,23 @@ Clock.prototype.countdownMode = function() {
     return this.countdownTime > 0;
 };
 Clock.prototype.start = function() {
-    var delegate       = function(that, method) { return function() { return method.call(that) } };
-    if(!this.running) {
-        this.startTime = new Date().getTime();
-        this.running = true;
-        //this.timerID = setInterval(this.onTick.bind(this), this.tickResolution);
-        this.timerID = setInterval(delegate(this, this.onTick.bind(this)), this.tickResolution);
+    if(this.running) {
+        clearInterval(this.timerID);
+        pgUI_showWarn("start() called without stop()");
     }
+    var delegate       = function(that, method) { return function() { return method.call(that) } };
+    this.startTime = new Date().getTime();
+    this.running = true;
+    //this.timerID = setInterval(this.onTick.bind(this), this.tickResolution);
+    this.timerID = setInterval(delegate(this, this.onTick.bind(this)), this.tickResolution);
 };
 
 Clock.prototype.startFromTime = function(startTime) {
-    var delegate       = function(that, method) { return function() { return method.call(that) } };
-    if(this.timerID != null)
+    if(this.running) {
         clearInterval(this.timerID);
+        pgUI_showWarn("startFromTime() called without stop()");
+    }
+    var delegate       = function(that, method) { return function() { return method.call(that) } };
     this.totalElapsed = 0;
     this.startTime = startTime;
     this.running = true;
@@ -132,7 +136,7 @@ Clock.prototype.onTick = function() {
     if(this.countdownMode() && this.callback) {
         elapsed = this.countdownTime - elapsed;
         elapsed = Math.max(0, elapsed);
-        if(this.running && elapsed==0) {
+        if(this.running && elapsed===0) {
             //this.countdownTime=0;
             this.callback(pg.category(), true);
         }

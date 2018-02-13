@@ -193,37 +193,6 @@ Note.prototype.stop = function() {
     }
 };
 
-Note.prototype.updateAudio = function() {
-    if(UI.note.eid)
-        $("#note_audio").show();
-    else
-        $("#note_audio").hide();
-};
-
-Note.prototype.playRecorded = function() {
-    var fn  = pgAudio.getRecordFilename(this.eid);
-    pgAudio.playRecorded(this.eid, fn);
-};
-Note.prototype.deleteRecorded = function() {
-    if(!this.recording) {
-        UI.note.eid=0;
-        UI.note.updateAudio();
-    }
-};
-
-Note.prototype.getNoteText = function() {
-    var data = this.getPageData();
-    var noteText = "";
-    if(data.addText)
-        noteText = $("#noteText").val();
-    //if(data.enhancedEditor) {
-    //    this.createEnhancedEditor(true);
-    //    if(tinyMCE.activeEditor.getContent({format : 'text'}) != "")
-    //        noteText = tinyMCE.activeEditor.getContent({format : 'raw'});
-    //}
-    return noteText;
-};
-
 Note.prototype.reset = function() {
     ButtonPage.prototype.reset.call(this);
     if(this.recording) {    // wait for the user to stop recording.
@@ -311,9 +280,42 @@ Note.prototype.reset = function() {
         s += ".</p>";
         if(data.showConfirmation)
             pgUI.showDialog( {'title': "Created note: "+eventData.title, true: "OK"},
-                        s, function(ok){} );
+                        s);
     }
 };
+
+
+Note.prototype.updateAudio = function() {
+    if(UI.note.eid)
+        $("#note_audio").show();
+    else
+        $("#note_audio").hide();
+};
+
+Note.prototype.playRecorded = function() {
+    var fn  = pgAudio.getRecordFilename(this.eid);
+    pgAudio.playRecorded(this.eid, fn);
+};
+Note.prototype.deleteRecorded = function() {
+    if(!this.recording) {
+        UI.note.eid=0;
+        UI.note.updateAudio();
+    }
+};
+
+Note.prototype.getNoteText = function() {
+    var data = this.getPageData();
+    var noteText = "";
+    if(data.addText)
+        noteText = $("#noteText").val();
+    //if(data.enhancedEditor) {
+    //    this.createEnhancedEditor(true);
+    //    if(tinyMCE.activeEditor.getContent({format : 'text'}) != "")
+    //        noteText = tinyMCE.activeEditor.getContent({format : 'raw'});
+    //}
+    return noteText;
+};
+
 
 UI.note = new Note();
 //# sourceURL=note.js

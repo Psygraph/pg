@@ -5,7 +5,7 @@ function About() {
     // create the guesser
     this.AI = new pSeries([new pTDL(1,4), new pARMA(4,1)]);
     this.trials = new Arr();
-    //this.scrollbar = tinyscrollbar($("#about_main")[0]);
+    this.scrollbar = tinyscrollbar($("#about_scrollbar")[0]);
 }
 
 About.prototype = Object.create(ButtonPage.prototype);
@@ -32,12 +32,27 @@ About.prototype.resize = function() {
     var win     = pgUI.getWindowDims();
     var height  = win.height - (head);
     var width   = win.width;
-    $("#aboutDiv").css({
-            top:    head-1,
-            height: height,
-            position: "absolute"
+    $("#about_main").css({
+        position: "absolute",
+        width: "100%",
+        height: height+"px",
+        top:    head +"px"
     });
-    //this.scrollbar.update();
+    $("#aboutDiv").css({
+        height: height+"px"
+    });
+    /*
+    $("#about_scrollbar").css({
+        height: height+"px"
+    });
+    $("#about_scrollbar div.scrollbar").css({
+        height: height+"px"
+    });
+    $("#about_scrollbar div.track").css({
+        height: height+"px"
+    });
+    */
+    this.scrollbar.update({trackSize: height});
 };
 
 About.prototype.start = function(restart) {

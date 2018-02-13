@@ -117,25 +117,25 @@ JQuery elements
     xxxheight: 36px;
 }
 .ui-header .ui-title {
-    min-height:   1em;
-    max-height:   1em;
+    min-height:    1em;
+    max-height:    1em;
     margin-top:    0px;
     margin-bottom: 0px;
-    margin-left:  10%;
-    margin-right: 10%;
+    margin-left:   10%;
+    margin-right:  10%;
 }
 div.ui-header, div.ui-content, div.ui-footer {
     border-top-width: 0em;
-    xxxfont-size: 0.8em;
-    overflow: hidden;
+    xxxfont-size:   0.8em;
+    overflow:      hidden;
 }
 div.ui-content, div.ui-footer {
     margin:  0em;
     padding: 0em;
 }
 div.ui-header {
-    line-height: 1.4em;
-    xxxposition: relative;
+    line-height:     1.4em;
+    xxxposition:  relative;
     xxxpadding-bottom: 8px;
 }
 div [data-role="collapsibleset"] {
@@ -151,7 +151,7 @@ div.ui-input-text,
 div.ui-field-contain {
     margin: 0.2em 0.2em 0.4em 0em;
     border-width: 0em 0em 0em 0em;
-    padding: 0.4em 0em 0em 0em;
+    padding:    0.4em 0em 0em 0em;
 }
 div.ui-field-contain {
     outline: 0 none; /* turn off ios underscore */
@@ -258,7 +258,7 @@ CSS for navbar
     left: 0;
     background-color: #111;
     overflow-x: hidden;
-    transition: 0.36s;
+    transition: 0.2s;
     padding-top: 60px;
     list-style-type:none;
     opacity: 0.84;

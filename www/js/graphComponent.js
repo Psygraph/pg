@@ -1,13 +1,18 @@
 
 function GraphComponent(elementID, style) {
     this.elementID = elementID;
-    this.element = $("#"+elementID)[0];
-    this.style = style;
-    this.options = this.getOptions();
-    this.padding = 0;
+    this.element   = $("#"+elementID)[0];
+    this.style     = style;
+    this.options   = this.getOptions();
+    this.padding   = 0;
+    this.interval  = 24*60*60*1000;
+
+    this.minMS = 50; // minimum number of milliseconds between samples.
+    this.maxdisplayed = 10000;
 
     this.groupID = [
         'none',
+        'home',
         'stopwatch',
         'timer',
         'counter',
@@ -35,7 +40,7 @@ GraphComponent.prototype.palatte = function(groupName) {
     var index = this.groupID.indexOf(groupName)*2;
     var p1 = [
         'rgba(0,0,0,1.0)', '#000000',
-        'rgba(57,106,177,1.0)', '#396AB1',
+        'rgba(57,115,185,1.0)', '#3873b9',
         'rgba(204,37,41,1.0)', '#CC2529',
         'rgba(62,150,181,1.0)', '#3E9651',
         'rgba(218,124,48,1.0)', '#DA7C30',
@@ -47,11 +52,11 @@ GraphComponent.prototype.palatte = function(groupName) {
         'rgba(55,183,167,1.0)', '#37b7a7',
         'rgba(233,229,33,1.0)', '#e9e521',
         'rgba(207,194,194,1.0)', '#cfc2c2',
-        'rgba(104,179,90,1.0)', '#68af5a'
+        'rgba(104,179,90,1.0)', '#68af5a',
+        'rgba(0,86,145,1.0)', '#005691'
     ];
     var p2 = [
         'rgba(0,0,0,1.0)', '#000000',
-        'rgba(0,99,176,1.0)', '#0063b0',
         'rgba(224,91,67,1.0)', '#e05b43',
         'rgba(0,42,61,1.0)', '#002a3d',
         'rgba(0,114,26,1.0)', '#00727e',
@@ -66,9 +71,10 @@ GraphComponent.prototype.palatte = function(groupName) {
     return p1[index];
 };
 
-GraphComponent.prototype.create = function(groupNames) {
+GraphComponent.prototype.create = function(groupNames, interval) {
+    this.interval = interval;
     this.groupNames = groupNames;
-    this.numGroups = this.groupNames.length;
+    this.numGroups  = this.groupNames.length;
     Plotly.purge(this.elementID);
     if(this.numGroups) {
         this.groups = [];
@@ -80,24 +86,30 @@ GraphComponent.prototype.create = function(groupNames) {
         Plotly.newPlot(this.elementID, this.groups, this.layout, this.options);
     }
 };
+GraphComponent.prototype.setMinPeriod = function(minMS) {
+    this.minMS = minMS;
+};
 
-GraphComponent.prototype.addGroupOpts = function(groupName, trace) {
-    trace = typeof(trace)!=="undefined" ? trace : {x:[], y:[]};
+GraphComponent.prototype.addGroupOpts = function(groupName) {
+    var trace = {x:[], y:[]};
     //trace = typeof(trace)!=="undefined" ? trace : {x:[new Date()], y:[NaN]};
     var index = this.groupID[groupName];
-    if(groupName === "stopwatch" ||
-        groupName === "timer" ||
-        groupName === "counter" ||
+    if( groupName === "home"      ||
+        groupName === "stopwatch" ||
+        groupName === "timer"     ||
+        groupName === "counter"   ||
         groupName === "note"
     ) {
         trace.type  = "bar";
-        trace.width = 24*60*60*1000;
+        trace.width = Math.ceil(this.interval / this.numGroups);
         trace.marker  = {color: this.palatte(groupName)};
     }
     else {
-        trace.type  = "lines"; //'markers+lines'
-        trace.type  = 'scatter';
-        trace.line  = {color: this.palatte(groupName)};
+        trace.smoothing    = 0;
+        //trace.maxdisplayed = this.maxdisplayed;
+        trace.type = "lines"; //'markers+lines'
+        trace.type = "scatter";
+        trace.line = {color: this.palatte(groupName)};
     }
     trace.hoverinfo = 'none';
     trace.name = groupName;
@@ -110,7 +122,7 @@ GraphComponent.prototype.getOptions = function() {
         scrollZoom: true
     };
 };
-GraphComponent.prototype.getLayout = function() {
+GraphComponent.prototype.getLayout = function(interval) {
     var layout = {};
     if(this.style==="bar") {
         layout = {
@@ -121,10 +133,11 @@ GraphComponent.prototype.getLayout = function() {
             legend: {
                 x: 0.6,
                 y: 1.1,
-                bgcolor: 'rgba(255,255,255,0.4)',
+                bgcolor:     'rgba(255,255,255,0.4)',
                 bordercolor: '#FFFFFF',
                 borderwidth: 0
             },
+            width: Math.ceil(this.interval / this.numGroups),
             margin: {pad:2, t:4, b:80, l:60, r:4, autoexpand:true},
             font:  {family:'Arial',
                 size:  16,
@@ -150,7 +163,7 @@ GraphComponent.prototype.getLayout = function() {
             },
             //autosize: false,
             margin: {pad:2, t:4, b:80, l:60, r:4, autoexpand:true},
-            font:  {family:'Arial',
+            font:  { family:'Arial',
                      size:  16,
                      color: '#000000'}
         };
@@ -230,7 +243,7 @@ GraphComponent.prototype.redraw = function(start, end) {
         return;
     }
     start = (typeof(start)!=="undefined") ? start : this.firstTime();
-    end = (typeof(end)!=="undefined") ? end : this.lastTime();
+    end   = (typeof(end)!=="undefined")   ? end   : this.lastTime();
 
     var view = {
         width:  $(this.element).parent().width(),
@@ -262,6 +275,7 @@ GraphComponent.prototype.computeNumericInterval = function(word) {
 };
 
 GraphComponent.prototype.pushPoints = function(group, points) {
+    points = this.decimate(points);
     this.plot(group, points, false);
 };
 GraphComponent.prototype.clearPoints = function() {
@@ -270,24 +284,35 @@ GraphComponent.prototype.clearPoints = function() {
 GraphComponent.prototype.getGroupIndex = function(group) {
     return this.groupNames.indexOf(group);
 };
+GraphComponent.prototype.decimate = function(points) {
+    var newPoints = [];
+    if(points.length > 1000) {
+        var interval = points[99][0] - points[100][0];
+        if (interval < this.minMS) { // less than 50 ms period
+            var lastTime = points[points.length-2][0];
+            for(var i=0; i<points.length; i++) {
+                var thisTime = points[i][0];
+                if(thisTime >= lastTime+this.minMS)
+                    newPoints.push(points[i]);
+            }
+        }
+    }
+    else
+        newPoints = points;
+    return newPoints;
+};
 GraphComponent.prototype.addPoints = function(group, points, addBreak) {
-    //this.padding = 0;
     addBreak = (typeof(addBreak)!=="undefined") ? addBreak : true;
+    points = this.decimate(points);
     this.plot(group, points, addBreak);
 };
 
-GraphComponent.prototype.addBars = function(group, points, interval) {
+GraphComponent.prototype.addBars = function(group, points) {
     //this.padding = interval/2;
     var len = points.x.length;
     if(len === 0)
         return;
     this.plot(group, points);
-    // Also set the bar width
-    var index = this.getGroupIndex(group);
-    var update = {
-        width: interval
-    };
-    Plotly.restyle(this.elementID, update, [index]);
 };
 GraphComponent.prototype.changeLabels = function(from, to) {
     var update = {name:""};

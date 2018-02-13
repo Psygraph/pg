@@ -200,13 +200,20 @@ Page.prototype.displayEventData = function(e) {
             }
         }
         else if(e.page === "timer") {
-            if(e.type==="interval")
+            if(e.type==="interval") {
                 txt += dur;
+            }
             else if(e.type==="reset") {
-                if(typeof(e.data.resetTime)!=="undefined")
+                if(typeof(e.data['resetTime'])!=="undefined") {
                     txt += " " + getTimeString(e.data.resetTime);
+                }
+            }
+            else if(e.type==="response") {
                 if(typeof(e.data['mindful'])!=="undefined") {
-                    txt += e.data.mindful ? " +mindful" : " -mindful";
+                    if(e.data.mindful)
+                        txt += " Mindful";
+                    else
+                        txt += " Not mindful";
                 }
             }
         }
@@ -270,7 +277,7 @@ Page.prototype.createSettings = function() {
 
 Page.prototype.submitSettings = function(doClose) {
     if(doClose==="cancel") {
-        gotoPageMain();
+        gotoSectionMain();
         return;
     }
     var page     = getPage();

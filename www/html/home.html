@@ -50,9 +50,11 @@
             <label for="home_signals">Show signals:</label>
             <select id="home_signals" data-native-menu="false" multiple="multiple">
                 <option data-placeholder="true">Signals:</option>
+                <option value="home">home</option>
                 <option value="stopwatch">stopwatch</option>
                 <option value="counter">counter</option>
                 <option value="timer">timer</option>
+                <option value="note">note</option>
             </select>
         </div>
         <div class="buttons"></div>
@@ -60,9 +62,22 @@
 
     <div id="home_help" class="help content">
         <p><strong>Home</strong></p>
-        <p>The <strong>Home</strong> page displays a summary of your data over the last four weeks.  Two rows of data are displayed: the total amount of time tracked by the stopwatch and your breath counting score.  If you are signed in online, account information is displayed.</p>
-        <p>The settings display your username on psygraph.com, which must be a valid email address.  If you wish to register for an account, please visit <a href="" onclick="return pgUtil.openWeb('https://psygraph.com/register')">psygraph.com</a></p>
-
+        <p>
+            The <strong>Home</strong> page displays a summary of your data over the last several days or weeks.
+            Data is displayed that lets you track both summary statistics and time spent in a category.
+        </p>
+        <p>
+            The settings let you specifiy which signals are tracked and the length of history to show.
+            For each page, the following data is displayed:
+        </p>
+        <ul>
+            <li><strong>Home</strong>: The length of time the app was open.</li>
+            <li><strong>Stopwatch</strong>: The length of time logged.</li>
+            <li><strong>Counter</strong>: The ratio of correct/incorrect counts.</li>
+            <li><strong>Timer</strong>: The ratio of mindful vs. non-mindful alarms.</li>
+            <li><strong>Note</strong>: Whether a note was made or not.</li>
+        </ul>
+        <br/>
         <template>
             <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/home.png" alt="home" width="300" />
             <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/home_settings.png" alt="home_settings" width="300" />

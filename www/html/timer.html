@@ -30,12 +30,24 @@
                 <option value="both">both</option>
             </select>
         </div>
+        <div id="timer_numTimersDiv" class="ui-field-contain no-field-separator">
+            <label for="timer_numTimers">Number of timers:</label>
+            <select id="timer_numTimers" title="Timer alarm" data-native-menu="false">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="4">4</option>
+                <option value="8">8</option>
+                <option value="16">16</option>
+                <option value="32">32</option>
+            </select>
+        </div>
+        <!--
         <div class="ui-field-contain no-field-separator" data-role="controlgroup">
             <legend></legend>
             <label for="timer_loop">Loop</label>
             <input type="checkbox" id="timer_loop" />
         </div>
-
+        -->
 
         <div class="ui-field-contain no-field-separator" data-role="controlgroup">
             <legend></legend>
@@ -50,29 +62,26 @@
                 </div>
             </div>
         </div>
-        <div id="timer_extraAlarmsDiv" class="ui-field-contain no-field-separator">
-            <label for="timer_extraAlarms">Additional alarms:</label>
-            <select id="timer_extraAlarms" title="Timer alarm" data-native-menu="false">
-                <option value="0">0</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="4">4</option>
-                <option value="8">8</option>
-                <option value="16">16</option>
-            </select>
-        </div>
+
         <div class="buttons"></div>
     </div>
 
     <div id="timer_help" class="help content">
         <p><strong>Timer</strong></p>
-        <p>The <strong>Timer</strong> tool is a countdown alarm: the top widget shows time remaining and the bottom widget shows total time.  You start/stop the timer with the right button and reset the timer with the left button.  When the timer goes off, an alarm (notification) displays a randomly selected message and plays a sound.  The alarm sound and text are specific to each category, and are changed in the category preferences.</p>
-        <p>The settings let you:
+        <p>
+            The <strong>Timer</strong> tool is a countdown alarm: the top widget shows time remaining and the bottom widget shows total time.
+            You start/stop the timer with the right button and reset the timer with the left button.
+            When the timer goes off, an alarm (notification) displays a randomly selected message and plays a sound.
+            You then have the opportunity to indicate whether you were mindful or not when the alarm elapsed.
+        </p>
+        <p>
+            The alarm sound and text are specific to each category, and are changed in the category preferences.
+            The settings on this page let you:
+        </p>
         <ul>
-            <li>Specify what happens when the timer elapses.</li>
-            <li>Run the timer in a loop.</li>
+            <li>Specify an alarm that happens when the timer elapses.</li>
+            <li>Run the timer a specified number of times.</li>
             <li>Set the countdown duration and specify a random interval that is added to that duration.</li>
-            <li>Schedule additional alarms (which occur even when the app is closed, so you can use this feature to schedule several remindfull alarms throughout the day).</li>
         </ul>
         <br/>
         <template>

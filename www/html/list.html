@@ -32,10 +32,10 @@
                 <li data-role="list-divider"><i>Select events</i></li>
                 <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('all');">Select all</a></li>
                 <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('none');">Select none</a></li>
-                <li data-icon="false" class="debug"><a href="" class="debug" onclick="return UI.list.selectEvents('tool:home');">home</a></li>
+                <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('tool:home');">home</a></li>
                 <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('tool:stopwatch');">stopwatch</a></li>
-                <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('tool:timer');">timer</a></li>
                 <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('tool:counter');">counter</a></li>
+                <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('tool:timer');">timer</a></li>
                 <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('tool:note');">note</a></li>
             </ul>
         </div>
@@ -56,11 +56,11 @@
             <label for="list_pageSelect">Show Events:</label>
             <select id="list_pageSelect" data-native-menu="false" multiple="multiple">
                 <option data-placeholder="true">Show Events:</option>
+                <option value="home">home</option>
                 <option value="stopwatch">stopwatch</option>
-                <option value="timer">timer</option>
                 <option value="counter">counter</option>
+                <option value="timer">timer</option>
                 <option value="note">note</option>
-                <option class="debug" value="home">home</option>
             </select>
         </div>
 
@@ -82,8 +82,14 @@
 
     <div id="list_help" class="help content">
         <p><strong>List</strong></p>
-        <p>The <strong>List</strong> tool shows all of the events in the current category. You select events by clicking on them individually or by using the <i>Select Events...</i> button (selected events are displayed on the graph page). Selected events can be deleted or changed to a different category with the <i>Select Action...</i> button.</p>
-        <p>The settings allow you to filter the displayed events by the tool that created them, and choose which columns of data to display for each event.</p>
+        <p>
+            The <strong>List</strong> tool shows the events for various pages in the current category.
+            You select events by clicking on them individually or by using the <i>Select Events...</i> button (selected events are displayed on the graph page).
+            Selected events can be deleted or changed to a different category with the <i>Select Action...</i> button.
+        </p>
+        <p>
+            The settings allow you to filter the displayed events by the tool that created them, and choose which columns of data to display for each event.
+        </p>
         <br/>
         <template>
             <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/list.png" alt="list" width="300" />

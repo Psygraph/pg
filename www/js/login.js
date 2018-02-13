@@ -2,6 +2,7 @@
 var Login = function () {
     this.loggingIn   = false;
     this.askedForPW  = false;
+    this.startTime   = pgUtil.getCurrentTime();
 };
 
 Login.prototype.begin = function() {
@@ -16,7 +17,7 @@ Login.prototype.begin = function() {
         document.addEventListener("offline", onOffline, false);
     }
 
-    if(WORDPRESS==true) {
+    if(WORDPRESS===true) {
         // these WP_* variables are all set if index.html is served by wp.php
         PGEN.login(WP_USERNAME,
                    this.passwordCB.bind(this, WP_SERVER, WP_USERNAME, "", WP_CERT, this.endLogin.bind(this)));
@@ -52,6 +53,10 @@ Login.prototype.begin = function() {
     }
 };
 
+Login.prototype.getStartTime = function() {
+    return this.startTime;
+};
+
 Login.prototype.beginLogin = function(callback) {
     if(navigator.splashscreen)
         navigator.splashscreen.hide();
@@ -78,7 +83,7 @@ Login.prototype.beginLogin = function(callback) {
             pgUI.showDialog({'title': event.data.title, true: "Delete", false: "Cancel"},
                        "<p>There was an uncaught error during the previous login: "+event.data.text+"</p>" +
                        "<p>Do you wish to delete the local data and settings?</p>",
-                       cb.bind(this), "NOP");
+                       cb.bind(this));
         }
         else
             wait.resolve();
@@ -107,19 +112,19 @@ Login.prototype.endLogin = function() {
     pgUI.showBusy(false);
     pgUI_showLog("LOGIN_END");
     this.loggingIn = false;
+    logEvent("login");
     //pgFile.deleteFile("com.psygraph.lastError");
-    pgFile.readFile("com.psygraph.exit", handleExit);
-    PGEN.readPsygraph(cb);
+    pgFile.readFile("com.psygraph.exit", handleExit.bind(this));
+    PGEN.readPsygraph(cb.bind(this));
     function cb(success) {
-        var firstPage = pg.page();
-        if(!success) {
-            firstPage = "help";
-        }
-        gotoPage(firstPage);
-        gotoCategory(pg.category());
         if(navigator.splashscreen)
             navigator.splashscreen.hide();
-        //setTimeout(gotoLoadedPage.bind(this,firstPage), 200);
+        setTimeout(cbSoon.bind(this,success), 100);
+    }
+    function cbSoon(success) {
+        var firstPage = success ? pg.page() : "help";
+        gotoPage(firstPage);
+        gotoCategory(pg.category());
     }
     function handleExit(success, event) {
         if(success) {
@@ -251,7 +256,6 @@ Login.prototype.passwordCB = function(server, username, password, cert, callback
 Login.prototype.serverLoginCB = function(server, username, callback, success) {
     if(success) {
         // pg already updated with verified informtation
-        this.logEvent("login");
         UI.home.status(true);
         $(".loginButton").html("Logout");
         $('#login').val("Logout").button("refresh");
@@ -276,7 +280,7 @@ Login.prototype.serverLoginCB = function(server, username, callback, success) {
 };
 
 Login.prototype.logoutAndErase = function(callback) {
-    callback = typeof(callback)!="undefined" ? callback : function(){};
+    callback = typeof(callback)!=="undefined" ? callback : function(){};
     PGEN.logout(this.logoutCB.bind(this), true);
     pg.init();
     gotoPage("home");
@@ -288,25 +292,13 @@ Login.prototype.getDefaultServerURL = function() {
 };
 
 Login.prototype.logoutCB = function(success) {
-    if(success) {
-        this.logEvent("logout");
-    } else {
+    if(!success) {
         pgUI.showAlert("Logout failure");
     }
     UI.home.status(false);
     pgUI.showBusy(false);
 };
 
-Login.prototype.logEvent = function(type) {
-    if(pg.debug()) {
-        var event = {page: "home",
-                     type: type,
-                     start: pgUtil.getCurrentTime(),
-                     data: {}};
-        if(type==="exit") // write a file for later.
-            pgFile.writeFile("com.psygraph.exit", event);
-        pg.addNewEvents(event, true);
-    }
-};
+
 
 var pgLogin = new Login();

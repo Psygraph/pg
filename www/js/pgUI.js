@@ -67,9 +67,9 @@ var pgUI = {
         sourceElement.popup("close");
     },
 
-    showDialog: function(s, message, callback, nextPage) {
-        nextPage = (typeof(nextPage)==="undefined") ? pg.page() : nextPage;
-        UI.dialog.showDialog(s, message, callback, nextPage);
+    showDialog: function(s, message, callback) {
+        callback = callback || function(){};
+        UI.dialog.showDialog(s, message, callback);
     },
     showBusy: function(show) {
         $('div.modal_page').remove();
@@ -134,8 +134,8 @@ var pgUI = {
             page==="dialog"   ||
             page==="categories" ||
             page==="preferences") {
-            if(getSubPage()==="help")
-                gotoPageMain();
+            if(getSection()==="help")
+                gotoSectionMain();
             else
                 gotoPage(pg.page());
         }
@@ -148,7 +148,7 @@ var pgUI = {
         var page = getPage();
         if (page === "preferences" ||
             page === "categories") {
-            gotoPageHelp();
+            gotoSectionHelp();
         }
         else {
             $("#" + page + "_page .rightMenu").popup("open");
@@ -156,15 +156,17 @@ var pgUI = {
         return false;
     },
     isSlideNavOpen: function() {
-        return $(".sidenav").css("width") != "0px";
+        if(!UI.window.sidenav)
+            UI.window.sidenav = $(".sidenav");
+        return UI.window.sidenav.css("width") !== "0px";
     },
     slideNav: function(open) {
-        var page = pg.page();
-        if (open) {
-            $(".sidenav").css("width", "250px");
+        var isOpen = pgUI.isSlideNavOpen();
+        if (open && !isOpen) {
+            UI.window.sidenav.css("width", "250px");
         }
-        else {
-            $(".sidenav").css("width", "0px");
+        else if(!open && isOpen) {
+            UI.window.sidenav.css("width", "0px");
         }
     },
     menu_action: function(action) {

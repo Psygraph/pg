@@ -90,8 +90,7 @@ Map.prototype.resize = function() {
 Map.prototype.updateLocation = function(path) {
     if(typeof(path)==="string") {
         pgUI.showDialog({title: "Location Error", true: "OK", false: "Cancel"},
-                   "<p>Error message: " +path +"</p>",
-                   function(){} );
+                   "<p>Error message: " +path +"</p>" );
         return;
     }
     else if(path.length===0) {
