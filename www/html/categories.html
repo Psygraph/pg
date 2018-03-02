@@ -40,23 +40,31 @@
                 <label for="textEdit"><a href="" onclick="UI.categories.getFileURL('textEdit');">Text</a>:</label>
                 <select id="textEdit" data-native-menu="false"></select>
             </div>
+            <div class="ui-field-contain no-field-separator" id="categories_calendarDiv">
+                <label for="categories_calendar">Category Schedule</label>
+                <input type="checkbox" onClick="pgNotify.scheduleCalendar($(this).is(':checked')); return false;" name="calendar" id="categories_calendar"/>
+                <!--input type="button" onClick="pgNotify.scheduleCalendar(true); return false;" class="btn fast" value="Calendar" title="Calendar" data-inline="true"/-->
+            </div>
 
         </div>
 
         <div data-role="fieldcontain" id="settingButtons">
             <input type="button" id="applyAllCategories" onClick="UI.categories.submitSettings('applyAll'); return false;" class="btn fast" value="Apply All" title="applyAll" data-inline="true"/>
-            <input type="button" id="cancelCategories" onClick="gotoPage(pg.page()); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"/>
+            <input type="button" id="cancelCategories" onClick="UI.categories.submitSettings('cancel'); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"/>
             <input type="button" id="applyCategories" onClick="UI.categories.submitSettings('apply'); return false;" class="btn fast" value="Apply" title="apply" data-inline="true"/>
             <input type="button" id="OKCategories" onClick="UI.categories.submitSettings('OK'); return false;" class="btn fast" value="OK" title="OK" data-inline="true"/>
         </div>
 
     </div>
 
+    <div id="categories_settings" class="categories content">
+    </div>
+
     <div id="categories_help" class="help content">
         <strong>Categories</strong>
-        <p>The <strong>categories</strong> page lets you add, remove, and configure the app categories.  Every category has settings that govern its behavior, such as a particular sound, background color, and set of strings that are displayed by the timer alarms.  If you are uploading data to a WordPress server, that data is tagged with its associated category.</p>
         <p>All events (such as stopwatch start/stop times) are assigned to a category.  Four categories are present by default: <em>Uncategorized</em>, <em>Meditate</em>, <em>Exercise</em>, and <em>Think</em>.</p>
-        <p>The current category can be changed on any settings tab.</p>
+        <p>The <strong>categories</strong> page lets you add, remove, and configure these categories.  Every category has settings that govern its behavior, such as a particular sound, background color, and set of strings that are displayed by the timer alarms.  If you are uploading data to a WordPress server, that data is tagged with its associated category.</p>
+        <p>The current category can be changed on the settings tab of any page.</p>
         <br/>
         <template>
             <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/categories.png" alt="" width="300" />

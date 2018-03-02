@@ -47,7 +47,7 @@ Page.prototype.resize = function(scrollable) {
         var width  = this.contentWidth();
         var totalHeight = header;
         scrollDiv  = $("#"+this.name+"_page div.main.content");
-        scrollDiv = (typeof(scrollDiv)!=="undefined") ? scrollDiv : $("#"+this.name+"_main");
+        scrollDiv  = (typeof(scrollDiv)!=="undefined") ? scrollDiv : $("#"+this.name+"_main");
         scrollDiv.children().each(function(){
                 totalHeight = totalHeight + $(this).outerHeight(true);
             });
@@ -219,15 +219,16 @@ Page.prototype.displayEventData = function(e) {
         }
         else if(e.page === "counter") {
             txt += e.data.count;
-            if(e.type==="reset" && e.data.target !== 0) {
-                if(e.data.count === e.data.target)
+            if(e.type==="reset" && e.data.countTarget!==0) {
+                if(e.data.count === e.data.countTarget)
                     txt += ", correct";
                 else
                     txt += ", incorrect";
             }
         }
         else if(e.page === "home") {
-            // login and logout events... nothing to display.
+            if(e.type==="login")
+                txt += dur;
             if(e.type==="error" ||
                e.type==="warn"  ||
                e.type==="log")
@@ -250,7 +251,11 @@ Page.prototype.displayEventData = function(e) {
         return ' <a href="" onclick="return pgAudio.playRecorded(\''+id+'\', \''+fn+'\');">'+type+'</a>';
     }
     function getTimeString(dur) {
-        return pgUtil.getStringFromMS(dur) + " sec";
+        var t = pgUtil.getStringFromMS(dur, false);
+        //if(t.indexOf(":") < 0) {
+            t = t + " sec";
+        //}
+        return t;
     }
 };
 
@@ -277,6 +282,7 @@ Page.prototype.createSettings = function() {
 
 Page.prototype.submitSettings = function(doClose) {
     if(doClose==="cancel") {
+        gotoPage(pg.page());
         gotoSectionMain();
         return;
     }
@@ -288,7 +294,11 @@ Page.prototype.submitSettings = function(doClose) {
 
     var data = UI[page].getPageData(page, pg.category());
     var newPageData = UI[page].settings(false, data);
-    var pmtime      = pg.getPageMtime(page);
+    if(getPage()==="categories" &&
+       !pgUtil.equal(this.localPG.categories, pg.categories)) {
+        pg.setCategories(this.localPG.categories);
+    }
+    var pmtime = pg.getPageMtime(page);
     if(doClose==="applyAll") {
         for(var i=0; i<pg.categories.length; i++)
             setPageDataForCategory(this.localPG, newPageData, page, pg.categories[i]);
@@ -298,11 +308,12 @@ Page.prototype.submitSettings = function(doClose) {
     }
 
     // no-op if settings have not changed
-    if(pgUtil.encode(this.localPG, true) === pgUtil.encode(pg, true)) {
-        if(doClose==="OK")
-            gotoPage(pg.page(), true);
-        return;
-    }
+    //if(pgUtil.encode(this.localPG, true) === pgUtil.encode(pg, true)) {
+    //    if(doClose==="OK")
+    //        gotoPage(pg.page(), true);
+    //    return;
+    //}
+
     // Here we might download and cache the CSS or TEXT files.
     this.localPG.dirty(true);
     if(pg.loggedIn) {

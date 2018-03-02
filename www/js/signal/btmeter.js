@@ -458,7 +458,7 @@ PGMeter.prototype.read = function(type, a) {
     }
     if(!this.running)
         return;
-    if(this.signals.indexOf(type)===-1) {
+    if(this.signals.indexOf(type)===-1 && (type !=="analog")) {
         pgUI_showWarn("Not logging signal: "+type);
         return;
     }

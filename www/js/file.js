@@ -270,12 +270,15 @@ var pgFile = {
         }
     },
     writeFile: function(filename, struct, callback) {
+        var data = JSON.stringify(struct);
+        pgFile.writeData(filename, data, callback);
+    },
+    writeData: function(filename, data, callback) {
         callback = typeof(callback)!=="undefined" ? callback : function(){};
         //if(filename.indexOf("com.")==0)
         //    filename = pgFile.getPersistURL() +"/" +filename;
         pgFile.init(cb.bind(this,callback));
         function cb(callback) {
-            var data = JSON.stringify(struct);
             if(pgFile.useWebFS) {
                 pgUI_showLog("Writing file: " + filename +" size: "+data.length);
                 var oldData = localStorage.getItem(filename);
@@ -290,13 +293,13 @@ var pgFile = {
                                "<p>"+err.message+"</p>" +
                                "<p>Try deleting local files to increase available space,<br/>"+
                                "and removing and \"data:\" links from the category settings.</p>",
-                               callback.bind(false));
+                               callback.bind(false, ""));
                     return;
                 }
                 var s = (len < localStorage.length);
                 if(!s)
                     localStorage.setItem(filename, oldData);
-                callback(s);
+                callback(s, "");
             }
             else {
                 pgFile.persistEntry.getFile(filename, {create: true, exclusive: false}, success, fail1);
@@ -306,18 +309,18 @@ var pgFile = {
                 function win1(writer) {
                     writer.onwrite = function(evt) {
                         pgUI_showLog("write success: "+filename);
-                        callback(true);
+                        callback(true, ent.toURL());
                     };
                     writer.onerror = function(evt) {
                         pgUI_showWarn("Write failed: " +filename +", " + evt.toString());
-                        callback(false);
+                        callback(false, "");
                     };
                     writer.write(data);
                 }
             }
             function fail1(evt) {
                 pgUI_showWarn("write fail: "+filename);
-                callback(false);
+                callback(false, "");
             }
         }
     },
@@ -414,6 +417,7 @@ var pgFile = {
         var directoryReader = entry.createReader();
         // Get a list of all the entries in the directory
         directoryReader.readEntries(cb,fail);
+
         function cb(entries) {
             // This is too complicated, but its fun.  We chain together bound function calls in a for-loop,
             // and link them together with deferred promises.  There must be a design pattern in there somewhere.
@@ -468,7 +472,7 @@ var pgFile = {
         }
         else {
             pgFile.forAllFiles("persist", rename);
-         }
+        }
         function rename(parent, entry, promise) {
             if(parent) {
                 for(var i=0; i<ids.length; i++) {
@@ -554,7 +558,22 @@ var pgFile = {
             callback(false);
         }
     },
-
+    // Upload all audio files.
+    getAudioFilenames: function(callback) {
+        var names = [];
+        pgFile.forAllFiles("persist", getFilename, finished);
+        function getFilename(parent, entry, promise) {
+            var fileURL = entry.toURL();
+            var filename = entry.name;
+            if(pgAudio.isRecordedFile(filename) ) {
+                names.push(fileURL);
+            }
+            promise.resolve();
+        }
+        function finished() {
+            callback(names);
+        }
+    },
     // Upload all audio files.
     uploadAudioFiles: function(force, callback) {
         callback = typeof(callback)!=="undefined" ? callback : function(){};

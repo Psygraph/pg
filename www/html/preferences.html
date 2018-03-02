@@ -34,9 +34,10 @@
                         <label for="preferences_server">Server:</label>
                         <input type="text" id="preferences_server" name="server" value="localhost" data-clear-btn="true" />
                     </div>
+                    <input type="button" data-inline="true" id="preferences_email" class="preferences_button" onclick="return PGEN.selectAction('emailFiles');" value="Email files"/>
                     <div id="preferences_onlineButtons">
-                        <input type="button" data-inline="true"  class="preferences_button" onclick="return PGEN.selectAction('downloadEvents');" value="Download events"/>
-                        <input type="button" data-inline="true"  class="preferences_button" onclick="return PGEN.selectAction('uploadFiles');" value="Upload files"/>
+                        <input type="button" data-inline="true" class="preferences_button" onclick="return PGEN.selectAction('downloadEvents');" value="Download events"/>
+                        <input type="button" data-inline="true" class="preferences_button" onclick="return PGEN.selectAction('uploadFiles');" value="Upload files"/>
                         <label for="preferences_wifiOnly">Upload files using WIFI only</label>
                         <input type="checkbox" name="wifiOnly" id="preferences_wifiOnly"/>
                     </div>
@@ -47,17 +48,22 @@
 
                 <div data-role="fieldcontain" id="settingButtons">
                     <input type="button" id="preferences_login" name="login" value="Login" onclick="UI.preferences.loginUser();" data-inline="true"/>
-                    <input type="button" onClick="gotoPage(pg.page()); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"/>
-                    <input type="button" onClick="UI.preferences.submit(true); return false;" class="btn fast" value="OK" title="OK" data-inline="true"/>
+                    <input type="button" onClick="UI.preferences.submitSettings('cancel'); return false;" class="btn fast" value="Cancel" title="cancel" data-inline="true"/>
+                    <input type="button" onClick="UI.preferences.submitSettings('OK'); return false;" class="btn fast" value="OK" title="OK" data-inline="true"/>
                 </div>
             </div>
         </div>
     </div>
 
+    <div id="preferences_settings" class="settings content">
+    </div>
+
     <div id="preferences_help" class="help content">
         <p><strong>Preferences</strong></p>
-        <p class="help">The <strong>Preferences</strong> page lets you connect to Bluetooth devices, remove settings and other data, and turn on error logging.</p>
+        <p class="help">The <strong>Preferences</strong> page lets you connect to Bluetooth devices, email yourself data or connect to a server, remove settings and other data, and turn on error logging.</p>
         <p>If you want to connect to a Bluetooth device and you have a Bluetooth LE (4.0) heart rate monitor, select the device from the list of available of available devices, click Connect, and then specify the signal that you wish to acquire from the device.  Then go to the Stopwatch page settings and select the <i>Bluetooth</i> option to begin logging Bluetooth data.</p>
+        <p>To email yourself the collected data and audio notes, enter your email and click the &quot;send email&quot; button.</p>
+        <p>To connect to an existing wordpress account, enter your username(email) and click the &quot;login&quot; button.</p>
         <br/>
         <template>
             <img class="alignnone size-medium" src="https://psygraph.com/webclient/help/preferences.png" alt="" width="300" />

@@ -6,6 +6,7 @@ function Timer() {
     this.visible        = true;
     this.timerWidget    = $('#countdown_timer');
     this.durationWidget = $('#countdown_duration');
+    this.calendarOffset = {};
     pgNotify.setCallback(this.notificationCallback.bind(this));
 }
 
@@ -23,12 +24,14 @@ Timer.prototype.update = function(show, data) {
             // see if there are any notifications that need to be removed.
             // we have to run this after setting the state because we set the startTime
             pgNotify.callElapsed(pg.category(), this.isRunning());
+            //this.recomputeCalendar();
             this.pushCategory(pg.category());
             for (var i = 0; i < pg.categories.length; i++) {
                 if(this.tempCategory === pg.categories[i])
                     continue;
                 gotoCategory(pg.categories[i]);
                 pgNotify.callElapsed(pg.category(), this.isRunning());
+                //this.recomputeCalendar();
             }
             this.popCategory();
         }
@@ -69,7 +72,7 @@ Timer.prototype.refreshTimer = function() {
     var ctime = 0;
     if(data.countdownTimes.length)
         ctime = data.countdownTimes[0];
-    this.durationWidget.val(pgUtil.getStringFromMS(ctime) );
+    this.durationWidget.val(pgUtil.getStringFromMS(ctime, true) );
     this.clock.setCountdown(ctime);
     var e = this.getElapsedTimer();
     if(this.isRunning()) {
@@ -83,14 +86,14 @@ Timer.prototype.refreshTimer = function() {
 Timer.prototype.settings = function(show, data) {
     if(show) {
         $("#timer_alarm").val(data.timerAlarm).change();
-        //$("#timer_loop").prop('checked', data.loop).checkboxradio("refresh");
-        $("#countdown_setDuration").val(pgUtil.getStringFromMS(data.countdownInterval));
-        $("#countdown_setRandom").val(pgUtil.getStringFromMS(data.randomInterval));
+        //$("#timer_calendar").prop('checked', data.loop).checkboxradio("refresh");
+        $("#countdown_setDuration").val(pgUtil.getStringFromMS(data.countdownInterval, true));
+        $("#countdown_setRandom").val(pgUtil.getStringFromMS(data.randomInterval, true));
         $("#timer_numTimers").val(data.numTimers).change();
     }
     else {
         data.timerAlarm        = $("#timer_alarm").val();
-        //data.loop            = $("#timer_loop")[0].checked;
+        //data.calendar          = !! $("#timer_calendar")[0].checked;
         data.countdownInterval = pgUtil.getMSFromString($("#countdown_setDuration").val());
         data.randomInterval    = pgUtil.getMSFromString($("#countdown_setRandom").val());
         data.numTimers         = parseInt($("#timer_numTimers").val());
@@ -108,8 +111,8 @@ Timer.prototype.getPageData = function() {
     var data = pg.getPageData("timer", pg.category());
     if(! ('timerAlarm' in data))
         data.timerAlarm = "both";
-    //if(! ('loop' in data))
-    //    data.loop = 0;
+    if(! ('calendar' in data))
+        data.calendar = 0;
     if(! ('startTime' in data))
         data.startTime = 0;
     if(! ('countdownInterval' in data))
@@ -302,11 +305,33 @@ Timer.prototype.notify = function(scheduledTime, id, resetTime) {
         this.start(false);
     }
 };
+/*
+Timer.prototype.recomputeCalendar = function(category) {
+    category = category || pg.category();
+    var data = this.getPageData();
+    if(data.calendar)
+        pgNotify.getCalendarTime(category, cb.bind(this));
+
+    function cb(ms) {
+        this.calendarOffset[category] = ms > 0 ? ms : 0;
+        this.setPageDataField(data);
+    }
+};
+Timer.prototype.timerStartTime = function() {
+    var time = 0;
+    if (data.calendar && this.calendarOffset[pg.category()])
+        time = this.calendarOffset[pg.category()];
+    if(! time)
+        time = new Date().getTime();
+    return time;
+};
+*/
 Timer.prototype.computeNewCountdowns = function(data) {
     data = data || this.getPageData();
     var countdowns = [];
-    for(var i=0; i<data.numTimers; i++)
+    for(var i=0; i<data.numTimers; i++) {
         countdowns.push(Math.floor(data.countdownInterval + data.randomInterval * Math.random() ));
+    }
     return countdowns;
 };
 

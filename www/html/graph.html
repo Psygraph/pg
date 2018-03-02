@@ -31,9 +31,15 @@
             </select>
         </div>
 
-        <div class="ui-field-contain no-field-separator" data-role="controlgroup">
-            <legend>Minimum Period(ms):</legend>
-            <input type="text" class="settings" id="graph_minMS" value=""/>
+        <div class="ui-field-contain no-field-separator">
+            <label for="graph_signals">Minimum Period(ms):</label>
+            <select name="signal" id="graph_minMS" data-native-menu="false">
+                <option value="1">none</option>
+                <option value="25">25 milliseconds</option>
+                <option value="100">100 milliseconds</option>
+                <option value="1000">1 second</option>
+                <option value="60000">1 minute</option>
+            </select>
         </div>
 
         <div class="buttons"></div>
@@ -43,15 +49,13 @@
         <p><strong>Graph</strong></p>
         <p>
             The <strong>Graph</strong> tool displays selected events or the signals from those events as a function of time (you select events with the <strong>List</strong> tool).
-            Tap one on the graph to select it, and then pinch, zoom, or triple click to alter the graph axes.
-            Different signals can be displayed, such as the amount of movement over time or your mindfulness when counting breaths.
         </p>
         <p>
-            The settings let you control which signals to display:
+            The settings let you control:
         </p>
         <ul>
-            <li>Choose signals such as accelerometer or bluetooth data, stopwatch time, or correct/incorrect breath count.</li>
-            <li>Specify the width of the bars in the bar chart (i.e. the aggregation interval).</li>
+            <li>The signals to be displayed, such as accelerometer or bluetooth data.</li>
+            <li>The minimum sampling period (samples closer together than this value will not be displayed).</li>
         </ul>
         <br/>
         <template>

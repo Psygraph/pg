@@ -58,6 +58,10 @@ a:visited {
 a:hover, a:active { 
     text-decoration: underline;
 }
+ul,ol {
+    text-align: left;
+}
+
 /* Various text properties */
 html {
     xxx-font-family: Helvetica; 
@@ -469,13 +473,13 @@ th.data, tr.selected, td.selected { /* tint the headers and selected rows to a v
 
 /* HELP, ABOUT
 ============================================================== */
-#helpPage {
-    padding-top: 0px;
-}
+
 div.help {
-    margin:  0em;
     padding: 20px;
     margin-bottom: 40px;
+}
+div.help p {
+    text-align: left;
 }
 div.help img {
     margin:  0em;
@@ -483,25 +487,12 @@ div.help img {
     margin-bottom: 40px;
     border-style: solid;
 }
-div#helpDiv, div#aboutDiv {
+#helpDiv, #aboutDiv {
     margin:  0em;
     padding: 12px;
 }
 div.helpPageDiv {
     margin-bottom: 40px;
-}
-ul {
-    text-align: left;
-}
-div.help {
-    font-size: 1.2em;
-}
-div.help p {
-    text-align: left;
-}
-div#helpText {
-    display: none;
-    xxxheight: 0px;
 }
 div#levers {
     display: inline-table;
@@ -510,9 +501,13 @@ div#levers {
     font-size: 0.4em;
     text-align: left;
 }
+/*
+
 #help_rightButton {
     padding-right: 4em;
 }
+
+*/
 
 /* PREFERENCES
 ============================================================== */

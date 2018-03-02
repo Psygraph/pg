@@ -28,10 +28,8 @@ About.prototype.settings = function() {
 
 About.prototype.resize = function() {
     var head    = this.headerHeight();
-    var foot    = 0;//$("#" + this.name + "_footer").outerHeight(true);
     var win     = pgUI.getWindowDims();
     var height  = win.height - (head);
-    var width   = win.width;
     $("#about_main").css({
         position: "absolute",
         width: "100%",
@@ -39,19 +37,9 @@ About.prototype.resize = function() {
         top:    head +"px"
     });
     $("#aboutDiv").css({
-        height: height+"px"
+        height: height+"px",
+        xxxtop:    head +"px"
     });
-    /*
-    $("#about_scrollbar").css({
-        height: height+"px"
-    });
-    $("#about_scrollbar div.scrollbar").css({
-        height: height+"px"
-    });
-    $("#about_scrollbar div.track").css({
-        height: height+"px"
-    });
-    */
     this.scrollbar.update({trackSize: height});
 };
 

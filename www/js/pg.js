@@ -20,7 +20,6 @@ function PG() {
     this.allPages       = ["home","stopwatch","counter","timer","note","list","graph","map"];
     this.allEventPages  = ["stopwatch","counter","timer","note"];
     this.pages          = null;
-    this.categoryData   = null;
     this.pageData       = null;
     this.online         = null;
     this.background     = null;
@@ -44,7 +43,6 @@ function PG() {
         this.pageIndex      = 0;
         this.categories     = ["Uncategorized","Meditate","Exercise","Study"];
         this.pages          = ["home","stopwatch","counter","timer","note","list","graph","map"];
-        this.categoryData   = {"Uncategorized": nd()};
         this.pageData       = {"home": nd(), "stopwatch": nd(),"counter": nd(),"timer": nd(),"note": nd(),"list": nd(),"map": nd(),"graph": nd(),"categories": nd(),"prefs": nd() };
         this.online         = true;
         this.background     = false;
@@ -87,7 +85,6 @@ function PG() {
         this.dirtyFlag      = opg.dirtyFlag;
         this.mtime          = opg.mtime;
         this.lastSync       = opg.lastSync;
-        this.categoryData   = pgUtil.deepCopy(opg.categoryData);
         this.pageData       = pgUtil.deepCopy(opg.pageData);
         if(copyEvents)
             this.copyEvents(opg);
@@ -194,62 +191,17 @@ function PG() {
         }
         return this.xml[cat];
     };
-    this.getCategoryData = function(cat) {
-        cat = (typeof(cat) !== "undefined") ? cat: this.category();
-        // return the specified category
-        if(!this.categoryData[cat]) {
-            this.categoryData[cat] = {'mtime': 0, 'data': {}};
-        }
-        var data  = this.categoryData[cat].data;
-        if(!data)
-            data = {};  // xxx we should fully initialize categoryData
-        var index = this.categories.indexOf(cat);
-        if(index===-1)
-            pgUI_showLog("Non-existent category");
-        index++;
-        if(! ('description' in data)) {
-            if(cat==="Uncategorized")
-                data.description = "Default category";
-            else
-                data.description = "";
-        }
-        if(! ('sound' in data)) {
-            data.sound = "default.mp3";
-        }
-        if(! ('style' in data)) {
-            data.style = "default.css";
-        }
-        if(! ('color' in data)) {
-            data.color = "#CCCCCC";
-        }
-        if(! ('text' in data)) {
-            data.text  = "default.xml";
-        }
-        return pgUtil.deepCopy( data );
-    };
-    this.getCategoryMtime = function(category) {
-        var data = this.categoryData[category];
-        if(!data) {
-            data = {'mtime': 0, 'data': {}};
-        }
-        return data['mtime'];
-    };
-    this.setCategoryData = function(category, mtime, data) {
-        this.categoryData[category] = {'mtime': mtime, 'data': data};
-        if(mtime > this.mtime) {
-            this.dirty(true);
-            this.mtime = Math.max(this.mtime, mtime);
-        }
+    this.getCategories = function() {
+        return this.categories;
     };
     this.setCategories = function(categories) {
-        for(i=0; i<categories.length; i++) {
-            if(this.categories.indexOf(categories[i])===-1)
-                this.setCategoryData(categories[i], 0, {});
-        }
         if(!pgUtil.equal(this.categories, categories)) {
-            this.categories = categories.concat(Array());
+            this.categories = categories.slice(0);
             this.dirty(true);
         }
+    };
+    this.getCategoryData = function(category) {
+        return UI.categories.getPageData(category);
     };
     this.getPageData = function(page, category) {
         var data = this.pageData[page];
@@ -699,6 +651,21 @@ function PG() {
         }
         this.dirty(true);
     };
+    this.printCSV = function() {
+        var events = pg.events;
+        var data = "ID,start,duration,category,page,type,data\n";
+        for(var i=this.events.length-1; i>=0;  i--) {
+            var row = this.events[i][E_ID] + "," +
+                this.events[i][E_START] + "," +
+                this.events[i][E_DUR] + "," +
+                this.events[i][E_CAT] + "," +
+                this.events[i][E_PAGE] + "," +
+                this.events[i][E_TYPE] + "," +
+                JSON.stringify(this.events[i][E_DATA]) + "\n";
+            data += row;
+        }
+        return data;
+    };
 }
 
 function def(a,b) {
@@ -810,7 +777,7 @@ var pgUtil = {
             ans = e.days + ":" + ans;
         }
         // add milliseconds at centisecond resolution
-        if(e.milliseconds || displayMillis)
+        if(e.milliseconds && displayMillis)
             ans += "." + zpad(Math.floor(e.milliseconds/10),2);
         return ans;
     },

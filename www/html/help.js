@@ -1,6 +1,7 @@
 
 function Help() {
     Page.call(this, "help");
+    this.scrollbar = tinyscrollbar($("#help_scrollbar")[0]);
 }
 
 Help.prototype = Object.create(Page.prototype);
@@ -30,15 +31,21 @@ Help.prototype.settings = function(show, data) {
 };
 
 Help.prototype.resize = function() {
-    var head   = this.headerHeight();
-    var win    = pgUI.getWindowDims();
-    var width  = win.width;
-    $("#help_page .content").css({
-            'position': "absolute",
-            'top':    head+"px" ,
-            'width':  width+"px"
-            }
+    var head    = this.headerHeight();
+    var win     = pgUI.getWindowDims();
+    var height  = win.height - (head);
+    $("#help_main").css({
+        position: "absolute",
+        width:  "100%",
+        height: height+"px",
+        top:    head+"px"
+        }
     );
+    $("#helpDiv").css({
+        height: height+"px",
+        xxxtop:    head+"px"
+    });
+    this.scrollbar.update({trackSize: height});
 };
 
 Help.prototype.setIntro = function(value) {

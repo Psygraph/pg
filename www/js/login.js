@@ -67,16 +67,8 @@ Login.prototype.beginLogin = function(callback) {
     // So we ask the user if they wish to reset the local files.
     var wait = $.Deferred();
     pgFile.readFile("com.psygraph.lastError", handleError.bind(this));
-    pgFile.readFile("com.psygraph.state",     handleState.bind(this));
     $.when(wait).then(callback);
 
-    function handleState(success, state) {
-        if(success) {
-            pgFile.deleteFile("com.psygraph.state");
-            UI.state = state;
-            updateState(true);
-        }
-    }
     function handleError(success, event) {
         if(success) { // read the file containing an error.  Bummer.
             pgFile.deleteFile("com.psygraph.lastError"); // try to handle once only

@@ -264,23 +264,24 @@ Note.prototype.reset = function() {
         this.setPageData(data);
         this.updateText();
         this.updateAudio();
-        
-        var includedData = [];
-        if(hasText)
-            includedData.push("text");
-        if(hasAudio)
-            includedData.push("audio");
-        if(hasLocation)
-            includedData.push("location");
-        var s = "<p>Data included: ";
-        if(hasText || hasAudio || hasLocation)
-            s += includedData.join();
-        else
-            s += "none";
-        s += ".</p>";
-        if(data.showConfirmation)
-            pgUI.showDialog( {'title': "Created note: "+eventData.title, true: "OK"},
-                        s);
+
+        if(data.showConfirmation) {
+            var includedData = [];
+            if (hasText)
+                includedData.push("text");
+            if (hasAudio)
+                includedData.push("audio");
+            if (hasLocation)
+                includedData.push("location");
+            var s = "<p>Data included: ";
+            if (hasText || hasAudio || hasLocation)
+                s += includedData.join();
+            else
+                s += "none";
+            s += ".</p>";
+            pgUI.showDialog({'title': "Created note: " + eventData.title, true: "OK"}, s);
+        }
+        syncSoon();
     }
 };
 
@@ -304,7 +305,7 @@ Note.prototype.deleteRecorded = function() {
 };
 
 Note.prototype.getNoteText = function() {
-    var data = this.getPageData();
+    var data     = this.getPageData();
     var noteText = "";
     if(data.addText)
         noteText = $("#noteText").val();

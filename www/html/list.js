@@ -68,7 +68,7 @@ List.prototype.update = function(show, data) {
             s += "<tr class='data eid' id=\"" + e.id.toString() + "\">";
             if (data.showID) {
                 var id = e.id.toString();
-                s += "<td class=data>" + id + "<input type='checkbox' id=\"cb_" + id + "\" value='";
+                s += "<td class=data>" + id + "<input type='checkbox' onclick='return UI.list.itemClick("+id+");' id=\"cb_" + id + "\" value='";
                 s += "' /></td>";
             }
             if (data.showDate) {
@@ -222,23 +222,28 @@ List.prototype.eventSelected = function(e) {
     }
 };
 
+List.prototype.itemClick = function(id) {
+    this.listSelectEvent(id);
+    return true;
+};
+
 List.prototype.listSelectEvent = function(id) {
     var row = $("#" +id);
     var checkbox = null;
     var data = this.getPageData();
     if(data.showID)
-        checkbox = $("#cb_" + id)[0];
+        checkbox = $("#cb_" + id);
     if(pg.isEventSelected(id)) {
         pg.unselectEvent( id );
         if(checkbox)
-            checkbox.checked = false;
+            checkbox.prop('checked', false);
         if(row)
             $(row).removeClass("selected");
     }
     else {
         pg.selectEvent( id );
         if(checkbox)
-            checkbox.checked = true;
+            checkbox.prop('checked', true);
         if(row)
             $(row).addClass("selected");
     }
@@ -253,11 +258,11 @@ List.prototype.selectEvents = function(selection) {
             var id  = row.id;
             var checkbox = $("#cb_" + id);
             if(ids.indexOf(parseInt(id)) === -1) {
-                checkbox.checked = false;
+                checkbox.prop('checked', false);
                 $(row).removeClass("selected");
             }
             else {
-                checkbox.checked = true;
+                checkbox.prop('checked', true);
                 $(row).addClass("selected");
             }
         }

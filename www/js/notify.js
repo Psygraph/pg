@@ -284,4 +284,76 @@ Notify.prototype.setCallback = function(callback) {
     this.callback = callback;
 };
 
+Notify.prototype.scheduleCalendar = function(create) {
+    if(pgUtil.isWebBrowser())
+        return;
+
+    var startDate     = new Date();
+    var endDate       = new Date(startDate.getTime() + 30*60*1000);
+    var title         = pg.category();
+    var eventLocation = null;
+    var notes         = "Event created by Psygraph";
+    var calOptions    = window.plugins.calendar.getCalendarOptions(); // grab the defaults
+    calOptions.firstReminderMinutes  = 30;
+    calOptions.secondReminderMinutes = 5;
+    calOptions.recurrence            = "daily"; // supported are: daily, weekly, monthly, yearly
+    calOptions.recurrenceEndDate     = null;
+    calOptions.recurrenceInterval    = 1;
+    //calOptions.url                   = "https://psygraph.com";
+
+    this.deleteCalendar(cb.bind(this));
+
+    function cb(tf) {
+        if(create) {
+            window.plugins.calendar.createEventInteractivelyWithOptions(
+                title, eventLocation, notes, startDate, endDate, calOptions, success.bind(this), failure.bind(this));
+        }
+    }
+    function success(message) {
+        //alert("Success: " + message);
+    }
+    function failure(message) {
+        alert("Error: " + message);
+    }
+};
+Notify.prototype.deleteCalendar = function(callback) {
+    var title         = pg.category();
+    var eventLocation = null;
+    var notes         = null;
+    var eventDate     = new Date().getTime();
+    var oneYear       = 365*24*60*60*1000;
+    var startDate     = new Date(eventDate-oneYear);
+    var endDate       = new Date(eventDate+oneYear);
+
+    window.plugins.calendar.findEvent(title,eventLocation,notes,startDate,endDate,success.bind(this),failure.bind(this));
+    function success(event) {
+        var id = event.id;
+        window.plugins.calendar.deleteEventById(id, null, callback.bind(true), failure);
+    }
+    function failure(message) {
+        //alert("Error: " + message);
+        callback(false);
+    }
+};
+Notify.prototype.getCalendarTime = function(category, callback) {
+    var title         = category;
+    var eventLocation = null;
+    var notes         = null;
+    var eventDate     = new Date().getTime();
+    var oneYear       = 365*24*60*60*1000;
+    var startDate     = new Date(eventDate-oneYear);
+    var endDate       = new Date(eventDate+oneYear);
+
+    window.plugins.calendar.findEvent(title,eventLocation,notes,startDate,endDate,success.bind(this),failure.bind(this));
+    function success(event) {
+        var time = new Date(event.startDate).getTime() - new Date.getTime();
+        if(time < 0)
+            time = 0;
+        callback(time);
+    }
+    function failure(message) {
+        callback(0);
+    }
+};
+
 var pgNotify = new Notify();

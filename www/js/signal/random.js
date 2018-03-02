@@ -5,6 +5,7 @@ function RandomMeter(device) {
     this.allPeriods = [5, 10, 50, 100, 500, 1000, 5000];
     this.period     = 1000;
     this.ping       = 0;
+    this.lastTime   = 0;
 }
 RandomMeter.prototype = Object.create(Meter.prototype);
 RandomMeter.prototype.constructor = RandomMeter;
@@ -42,9 +43,14 @@ RandomMeter.prototype.settingsDialog = function(callback) {
 };
 RandomMeter.prototype.start = function(restart) {
     this.createData(["random"]);
-    this.ping = setInterval(periodic.bind(this), this.period);
+    this.lastTime = pgUtil.getCurrentTime();
+    this.ping = setInterval(periodic.bind(this), 250);
     function periodic() {
-        this.pushData([pgUtil.getCurrentTime(), Math.random()]);
+        var currentTime = pgUtil.getCurrentTime();
+        while(this.lastTime <= currentTime) {
+            this.pushData([this.lastTime, Math.random()]);
+            this.lastTime += this.period;
+        }
     }
 };
 RandomMeter.prototype.stop = function() {

@@ -139,7 +139,9 @@ Home.prototype.updateGraph = function() {
             //if(e.start < cutoff)
             //    break;
             if(e.type==="reset") {
-                var val = (e.data.count === e.data.countTarget) ? 1 : 0;
+                var val = e.data.count;
+                if(e.data.countTarget)
+                    val = (e.data.count === e.data.countTarget) ? 1 : 0;
                 pts.x.push(new Date(e.start));
                 pts.y.push(val);
             }

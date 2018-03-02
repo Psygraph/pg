@@ -101,6 +101,7 @@ function logEvent(type, data) {
     var startTime = pgLogin.getStartTime();
     var event = {
         page: "home",
+        category: "Uncategorized",
         type: type,
         start: startTime,
         duration: pgUtil.getCurrentTime() - startTime,
@@ -474,14 +475,13 @@ function gotoCategory(num) {
     var page = getPage();
     UI.state[page] = UI[page].update(false, UI[page].getPageData());
     pg.categoryIndex = num; // the category change has to happen between the state updates
-    if(pg.pages.indexOf(page) !== -1) // make sure it is not the settings page
-        UI[page].update(true, UI.state[page]);
+    UI[page].update(true, UI[page].getPageData());
     var cd = pg.getCategoryData(pg.category());
     var style = "media/" + cd.style;
     $("#user_style").attr("href", style);
     $("html").css('backgroundColor', cd.color);
     updateSubheader();
-    // reload the settings if the cateogry has changed
+    // reload the settings if the category has changed
     if(getSection()==="settings")
         gotoSectionSettings();
 }
@@ -665,20 +665,6 @@ var PGEN = {
             else
                 callback(true);
         }
-        function updateCategories(success, data, callback) {
-            if(data.categories.length) {
-                pg.categories = data.categories;
-                updateCategoryData(data.categoryData, updateMtime);
-            }
-            else {
-                callback(success);
-            }
-            function updateMtime(tf) {
-                if(success && tf)
-                    pg.mtime = data.mtime;
-                callback(success && tf);
-            }
-        }
         function updatePageData(data, callback) {
             var pageData = {};
             for(var field in data) {
@@ -690,22 +676,6 @@ var PGEN = {
                 if(success) {
                     for(var field in r)
                         pg.pageData[field] = parseJSONResponse(field, r[field]);
-                }
-                callback(success);
-            }
-        }
-        function updateCategoryData(data, callback) {
-            var catData = {};
-            for(var field in data) {
-                if(data[field].mtime > pg.getCategoryMtime(field))
-                    catData[field] = 1;
-            }
-            postData({"action": "getCategoryData", "data": catData}, catUpdate);
-            function catUpdate(success, r) {
-                if(success) {
-                    for(var field in r) {
-                        pg.categoryData[field] = parseJSONResponse(field, r[field]);
-                    }
                 }
                 callback(success);
             }
@@ -842,11 +812,11 @@ var PGEN = {
         function cbState(success, data) {
             if(success) {
                 UI.state = data;
-                updateState(true);
             }
             else {
-                showLog("Could not read state file.");
+                pgUI_showLog("Could not read state file.");
             }
+            updateState(true);
             if(callback)
                 callback(success);
         }
@@ -869,15 +839,6 @@ var PGEN = {
         function getDataURL(success, request, newPG, callback) {
             if(success && request[0]!=="mtime" && pgUtil.isWebBrowser()) {
                 var doUpload = false;
-                var categoryData = {};
-                for(var cat in request.categoryData) {
-                    if(request.categoryData[cat]) {
-                        categoryData[cat] = {};
-                        categoryData[cat]['mtime'] = newPG.getCategoryMtime(cat);
-                        categoryData[cat]['data']  = JSON.stringify(newPG.getCategoryData(cat));
-                        doUpload = true;
-                    }
-                }
                 var pageData = {};
                 for(var page in request.pageData) {
                     if(request.pageData[page]) {
@@ -887,7 +848,7 @@ var PGEN = {
                         doUpload = true;
                     }
                 }
-                var data = {'categoryData': categoryData, 'pageData': pageData};
+                var data = {'pageData': pageData};
                 if(doUpload)
                     postData({'action': "settingsData", 'data': data}, callback);
                 else
@@ -995,6 +956,36 @@ var PGEN = {
             }
         }
     },
+    sendEmail: function(callback) {
+        callback = callback || function(){};
+        var to = [UI.preferences.getEmail()];
+        var subject = "Psygraph Data";
+        var body = "<p>Your psygraph data is attached to this email.</p>" +
+                   "<p>The CSV file can be opened in any spreadsheet program such as OpenOffice Calc.  " +
+                   "Any attached audio files can be opened by audio applications auch as Audacity.</p>";
+        var attachments = [];
+        pgFile.getAudioFilenames(audioCB);
+
+        function audioCB(filenames) {
+            attachments = attachments.concat(filenames);
+            var data = pg.printCSV();
+            var d = new Date();
+            // 2014-09-11T02:32:36.955Z
+            var fn = "psygraph_" + d.toISOString().slice(0, 10) + ".csv";
+            pgFile.writeData(fn, data, eventsCB);
+        }
+        function eventsCB(success, filename) {
+            if(success)
+                attachments.push(filename);
+            cordova.plugins.email.open({
+                to:          to, // email addresses for TO field
+                attachments: attachments, // file paths or base64 data streams
+                subject:     subject, // subject of the email
+                body:        body, // email body (for HTML, set isHtml to true)
+                isHtml:      true
+            }, callback);
+        }
+    },
     selectAction: function(selection) {
         if(selection === "") {
             // no-op.
@@ -1007,6 +998,10 @@ var PGEN = {
             pgUI.showBusy(true);
             PGEN.uploadEvents();
             PGEN.uploadFiles(true, cb);
+        }
+        else if(selection === "emailFiles") {
+            //pgUI.showBusy(true);
+            PGEN.sendEmail(); // true,cb
         }
         else if(selection === "deleteSettings") {
             var localPG = new PG();

@@ -17,12 +17,11 @@ Preferences.prototype.update = function(show, data) {
             }
             this.initialized = true;
         }
-        this.settings(show, data);
-
-	    this.resize();
-        // Get a location before starting a bluetooth scan
+        data = this.settings(show, data);
+        // Optionally get a location before starting a bluetooth scan
         //pgLocation.getCurrentLocation(posCB);
         posCB();
+        this.resize();
     }
     else {
         pgBluetooth.stopScan(function(){});
@@ -32,7 +31,7 @@ Preferences.prototype.update = function(show, data) {
 
     function posCB(loc) {
         pgUI_showLog("Bluetooth scan starting...");
-        var devs   = $("#BTDevices");
+        var devs = $("#BTDevices");
         pgBluetooth.startScan(UI.preferences.btCallback);
         UI.preferences.btSetCurrentDevice();
     }
@@ -54,11 +53,13 @@ Preferences.prototype.settings = function(show, data) {
         server.val(pg.server);
         server.prop('readonly', pg.loggedIn);
 
-        if(pgUtil.isWebBrowser())
+        if(pgUtil.isWebBrowser()) {
             $("#preferences_wifiOnly").parent().hide();
-        else
+            $("#preferences_email").parent().hide();
+        }
+        else {
             $("#preferences_wifiOnly").prop('checked', data.wifiOnly).checkboxradio("refresh");
-
+        }
         var loginString;
         if(pg.loggedIn) {
             loginString = "Logout";
@@ -74,7 +75,7 @@ Preferences.prototype.settings = function(show, data) {
         data.debug = $("#preferences_debug")[0].checked ? 1 : 0;
         this.setDebug( data.debug );
         if(!pg.loggedIn) {
-            pg.server = $("#preferences_server").val();
+            pg.server   = $("#preferences_server").val();
             pg.username = $("#preferences_username").val();
         }
         if(!pgUtil.isWebBrowser())
@@ -87,7 +88,6 @@ Preferences.prototype.resize = function() {
     Page.prototype.resize.call(this, true);
 };
 
-
 Preferences.prototype.getPageData = function() {
     var data = pg.getPageData("preferences", "Uncategorized");
     if(! ('debug' in data))
@@ -97,13 +97,19 @@ Preferences.prototype.getPageData = function() {
     return data;
 };
 
+Preferences.prototype.getEmail = function() {
+    return $("#preferences_username").val();
+};
 
-Preferences.prototype.submit = function(doClose) {
-    var data = this.getPageData();
-    data = this.settings(false, data);
-    pmtime = pgUtil.getCurrentTime();
-    pg.setPageData(pmtime, data, "preferences", "Uncategorized");
-    gotoPage( pg.page() );
+Preferences.prototype.submitSettings = function(doClose) {
+    if(doClose!=="cancel") {
+        var data = this.getPageData();
+        data = this.settings(false, data);
+        pmtime = pgUtil.getCurrentTime();
+        pg.setPageData(pmtime, data, "preferences", "Uncategorized");
+    }
+    if(doClose!=="apply")
+        gotoPage( pg.page() );
 };
 
 Preferences.prototype.loginUser = function() {
