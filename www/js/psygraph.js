@@ -112,6 +112,7 @@ function logEvent(type, data) {
     }
     else if (type === "login" || type === "logout" || type === "update") {
         event.type = "login";
+        event.category = pg.category();
         pg.updateLoginEvent(event);
     }
     else if (type === "error") {

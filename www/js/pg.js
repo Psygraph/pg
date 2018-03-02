@@ -442,6 +442,11 @@ function PG() {
         return id;
     };
     this.updateLoginEvent = function(event) { // modify the event that corresponds to this session
+        if(this.loginEventID) { // check if same category
+            var e = this.getEventFromID(this.loginEventID);
+            if (e[E_CAT] !== event.category)
+                this.loginEventID = 0;
+        }
         if(!this.loginEventID) {
             this.loginEventID = pg.uniqueEventID();
             event.id = this.loginEventID;
