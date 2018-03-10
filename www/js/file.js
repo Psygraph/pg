@@ -10,47 +10,54 @@ var pgFile = {
     persistURL:   "",
     soundEntry:   "",
     soundURL:     "",
+    mediaEntry:   "",
+    mediaURL:     "",
     pending:      {},
     useWebFS:     pgUtil.isWebBrowser(),
-    initialized:  null,
-    mutex:        $.Deferred(),
+    initialized:  false,
 
     init: function(callback) {
         callback = typeof(callback)!=="undefined" ? callback : function(){};
-        if(pgFile.mutex.state()==="resolved") {
+        if(pgFile.initialized) {
             callback(true);
         }
-        else if (pgFile.initialized != null) {
-            $.when(pgFile.mutex).then(callback);
-        }
-        else
-        {
-            pgFile.initialized = -1;
-            $.when(pgFile.mutex).then(callback);
+        else {
+            pgFile.initialized = true;
             pgFile.useWebFS = pgUtil.isWebBrowser();
             if(pgUtil.isWebBrowser()) {
                 pgFile.appURL      = window.location;
                 pgFile.tempURL     = window.location;
                 pgFile.persistURL  = window.location;
+                pgFile.mediaURL    = window.location + "/media/";
                 pgFile.initialized = true;
-                pgFile.mutex.resolve(true);
+                callback(true);
             }
             else {
-                window.resolveLocalFileSystemURL(cordova.file.applicationDirectory, onFSApp, fsFail);
+                // these two do not seem necessary
+                //window.requestFileSystem(LocalFileSystem.TEMPORARY,  0, fsSuccess, fsFail);
+                //window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, fsSuccess, fsFail);
                 window.resolveLocalFileSystemURL(cordova.file.cacheDirectory, onFSTemp, fsFail);
                 if(device.platform==="iOS") // use the documents directory for iTunes sync
                     window.resolveLocalFileSystemURL(cordova.file.documentsDirectory, onFSPersist, persistFail);
                 else
                     window.resolveLocalFileSystemURL(cordova.file.dataDirectory, onFSPersist, persistFail);
-
-                // these two are not strictly necessary, but we should call them in case they initialize something
-                window.requestFileSystem(LocalFileSystem.TEMPORARY,  0, fsSuccess, fsFail);
-                window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, fsSuccess, fsFail);
+                // this call will invoke the callback.
+                window.resolveLocalFileSystemURL(cordova.file.applicationDirectory, onFSApp, fsFail);
             }
         }
         function onFSApp(fileSystem) {
             pgFile.appEntry = fileSystem;
             pgFile.appURL   = fileSystem.toURL().replace(/\/$/, "");
+            window.resolveLocalFileSystemURL(pgFile.appURL+"/www/media", success, fail);
+            function success(fileSystem) {
+                pgFile.mediaEntry = fileSystem;
+                pgFile.mediaURL   = fileSystem.toURL().replace(/\/$/, "");
+                callback(true);
+            }
+            function fail(err) {
+                pgUI_showLog("Could not open media file system");
+                callback(false);
+            }
         }
         function onFSTemp(fileSystem) {
             pgFile.tempEntry = fileSystem;
@@ -67,7 +74,7 @@ var pgFile = {
             pgFile.persistURL   = fileSystem.toURL().replace(/\/$/, "");
             pgUI_showLog("Got persistent FS");
 
-            var soundDir;
+            //var soundDir;
             if(device.platform==="iOS") {
                 //soundDir = cordova.file.dataDirectory.replace("/NoCloud","");
                 //window.resolveLocalFileSystemURL(soundDir, onFSSound, soundFail);
@@ -81,13 +88,12 @@ var pgFile = {
                 pgFile.soundURL   = pgFile.persistURL;
             }
             pgFile.initialized = true;
-            pgFile.mutex.resolve(true);
         }
         function persistFail(err) {
             pgUI_showLog("Could not get persistent fileSystem");
             pgFile.initialized = false;
-            pgFile.mutex.resolve(false);
         }
+        /*
         function onFSSound(fileSystem) {
             //fileSystem.getDirectory('Sounds', { create: true },
             //                        function(subDirEntry) {
@@ -105,25 +111,13 @@ var pgFile = {
         function soundFail(err) {
             pgUI_showLog("Could not get Sounds fileSystem");
         }
+        */
     },
     getAppURL: function() {return pgFile.appURL;},
-    getMediaURL: function() {
-        var src = "";
-        if(!pgUtil.isWebBrowser()) {
-            if(device.platform==="Android")
-                src = "/android_asset/www/media/";
-            else
-                src = "media/";
-            //src = pgFile.getAppURL() + "/www/media/";
-        }
-        else {
-            src = pgFile.getAppURL() +"/media/";
-        }
-        return src;
-    },
+    getMediaURL: function() {return pgFile.mediaURL;},
     getTempURL: function() {return pgFile.tempURL;},
     getPersistURL: function() {return pgFile.persistURL;},
-    getSoundURL: function() {return pgFile.soundURL;},
+    //getSoundURL: function() {return pgFile.soundURL;},
 
     saveDataURI: function(category, data, callback) {
         callback = typeof(callback)!=="undefined" ? callback : function(){};
@@ -199,7 +193,6 @@ var pgFile = {
         pgFile.deleteFile("com.psygraph.events");
         pgFile.deleteFile("com.psygraph.state");
         pgFile.deleteFile("com.psygraph.lastError");
-        pgFile.deleteFile("com.psygraph.exit");
         if(pgFile.useWebFS) {
             for (var i = 0; i < localStorage.length; i++){
                 localStorage.removeItem( localStorage.key(i) );
@@ -213,60 +206,58 @@ var pgFile = {
             promise.resolve();
         }
     },
-    readFile: function(filename, callback, parse) {
+    readFile: function(filename, callback, parse, ent) {
         callback = typeof(callback)!=="undefined" ? callback : function(){};
-        parse = typeof(parse)!=="undefined" ? parse : true;
-        pgFile.init(cb);
-        function cb(success) {
-            if(pgFile.useWebFS) {
-                var data = localStorage.getItem(filename);
-                if(data && data.length) {
-                    pgUI_showLog("Reading file: " + filename +" size: "+data.length);
+        parse    = typeof(parse)!=="undefined" ? parse : true;
+        ent      = typeof(ent)!=="undefined" ? ent : pgFile.persistEntry;
+        if(pgFile.useWebFS) {
+            var data = localStorage.getItem(filename);
+            if(data && data.length) {
+                pgUI_showLog("Reading file: " + filename +" size: "+data.length);
+                var s = "";
+                try {
+                    s = JSON.parse(data);
+                }
+                catch(err) {}
+                if(s==="")
+                    callback(false, s);
+                else
+                    callback(true, s);
+            }
+            else {
+                fail();
+            }
+        }
+        else {
+            ent.getFile(filename, {create: false, exclusive: false}, success, fail);
+        }
+        function success(ent) {
+            ent.file(win, fail);
+            function win(file) {
+                var reader = new FileReader();
+                reader.onloadend = function (evt) {
+                    pgUI_showLog("read success: "+filename);
                     var s = "";
                     try {
-                        s = JSON.parse(data);
+                        if(parse)
+                            s = JSON.parse(evt.target.result);
+                        else
+                            s = evt.target.result
                     }
-                    catch(err) {}
+                    catch (err) {
+                        pgUI_showError(err.message);
+                    }
                     if(s==="")
                         callback(false, s);
                     else
                         callback(true, s);
-                }
-                else {
-                    fail();
-                }
+                };
+                reader.readAsText(file);
             }
-            else {
-                pgFile.persistEntry.getFile(filename, {create: false, exclusive: false}, success, fail);
-            }
-            function success(ent) {
-                ent.file(win, fail);
-                function win(file) {
-                    var reader = new FileReader();
-                    reader.onloadend = function (evt) {
-                        pgUI_showLog("read success: "+filename);
-                        var s = "";
-                        try {
-                            if(parse)
-                                s = JSON.parse(evt.target.result);
-                            else
-                                s = evt.target.result
-                        }
-                        catch (err) {
-                            pgUI_showError(err.message);
-                        }
-                        if(s==="")
-                            callback(false, s);
-                        else
-                            callback(true, s);
-                    };
-                    reader.readAsText(file);
-                }
-            }
-            function fail(evt) {
-                pgUI_showLog("Could not read file: "+filename);
-                callback(false, null);
-            }
+        }
+        function fail(evt) {
+            pgUI_showLog("Could not read file: "+filename);
+            callback(false, null);
         }
     },
     writeFile: function(filename, struct, callback) {
@@ -277,51 +268,48 @@ var pgFile = {
         callback = typeof(callback)!=="undefined" ? callback : function(){};
         //if(filename.indexOf("com.")==0)
         //    filename = pgFile.getPersistURL() +"/" +filename;
-        pgFile.init(cb.bind(this,callback));
-        function cb(callback) {
-            if(pgFile.useWebFS) {
-                pgUI_showLog("Writing file: " + filename +" size: "+data.length);
-                var oldData = localStorage.getItem(filename);
-                localStorage.removeItem(filename);
-                var len = localStorage.length;
-                try {
-                    localStorage.setItem(filename, data);
-                }
-                catch (err) {
-                    pgUI_showLog(err);
-                    pgUI.showDialog({title: "Storage Error", true: "OK"},
-                               "<p>"+err.message+"</p>" +
-                               "<p>Try deleting local files to increase available space,<br/>"+
-                               "and removing and \"data:\" links from the category settings.</p>",
-                               callback.bind(false, ""));
-                    return;
-                }
-                var s = (len < localStorage.length);
-                if(!s)
-                    localStorage.setItem(filename, oldData);
-                callback(s, "");
+        if(pgFile.useWebFS) {
+            pgUI_showLog("Writing file: " + filename +" size: "+data.length);
+            var oldData = localStorage.getItem(filename);
+            localStorage.removeItem(filename);
+            var len = localStorage.length;
+            try {
+                localStorage.setItem(filename, data);
             }
-            else {
-                pgFile.persistEntry.getFile(filename, {create: true, exclusive: false}, success, fail1);
+            catch (err) {
+                pgUI_showLog(err);
+                pgUI.showDialog({title: "Storage Error", true: "OK"},
+                           "<p>"+err.message+"</p>" +
+                           "<p>Try deleting local files to increase available space,<br/>"+
+                           "and removing and \"data:\" links from the category settings.</p>",
+                           callback.bind(false, ""));
+                return;
             }
-            function success(ent) {
-                ent.createWriter(win1, fail1);
-                function win1(writer) {
-                    writer.onwrite = function(evt) {
-                        pgUI_showLog("write success: "+filename);
-                        callback(true, ent.toURL());
-                    };
-                    writer.onerror = function(evt) {
-                        pgUI_showWarn("Write failed: " +filename +", " + evt.toString());
-                        callback(false, "");
-                    };
-                    writer.write(data);
-                }
+            var s = (len < localStorage.length);
+            if(!s)
+                localStorage.setItem(filename, oldData);
+            callback(s, "");
+        }
+        else {
+            pgFile.persistEntry.getFile(filename, {create: true, exclusive: false}, success, fail1);
+        }
+        function success(ent) {
+            ent.createWriter(win1, fail1);
+            function win1(writer) {
+                writer.onwrite = function(evt) {
+                    pgUI_showLog("write success: "+filename);
+                    callback(true, ent.toURL());
+                };
+                writer.onerror = function(evt) {
+                    pgUI_showWarn("Write failed: " +filename +", " + evt.toString());
+                    callback(false, "");
+                };
+                writer.write(data);
             }
-            function fail1(evt) {
-                pgUI_showWarn("write fail: "+filename);
-                callback(false, "");
-            }
+        }
+        function fail1(evt) {
+            pgUI_showWarn("write fail: "+filename);
+            callback(false, "");
         }
     },
     writeBinaryFile: function(filename, data, callback) { // pass in an ArrayBuffer
@@ -541,7 +529,7 @@ var pgFile = {
         formData.append('cert',      pg.cert);
         formData.append('mediaFile', blob, filename);
 
-        var postURL = pg.getMediaURL();
+        var postURL = pg.getMediaServerURL();
         var xhr = new XMLHttpRequest();
         xhr.addEventListener("load",  successCB, false);
         xhr.addEventListener("error", failCB, false);
@@ -587,7 +575,7 @@ var pgFile = {
         }
         pgFile.forAllFiles("persist", postFile, callback);
         function postFile(parent, entry, promise) {
-            var postURL = pg.getMediaURL();
+            var postURL = pg.getMediaServerURL();
             var fileURL = entry.toURL();
             var filename = entry.name;
             if(! pgAudio.isRecordedFile(filename) ) {
@@ -632,7 +620,7 @@ var pgFile = {
             }
             function success(r) {
                 if(r.responseCode===200) {
-                    if(r.response !== "OK") {
+                    if(r.response !== "" && r.response !== "OK") {
                         pgUI.showAlert("Error: "+r.response);
                     }
                     else {

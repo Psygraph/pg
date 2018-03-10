@@ -108,6 +108,13 @@
           <h2 class="banner"><b class="pg_page_title"></b></h2>
           <button data-position="fixed" data-icon="info" data-iconpos="right" onclick="return pgUI.menu_rightButton();" class="ui-btn-right rightMenuButton fast">Info</button>
         </div>
+
+          <div data-role="popup" class="catPopupMenu">
+              <ul data-role="listview" data-inset="true" class="ui-listview-outer" data-native-menu="false">
+                  <li data-role="list-divider"><i>Category...</i></li>
+                  <li data-icon="false"><a href="" onclick="return gotoCategory('Uncategorized');">Uncategorized</a></li>
+              </ul>
+          </div>
       </template>
       
       <template id="header_template">
@@ -148,7 +155,14 @@
               <li class="navbar_button"><a class="navbar_link_right navbar_link fast" data-role="button" data-iconpos="notext" data-theme="b" href="" onclick="gotoSectionHelp()" data-icon="info">Info</a></li>
             </ul>
           </div>
-          
+
+            <div data-role="popup" class="catPopupMenu">
+                <ul data-role="listview" data-inset="true" class="ui-listview-outer" data-native-menu="false">
+                    <li data-role="list-divider"><i>Category...</i></li>
+                    <li data-icon="false"><a href="" onclick="return gotoCategory('Uncategorized');">Uncategorized</a></li>
+                </ul>
+            </div>
+
         </div>
       </template>
 

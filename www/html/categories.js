@@ -97,7 +97,7 @@ Categories.prototype.settings = function(show, data) {
         }
         strings = ["default.xml"];
         if(pgUtil.isWebBrowser())
-            strings = ["default.xml","christian.xml","einstein.xml","lojong.xml","twain.xml", "monroe.xml"];
+            strings = ["default.xml","christian.xml","einstein.xml","lojong.xml","twain.xml", "xkcd.xml"];
         this.displaySelect("textEdit", strings, textVal);
 
         // ### calendar ###

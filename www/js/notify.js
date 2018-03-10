@@ -17,6 +17,7 @@ Notify.prototype.init = function(cb) {
         if(this.usePlugin) {
             cordova.plugins.notification.local.on("click", this.onClick.bind(this));
             cordova.plugins.notification.local.on("trigger", this.onTrigger.bind(this));
+            //cordova.plugins.notification.local.addActions('mindful', [
             cordova.plugins.notification.local.addActionGroup('mindful', [
                 { id: 'yes', title: 'Mindful' },
                 { id: 'no',  title: 'Not Mindful'}
@@ -129,6 +130,7 @@ Notify.prototype.getOpts = function(category, atTime, countdownTime, txt, sound)
     }
     if(this.usePlugin) {
         opts.text = $(opts.text).text(); // convert to plain text
+        //opts.actions = 'mindful';
         opts.actionGroupId = 'mindful';
     }
     opts.data = JSON.stringify(opts.data);
@@ -202,8 +204,10 @@ Notify.prototype.removeCategory = function(category) {
             var data = JSON.parse(note.data);
             // xxx This is broken upstream: it should not be double-encoded.
             data = JSON.parse(data);
-            if(data.category === category)
+            if(data.category === category && cordova.plugins.notification.local.isScheduled(id)) {
+                // only cancel scheduled notifications, otherwise the sound will stop playing.
                 cordova.plugins.notification.local.cancel( id );
+            }
         }
     }
 };
@@ -236,6 +240,9 @@ Notify.prototype.removeAll = function() {
 Notify.prototype.onClick = function(notification) {
     var len = this.clicked.length;
     this.clicked[len] = notification;
+    if(notification.text) {
+        pgUI.showAlert(notification.text, notification.title);
+    }
 };
 Notify.prototype.onTrigger = function(notification) {
     var data = JSON.parse(notification.data);
@@ -252,6 +259,7 @@ Notify.prototype.onTrigger = function(notification) {
     data.text    = notification.text;
     data.title   = notification.title;
     data.sound   = notification.sound;
+    //data.foreground = notification.foreground;
     if(this.callback) {
         this.callback("trigger", data);
     }

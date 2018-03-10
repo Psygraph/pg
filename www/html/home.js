@@ -11,13 +11,13 @@ Home.prototype.constructor = Home;
 Home.prototype.update = function(show, data) {
     if(show) {
         if (!this.graph) {
-            this.graph = new GraphComponent("home_graph", "bar");
-            var interval   = this.graph.computeNumericInterval(data.interval);
+            this.graph   = new GraphComponent("home_graph", "bar");
+            var interval = this.graph.computeNumericInterval(data.interval);
             this.graph.create(data.signals, interval);
         }
         this.status();
         this.resize();
-        setTimeout(this.updateGraph.bind(this), 280);
+        this.updateGraph();
     }
     else {
     }
@@ -100,7 +100,7 @@ Home.prototype.updateGraph = function() {
     // Total time
     if(showHome) {
         var pts = {x:[],y:[]};
-        var events = pg.getEventsInPage("home");
+        var events = pg.getEventsInPage("home", pg.category());
         for (var i=0; i<events.length; i++) {
             var e = pgUtil.parseEvent(events[i]);
             //if(e.start < cutoff)

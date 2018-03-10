@@ -11,11 +11,12 @@ if(! $server || $server == "") {
     $server = "https://psygraph.com/wp-content/plugins/psygraph/pg";
 }
 
-$script = "var WORDPRESS   = true;\n" .
+$script = "var WORDPRESS   = true;\n"        .
           "var WP_USERNAME = '$username';\n" .
-          "var WP_CERT     = '$cert';\n" .
-          "var WP_SERVER   = '$server';\n";
-
+          "var WP_CERT     = '$cert';\n"     .
+          "var WP_SERVER   = '$server';\n"   .
+          "function WP_EXTRA() {\n"          .
+          "}\n"         ;
 
 $url  = 'index.html';
 $data = file_get_contents("php://input", TRUE);

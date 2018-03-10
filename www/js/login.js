@@ -9,23 +9,26 @@ Login.prototype.begin = function() {
     // set the online status
     if(navigator.connection) {
         var networkState = navigator.connection.type;
-        if(networkState === Connection.NONE)
+        if(typeof(Connection) !== "undefined" && networkState === Connection.NONE)
             pg.online = false;
         else
             pg.online = true;
         document.addEventListener("online", onOnline, false);
         document.addEventListener("offline", onOffline, false);
     }
+    pgFile.init(fileReady.bind(this));
 
-    if(WORDPRESS===true) {
-        // these WP_* variables are all set if index.html is served by wp.php
-        PGEN.login(WP_USERNAME,
-                   this.passwordCB.bind(this, WP_SERVER, WP_USERNAME, "", WP_CERT, this.endLogin.bind(this)));
+    function fileReady() {
+        if (WORDPRESS === true) {
+            // these WP_* variables are all set if index.html is served by wp.php
+            pg.setTemp(true);
+            PGEN.login(WP_USERNAME,
+                this.passwordCB.bind(this, WP_SERVER, WP_USERNAME, "", WP_CERT, this.endLogin.bind(this, this.wordpress.bind(this))));
+        }
+        else {
+            PGEN.readPG(localFileCB.bind(this));
+        }
     }
-    else {
-        PGEN.readPG(localFileCB.bind(this));
-    }
-
     function localFileCB(success, struct) {
         if(success) {
             var cert = "";
@@ -39,7 +42,7 @@ Login.prototype.begin = function() {
                 if(pluginIndex !== -1)
                     server = server.substr(0, pluginIndex);
                 PGEN.login(username,
-                           this.passwordCB.bind(this, server, username, "", cert, this.endLogin.bind(this)));
+                    this.passwordCB.bind(this, server, username, "", cert, this.endLogin.bind(this)));
                 return;
             }
         }
@@ -50,6 +53,31 @@ Login.prototype.begin = function() {
         function cb(success) {
             this.endLogin();
         }
+    }
+};
+
+Login.prototype.wordpress = function() {
+    // If we were started by wordpress, execute whatever actions might be desired
+    pgUI_showLog("Starting wordpress actions...");
+    pg.setTemp(true);
+    if(pg.categories.indexOf("*")<0)
+        pg.categories.push("*");
+    PGEN.downloadEvents(cb);
+    function cb(success) {
+        // update settings
+        UI.home.setPageDataField("history", 8);
+        UI.home.setPageDataField("interval", "day");
+        UI.home.setPageDataField("signals", ["home", "stopwatch", "counter", "timer", "note"]);
+        // generate a screenshot of the home page.
+        gotoPage("home");
+        gotoCategory("*");
+        UI.home.graph.makeImage(writeImage.bind(this, "home.png"));
+        if (typeof(WP_EXTRA) === "function")
+            WP_EXTRA();
+        pgUI_showLog("Wordpress actions finished.");
+    }
+    function writeImage(fn, url) {
+        UI.screenshot = url;
     }
 };
 
@@ -100,13 +128,13 @@ Login.prototype.hasFinishedLogin = function() {
     return !this.loggingIn;
 };
 
-Login.prototype.endLogin = function() {
+Login.prototype.endLogin = function(callback) {
+    callback = callback || function(){};
     pgUI.showBusy(false);
     pgUI_showLog("LOGIN_END");
     this.loggingIn = false;
     logEvent("login");
     //pgFile.deleteFile("com.psygraph.lastError");
-    pgFile.readFile("com.psygraph.exit", handleExit.bind(this));
     PGEN.readPsygraph(cb.bind(this));
     function cb(success) {
         if(navigator.splashscreen)
@@ -117,12 +145,7 @@ Login.prototype.endLogin = function() {
         var firstPage = success ? pg.page() : "help";
         gotoPage(firstPage);
         gotoCategory(pg.category());
-    }
-    function handleExit(success, event) {
-        if(success) {
-            pgFile.deleteFile("com.psygraph.exit");
-            pg.addNewEvents(event, false);
-        }
+        callback();
     }
 };
 
@@ -275,6 +298,7 @@ Login.prototype.logoutAndErase = function(callback) {
     callback = typeof(callback)!=="undefined" ? callback : function(){};
     PGEN.logout(this.logoutCB.bind(this), true);
     pg.init();
+    PGEN.login("");
     gotoPage("home");
     callback();
 };

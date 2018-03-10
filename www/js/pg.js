@@ -32,8 +32,9 @@ function PG() {
     this.events         = null;
     this.deletedEvents  = null;
     this.selectedEvents = null;
-    this.version        = 0.5;
+    this.version        = 0.87;
     this.loginEventID   = 0;
+    this.readOnly       = false;
 
     this.init = function() {
         this.username       = "";
@@ -94,8 +95,9 @@ function PG() {
         this.deletedEvents = pgUtil.deepCopy(opg.deletedEvents);
         this.selectedEvents= pgUtil.deepCopy(opg.selectedEvents);
     };
-    this.copySettings = function(opg) {
-        if(this.mtime <= opg.mtime) {
+    this.copySettings = function(opg, force) {
+        force = force || false;
+        if(force || this.mtime <= opg.mtime) {
             // don't over-write new information
             var server          = this.server;
             var online          = this.online;
@@ -141,7 +143,7 @@ function PG() {
         this.deletedEvents  = new Array();
         this.selectedEvents = new Array();
     };
-    this.getMediaURL = function() {
+    this.getMediaServerURL = function() {
         return this.server + "/mediaServer.php";
     };
     this.numCategories = function() {
@@ -224,6 +226,12 @@ function PG() {
     };
     this.debug = function() {
         return this.getPageDataValue("preferences", "Uncategorized", "debug");
+    };
+    this.getReadOnly = function() {
+        return this.readOnly;
+    };
+    this.setReadOnly = function(val) {
+        this.readOnly = val;
     };
     this.getPageMtime = function(page) {
         var data = this.pageData[page];
@@ -444,7 +452,7 @@ function PG() {
     this.updateLoginEvent = function(event) { // modify the event that corresponds to this session
         if(this.loginEventID) { // check if same category
             var e = this.getEventFromID(this.loginEventID);
-            if (e[E_CAT] !== event.category)
+            if(!e || e[E_CAT] !== event.category)
                 this.loginEventID = 0;
         }
         if(!this.loginEventID) {
@@ -602,6 +610,7 @@ function PG() {
                 return this.events[i];
             }
         }
+        return null;
     };
     this.changeEventAtID = function(id, e, changeID) {
         changeID = changeID!==undefined ? changeID : true;
@@ -782,7 +791,7 @@ var pgUtil = {
             ans = e.days + ":" + ans;
         }
         // add milliseconds at centisecond resolution
-        if(e.milliseconds && displayMillis)
+        if(displayMillis)
             ans += "." + zpad(Math.floor(e.milliseconds/10),2);
         return ans;
     },

@@ -50,12 +50,19 @@ a:link {
     font-weight: bold; 
     text-decoration: none; 
 }
-a:visited { 
+div.category a:visited,
+a:visited {
     color: black;
-    font-weight: bold; 
-    text-decoration: none; 
+    font-weight: bold;
+    text-decoration: none;
 }
-a:hover, a:active { 
+div.category a,
+div.category a:visited {
+    color: black;
+    font-weight: bold;
+    text-decoration: none;
+}
+a:hover, a:active {
     text-decoration: underline;
 }
 ul,ol {
@@ -104,6 +111,11 @@ Title Bar and Common Elements
 JQuery elements 
 ==============================================================
 */
+/* popups that are otherwise transparent */
+div.catPopupMenu.ui-popup {
+    background: rgba(255,255,255, 1);
+}
+
 .ui-content .ui-listview, .ui-panel-inner>.ui-listview {
     margin: 1px;
 }
@@ -490,6 +502,7 @@ div.help img {
 #helpDiv, #aboutDiv {
     margin:  0em;
     padding: 12px;
+    position: inherit;
 }
 div.helpPageDiv {
     margin-bottom: 40px;

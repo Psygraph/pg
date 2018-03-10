@@ -367,3 +367,9 @@ GraphComponent.prototype.flipPoints = function(pts) {
         return arr;
     }
 };
+
+
+GraphComponent.prototype.makeImage = function(callback) {
+    Plotly.toImage(this.elementID, {format: 'png', width: 800, height: 600}).then(callback);
+    //Plotly.toImage(this.elementID, {format: 'png', width: 800, height: 600}).then(callback);
+};

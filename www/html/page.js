@@ -264,6 +264,7 @@ Page.prototype.displayEventData = function(e) {
 Page.prototype.createSettings = function() {
     var page     = pg.page();
     var category = pg.category();
+    /*
     var pc = $("#"+page+"_category");
     pc.empty();
     for(var i=0; i<pg.categories.length; i++) {
@@ -276,6 +277,7 @@ Page.prototype.createSettings = function() {
             if(category !== pg.category())
                 gotoCategory(category);
         });
+    */
     var data = UI[page].getPageData(page, pg.category());
     UI[page].settings(true, data);
 };

@@ -107,10 +107,7 @@ function logEvent(type, data) {
         duration: pgUtil.getCurrentTime() - startTime,
         data: data
     };
-    if (type === "exit") { // write a file for later.
-        pgFile.writeFile("com.psygraph.exit", event);
-    }
-    else if (type === "login" || type === "logout" || type === "update") {
+    if (type === "login" || type === "logout" || type === "update") {
         event.type = "login";
         event.category = pg.category();
         pg.updateLoginEvent(event);
@@ -449,10 +446,10 @@ function updateSubheader() {
     else
         menus.removeClass("ui-disabled");
     // Update the category name (string)
-    var catName = pg.category();
-    if(catName === "Uncategorized")
-        catName = "&nbsp;";
-    $(".category").html(catName);
+    var catName = '<a href="" onclick="return categoryClicked();">' + pg.category() + '</a>';
+    //if(catName === "Uncategorized")
+    //    catName = "&nbsp;";
+    $("div.category").html(catName);
     menus.empty();
     for(var i=pg.numCategories()-1; i>=0; i--) {
         var cat = pg.categories[i];
@@ -461,6 +458,27 @@ function updateSubheader() {
     menus.val(pg.category()).trigger("change");
 }
 
+function categoryClicked(cat) {
+    var page = pg.page();
+    var popup = $("#"+page+"_page div.catPopupMenu");
+    if(typeof(cat)!=="undefined") {
+        gotoCategory(cat);
+        popup.popup("close");
+    }
+    else {
+        // open a popup menu to change the category.
+        popup.popup("open");
+        var chooser = $("#"+page+"_page div.catPopupMenu ul");
+        txt = '<li data-role="list-divider"><i>Category...</i></li>';
+        for(var i=0; i<pg.numCategories(); i++) {
+            var cat = pg.categories[i];
+            txt += '<li data-icon="false"><a href="" onclick="return categoryClicked(\''+cat+'\');">'+cat+'</a></li>';
+        }
+        chooser.html(txt);
+        chooser.listview().listview('refresh');
+    }
+    return false;
+}
 function gotoCategory(num) {
     if(typeof(num)==="string") {
         var index = pg.categories.indexOf(num);
@@ -551,8 +569,6 @@ function postData(data, callback, isAsync) {
 }
 
 
-
-
 var PGEN = {
     servers: [],
 
@@ -607,10 +623,8 @@ var PGEN = {
                 if(username!==newPG.username) {
                     // ??? should we write different (local) files for each username?
                     pgUI_showWarn("User '"+username+"' inheriting settings of '" +newPG.username +"'");
-                    pg.copySettings(newPG);
                 }
-                else
-                    pg.copySettings(newPG);
+                pg.copySettings(newPG, true);
             }
             pg.updatePageData(); // add/remove new/obsolete page data
             PGEN.readEvents(callback);
@@ -648,7 +662,7 @@ var PGEN = {
                 pg.cert           = data.cert;
                 pg.certExpiration = data.certExpiration;
                 if(data.mtime > pg.mtime) {
-                    updatePages(data, function(success){updateCategories(success,data,finishLogin.bind(this,success));} );
+                    updatePages(data, finishLogin.bind(this,success) );
                     return;
                 }
             }
@@ -672,8 +686,8 @@ var PGEN = {
                 if(data[field].mtime > pg.getPageMtime(field))
                     pageData[field] = 1;
             }
-            postData({"action": "getPageData", "data": pageData}, pageUpdate);
-            function pageUpdate(success, r) {
+            postData({"action": "getPageData", "data": pageData}, pageUpdate.bind(this, callback));
+            function pageUpdate(callback, success, r) {
                 if(success) {
                     for(var field in r)
                         pg.pageData[field] = parseJSONResponse(field, r[field]);
@@ -761,42 +775,66 @@ var PGEN = {
         }
     },
     writePsygraph: function(data, callback) {
-        callback = typeof(callback)!=="undefined" ? callback : cb;
-        pgFile.writeFile("com.psygraph", data);
+        callback = callback || function(){};
+        if(pg.getReadOnly())
+           callback(true);
+        else
+            pgFile.writeFile("com.psygraph", data, cb);
         function cb(success) {
             if(!success)
                 pgUI.showAlert("Could not save psygraph settings file", "Error");
+            callback(success);
         }
     },
     readPsygraph: function(callback) {
         pgFile.readFile("com.psygraph", callback);
     },
-    writePG: function(data, callback) {
+    writePG: function(data, callback, fn) {
+        callback = callback || function(){};
+        fn = fn || "com.psygraph.pg";
         var tempPG = new PG();
         tempPG.init();
         tempPG.copy(data, false);
-        callback = typeof(callback)!=="undefined" ? callback : cb;
-        pgFile.writeFile("com.psygraph.pg", tempPG, callback);
+        if(pg.getReadOnly())
+            callback(true);
+        else
+            pgFile.writeFile(fn, tempPG, cb);
         function cb(success) {
             if(!success)
                 pgUI.showAlert("Could not save pg settings file", "Error");
+            callback(success);
         }
     },
-    readPG: function(callback) {
-        pgFile.readFile("com.psygraph.pg", callback);
+    readPG: function(callback, fn) {
+        fn = fn || "com.psygraph.pg";
+        pgFile.existFile(fn, cb);
+        function cb(exists) {
+            if(exists) {
+                pgFile.readFile(fn, callback);
+            }
+            else {
+                fn = "com.psygraph.default";
+                pgFile.readFile(fn, callback, true, pgFile.mediaEntry);
+            }
+
+        }
     },
     writeEvents: function(pgTemp, callback) {
-        callback = typeof(callback)!=="undefined" ? callback : cb;
+        callback = callback || function(){};
         var data = {'events': pgTemp.events,
-            'deletedEvents': pgTemp.deletedEvents,
+            'deletedEvents' : pgTemp.deletedEvents,
             'selectedEvents': pgTemp.selectedEvents
         };
-        pgFile.writeFile("com.psygraph.events", data, callback);
+        if(pg.getReadOnly())
+            callback(true);
+        else
+            pgFile.writeFile("com.psygraph.events", data, callback);
         function cb(success) {
             if(!success)
                 pgUI.showAlert("Could not save pg events file", "Error");
             //else  xxx logic to write then move the file
             //    pgFile.moveFile("com.psygraph.events_new", "com.psygraph.events");
+            callback(success);
         }
     },
     readEvents: function(callback) {
@@ -827,7 +865,7 @@ var PGEN = {
         pgFile.deleteAudioFiles();
     },
     updateSettings: function(newPG, callback) {
-        if(pg.useServer) {
+        if(pg.useServer && !pg.getReadOnly()) {
             pgUI.showBusy(true);
             pgUI_showLog("Writing settings to the server");
             postData({'action': "settings", 'pg': pgUtil.encode(newPG, true) },

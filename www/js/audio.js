@@ -133,7 +133,7 @@ var pgAudio = {
             }
         }
         function wpURL(id) {
-            var wp_url = pg.getMediaURL() + "?action=downloadFile";
+            var wp_url = pg.getMediaServerURL() + "?action=downloadFile";
             wp_url += "&id="       + id;
             wp_url += "&username=" + pg.username;
             wp_url += "&cert="     + pg.cert;
@@ -160,15 +160,18 @@ var pgAudio = {
         if(src.indexOf("http") !== 0 &&
            src.indexOf("file") !== 0 &&
            src.indexOf("data:") !== 0) {
-            if(forNotification)
-                src = "file://media/" + src;
-            else
-                src = pgFile.getMediaURL() + src;
-
+            if(forNotification) {
+                if(device.platform==="iOS")
+                    src = "file://media/"+src;
+                else
+                    src = "file://media/"+src;
+            }
+            else {
+                src = pgFile.getMediaURL() + "/" + src;
+                src = src.replace("file://", "");
+            }
         }
-        //if(callback)
         callback(src);
-
 
         function foundLocalFile(success, url) {
             if(success) {
