@@ -9,6 +9,7 @@ var app = {
 
     pagesLoaded  : $.Deferred(),
     pagesRemaining : 0,
+    firstPage: true,
 
     onPageReady : function() {
         pgUI_showLog("onPageReady");
@@ -88,6 +89,14 @@ var app = {
             var opts = {'role': "page"};
             pc.pagecontainer( "load", "html/"+page, opts );
         }
+        /*
+        pc.on( "pagecontainershow", function( event, ui ) {
+            if(app.firstPage) {
+                showPage(true);
+                app.firstPage = false;
+            }
+        });
+        */
     },
     initPage: function(event, ui) {
         var target = event.target;

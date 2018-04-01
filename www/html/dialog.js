@@ -19,10 +19,6 @@ function Dialog() {
 Dialog.prototype = Object.create(Page.prototype);
 Dialog.prototype.constructor = Dialog;
 
-Dialog.prototype.update = function(show) {
-};
-Dialog.prototype.settings = function() {
-};
 Dialog.prototype.help = function() {
     return "Modal dialog.";
 };

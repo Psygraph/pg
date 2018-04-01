@@ -18,7 +18,10 @@ Note.prototype.update = function(show, data) {
         this.resize();
     }
     else {
-        var noteText = this.getNoteText();
+        data.lastText = {
+            'title': this.getNoteTitle(),
+            'text':  this.getNoteText()
+        };
         // stop recording if we leave the page.
         if(this.running)
             this.stop();
@@ -150,8 +153,9 @@ Note.prototype.getPageData = function() {
 
 Note.prototype.audioFileUploaded = function(filename) {
     var data = this.getPageData();
-    if(data.showConfirmation)
-        pgUI.showAlert("Uploaded file: "+filename+", removed from local file system.");
+    // user notification is now achieved via email from the server.
+    //if(data.showConfirmation)
+    //    pgUI.showAlert("Uploaded file: "+filename+", removed from local file system.");
 };
 
 Note.prototype.start = function(restart) {
@@ -199,7 +203,7 @@ Note.prototype.reset = function() {
         return false;
     }
     var time          = pgUtil.getCurrentTime();
-    var noteTitle     = $("#noteTitle").val();
+    var noteTitle     = this.getNoteTitle();
     var noteText      = this.getNoteText();
     var eventData     = {'title': noteTitle};
 
@@ -302,6 +306,10 @@ Note.prototype.deleteRecorded = function() {
         UI.note.eid=0;
         UI.note.updateAudio();
     }
+};
+
+Note.prototype.getNoteTitle = function() {
+    return $("#noteTitle").val();
 };
 
 Note.prototype.getNoteText = function() {

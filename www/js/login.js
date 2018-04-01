@@ -21,7 +21,7 @@ Login.prototype.begin = function() {
     function fileReady() {
         if (WORDPRESS === true) {
             // these WP_* variables are all set if index.html is served by wp.php
-            pg.setTemp(true);
+            pg.setReadOnly(true);
             PGEN.login(WP_USERNAME,
                 this.passwordCB.bind(this, WP_SERVER, WP_USERNAME, "", WP_CERT, this.endLogin.bind(this, this.wordpress.bind(this))));
         }
@@ -59,18 +59,20 @@ Login.prototype.begin = function() {
 Login.prototype.wordpress = function() {
     // If we were started by wordpress, execute whatever actions might be desired
     pgUI_showLog("Starting wordpress actions...");
-    pg.setTemp(true);
     if(pg.categories.indexOf("*")<0)
         pg.categories.push("*");
     PGEN.downloadEvents(cb);
     function cb(success) {
+        if(!success)
+            pgUI_showWarn("Failed to download events.");
         // update settings
+        gotoPage("home");
+        gotoCategory("*");
         UI.home.setPageDataField("history", 8);
         UI.home.setPageDataField("interval", "day");
         UI.home.setPageDataField("signals", ["home", "stopwatch", "counter", "timer", "note"]);
+        showPage(true);
         // generate a screenshot of the home page.
-        gotoPage("home");
-        gotoCategory("*");
         UI.home.graph.makeImage(writeImage.bind(this, "home.png"));
         if (typeof(WP_EXTRA) === "function")
             WP_EXTRA();
@@ -145,6 +147,8 @@ Login.prototype.endLogin = function(callback) {
         var firstPage = success ? pg.page() : "help";
         gotoPage(firstPage);
         gotoCategory(pg.category());
+        // "Not good."  gotoCategory is blowing away the graph on the home page.
+        gotoPage(firstPage);
         callback();
     }
 };

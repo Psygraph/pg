@@ -72,7 +72,7 @@ GraphComponent.prototype.palatte = function(groupName) {
 };
 
 GraphComponent.prototype.create = function(groupNames, interval) {
-    this.interval = interval;
+    this.interval = interval || this.interval;
     this.groupNames = groupNames;
     this.numGroups  = this.groupNames.length;
     Plotly.purge(this.elementID);

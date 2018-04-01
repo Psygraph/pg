@@ -24,7 +24,8 @@ var UI = {
     dialog:      null,
 
     state:      {accel: {}, orient: {}, location: {}, notify: {}, random: {}, device: {}, bluetooth: {}},
-    window:     {t: null, currentPage: null, alertCallback: null, sidenav: null}
+    window:     {t: null, currentPage: null, alertCallback: null, sidenav: null},
+    screenshot: "data:image/png;base64,"
 };
 
 // update page, accel and location state
@@ -273,14 +274,14 @@ function onResize() {
 // Synchronize after four seconds of inactivity.
 // Pages that modify events or state should call this,
 // but it is also called when navigating away from pages.
-function syncSoon() {
-    callback = (typeof(callback)==="undefined") ? (function fx(){}) : callback;
+function syncSoon(force) {
+    force = force || false;
     clearTimeout(UI.window.t);
-    UI.window.t = setTimeout(timeout, 4000);
-    function timeout() {
+    UI.window.t = setTimeout(timeout.bind(this,force), 4000);
+    function timeout(force) {
         if(pgLogin.hasFinishedLogin()) {
             logEvent("update");
-            PGEN.synchronize();
+            PGEN.synchronize(force);
         }
     }
 }
@@ -366,13 +367,11 @@ function gotoSectionHelp() {
 function gotoPage(newPage) {
     var oldPage = getPage();
     UI.lastPage = oldPage;
-    var opts = {'changeHash': false,
-        'role': "page"
-    };
-    // update old state
+    // save page data
     if(oldPage && UI[oldPage]) {
         var data = UI[oldPage].getPageData();
-        UI.state[oldPage] = UI[oldPage].update(false, data);
+        data = UI[oldPage].update(false, data);
+        UI[oldPage].setPageData(data);
     }
     // change the PG page
     var index = pg.pages.indexOf(newPage);
@@ -387,55 +386,53 @@ function gotoPage(newPage) {
     }
     // remove the loading dialog, if present
     pgUI.showBusy(false);
-    // change the display page
-    if(oldPage == null)
-        opts.allowSamePageTransition = true;
+    // change the visible page
     UI.window.currentPage = newPage;
     if(ONSEN) {
-        //$(".page").hide();
-        //$("#"+newPage+"_page").show();
-        var lopts = {
+        var opts = {
             'animation' : "slide"
         };
         //$("#onsNavigator")[0].replacePage("ons_"+newPage+"_page");
-        $("#onsNavigator")[0].replacePage("html/"+newPage+".html", lopts);
+        $("#onsNavigator")[0].replacePage("html/"+newPage+".html", opts);
     }
     else {
+        var opts = {'changeHash': false,
+            'role': "page"
+        };
+        if(oldPage == null)
+            opts.allowSamePageTransition = true;
         var pc = $.mobile.pageContainer;
-        //$(":mobile-pagecontainer").pagecontainer("change", newPage+"_page", opts);
         pc.pagecontainer("change", $("#"+newPage+"_page"), opts);
     }
-    // update new state
+    // restore page data
     if(newPage && UI[newPage]) {
         var data = UI[newPage].getPageData();
         UI[newPage].update(true, data);
     }
-    //if(UI.onPageChange) {
-    //    UI.onPageChange();
-    //    UI.onPageChange = null;
-    //}
     pgAudio.stopAlarm(-1);
     logEvent("update");
-    //updateSubheader(); // updating the page does not change the header, which currently has only category info
     gotoSectionMain();
     pgUI.slideNav(false);
 }
-function showPage(update) {
+function showPage(show) {
     var page = getPage();
-    if(UI[page]) {
-        if(!update)
-            UI.state[page] = UI[page].update(false, UI[page].getPageData());
-        else {
-            UI[page].update(true, UI.state[page]);
-            syncSoon();
-        }
+    var data = UI[page].getPageData();
+    if(show) { // show (update) the page
+        UI[page].update(true, data);
+    }
+    else { // hide the page, save the data
+        data = UI[page].update(false, data);
+        UI[page].setPageData(data);
+        syncSoon();
     }
 }
 function resetPage() {
+    // This is basically a same-page transition.
+    // It is only necessary for pages that cache event IDs
     var page = getPage();
-    if(UI[page] && page==="list") { // only refresh pages that cache event IDs
-        UI.state[page] = UI[page].update(false, UI[page].getPageData());
-        UI[page].update(true, UI.state[page]);
+    if(page==="list") {
+        showPage(false);
+        showPage(true);
     }
 }
 function updateSubheader() {
@@ -492,9 +489,17 @@ function gotoCategory(num) {
     num = num > pg.numCategories()-1 ? pg.numCategories()-1 : num;
     // update the stylesheet URL
     var page = getPage();
-    UI.state[page] = UI[page].update(false, UI[page].getPageData());
-    pg.categoryIndex = num; // the category change has to happen between the state updates
-    UI[page].update(true, UI[page].getPageData());
+
+    // save page state, goto new category, load page state
+    var data = UI[page].getPageData();
+    data = UI[page].update(false, data);
+    UI[page].setPageData(data);
+
+    pg.categoryIndex = num;
+
+    data = UI[page].getPageData();
+    UI[page].update(true, data);
+
     var cd = pg.getCategoryData(pg.category());
     var style = "media/" + cd.style;
     $("#user_style").attr("href", style);
@@ -738,13 +743,13 @@ var PGEN = {
             gotoPage(pg.page());
         }
     },
-    synchronize: function (callback) {
+    synchronize: function (callback, force) {
         callback = (typeof(callback)==="undefined") ? (function fx(){}) : callback;
-
+        force = force || false;
         // Update the pg, do the callback
         PGEN.writePG(pg, cb);
 
-        if(!pg.dirty())
+        if(! (pg.dirty() || force) )
             return;
 
         updateState(false);
@@ -760,14 +765,11 @@ var PGEN = {
         }
         function moreSync(success) {
             if(success) {
-                if(pg.loggedIn) {
+                if(pg.loggedIn && pg.online) {
                     PGEN.uploadEvents(); // synchonize all events with the server
                     PGEN.uploadFiles(false);
-                    pg.dirty(false);
                 }
-                else {
-                    pg.dirty(false);
-                }
+                pg.dirty(false);
             }
             else {
                 pgUI.showAlert("Could not save pg events file", "Error");
@@ -901,12 +903,12 @@ var PGEN = {
     // download events from the server
     downloadEvents: function(callback) {
         if(!(pg.loggedIn && pg.online)) {
-            pgUI.showAlert("You must be online and logged in to issue this command", "Not online");
+            pgUI.showAlert("You must be online and logged in to download events.");
             //$('#home_action').popup('close');
             callback(true);
         }
         else {
-            postData({action: "getEventArray"}, createEvents );
+            postData({action: "getEventArray", timeout: 12000}, createEvents );
         }
         function createEvents(success, data) {
             if(success) {
@@ -923,7 +925,7 @@ var PGEN = {
     uploadFiles: function(force, callback) {
         force = typeof(force)==="undefined" ? false : force;
         if(!(pg.loggedIn && pg.online)) {
-            pgUI.showAlert("You must be online and logged in to issue this command");
+            pgUI.showAlert("You must be online and logged in to upload files.");
             callback(false);
             return;
         }
@@ -934,7 +936,7 @@ var PGEN = {
         //callback = (typeof(callback)!="undefined")? callback : function(){};
         var callback = function(){};
         if(!(pg.loggedIn && pg.online)) {
-            pgUI.showAlert("You must be online and logged in to issue this command");
+            pgUI.showAlert("You must be online and logged in to upload events.");
             return;
         }
         uploadDeletedEvents();

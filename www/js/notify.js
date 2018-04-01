@@ -204,9 +204,14 @@ Notify.prototype.removeCategory = function(category) {
             var data = JSON.parse(note.data);
             // xxx This is broken upstream: it should not be double-encoded.
             data = JSON.parse(data);
-            if(data.category === category && cordova.plugins.notification.local.isScheduled(id)) {
-                // only cancel scheduled notifications, otherwise the sound will stop playing.
-                cordova.plugins.notification.local.cancel( id );
+            if(data.category === category) {
+                // only cancel scheduled notifications, otherwise the sound will stop playing (Android)
+                if(cordova.plugins.notification.local.isTriggered(id)) {
+                    setTimeout( cordova.plugins.notification.local.cancel.bind(this,id), 4000);
+                }
+                else {
+                    cordova.plugins.notification.local.cancel( id );
+                }
             }
         }
     }

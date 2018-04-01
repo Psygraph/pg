@@ -475,7 +475,7 @@ var pgFile = {
             promise.resolve();
             function success() {
                 pgUI_showLog("Moved file: " +oldFN+ ", "+ newFN);
-                syncSoon();
+                syncSoon(true);
             }
             function fail(){
                 pgUI_showLog("Didn't move file: " +oldFN+ ", "+ newFN);
@@ -621,11 +621,13 @@ var pgFile = {
             function success(r) {
                 if(r.responseCode===200) {
                     if(r.response !== "" && r.response !== "OK") {
-                        pgUI.showAlert("Error: "+r.response);
+                        pgUI.showBusy(false);
+                        pgUI.showAlert(r.response, "Upload Error", function(){promise.resolve();});
+                        return;
                     }
                     else {
                         // xxx We should not remove uploaded files.
-                        // If we dont, though, we need a mechanism to ensure that they are not uploaded twice.
+                        // If we don't, though, we need a mechanism to ensure that they are not uploaded twice.
                         entry.remove();
                         // xxx we should not have knowledge of the note tool in the file system layer
                         UI.note.audioFileUploaded(filename);

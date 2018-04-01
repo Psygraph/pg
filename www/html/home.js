@@ -12,12 +12,10 @@ Home.prototype.update = function(show, data) {
     if(show) {
         if (!this.graph) {
             this.graph   = new GraphComponent("home_graph", "bar");
-            var interval = this.graph.computeNumericInterval(data.interval);
-            this.graph.create(data.signals, interval);
         }
         this.status();
         this.resize();
-        this.updateGraph();
+        this.updateGraph(data);
     }
     else {
     }
@@ -79,9 +77,9 @@ Home.prototype.getOptions = function() {
     };
 };
 
-Home.prototype.updateGraph = function() {
-    var data = this.getPageData();
-    this.graph.clearPoints();
+Home.prototype.updateGraph = function(data) {
+    data = data || this.getPageData();
+    this.graph.create(data.signals, this.graph.computeNumericInterval(data.interval));
     var interval   = this.graph.computeNumericInterval(data.interval);
     var nIntervals = data.history;
     var now        = pgUtil.getCurrentTime();

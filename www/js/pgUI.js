@@ -102,7 +102,7 @@ var pgUI = {
         message = pgUtil.escape(message, false, false);
         title   = pgUtil.escape(title, false, false);
         var modal     = typeof(cb)!=="undefined" ? false : true;
-        UI.window.alertCallback = typeof(cb)!="undefined" ? cb : null;
+        UI.window.alertCallback = typeof(cb)!=="undefined" ? cb : null;
         $(".default").removeClass('default');
 
         $("#pgAlert").remove();
@@ -121,8 +121,10 @@ var pgUI = {
     },
 
     alertCallbackHolder: function(l) {
-        if(UI.window.alertCallback)
+        if(UI.window.alertCallback) {
             UI.window.alertCallback.apply(this, arguments);
+            UI.window.alertCallback = null;
+        }
         return false;
     },
 
