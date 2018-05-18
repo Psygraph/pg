@@ -55,7 +55,7 @@ var pgFile = {
                 callback(true);
             }
             function fail(err) {
-                pgUI_showLog("Could not open media file system");
+                pgUI.showLog("Could not open media file system");
                 callback(false);
             }
         }
@@ -64,15 +64,15 @@ var pgFile = {
             pgFile.tempURL   = fileSystem.toURL().replace(/\/$/, "");
         }
         function fsSuccess(fileSystem) {
-            pgUI_showLog("Got fileSystem: " +fileSystem.toString());
+            pgUI.showLog("Got fileSystem: " +fileSystem.toString());
         }
         function fsFail(err) {
-            pgUI_showLog("Failed fileSystem: " +err.toString());
+            pgUI.showLog("Failed fileSystem: " +err.toString());
         }
         function onFSPersist(fileSystem) {
             pgFile.persistEntry = fileSystem;
             pgFile.persistURL   = fileSystem.toURL().replace(/\/$/, "");
-            pgUI_showLog("Got persistent FS");
+            pgUI.showLog("Got persistent FS");
 
             //var soundDir;
             if(device.platform==="iOS") {
@@ -90,7 +90,7 @@ var pgFile = {
             pgFile.initialized = true;
         }
         function persistFail(err) {
-            pgUI_showLog("Could not get persistent fileSystem");
+            pgUI.showLog("Could not get persistent fileSystem");
             pgFile.initialized = false;
         }
         /*
@@ -104,12 +104,12 @@ var pgFile = {
             //                        function() {
             pgFile.soundEntry = fileSystem;
             pgFile.soundURL   = fileSystem.toURL().replace(/\/$/, "");
-            //pgUI_showError("Could not create Sounds directory.");
+            //pgUI.showError("Could not create Sounds directory.");
             //                        }
             //);
         }
         function soundFail(err) {
-            pgUI_showLog("Could not get Sounds fileSystem");
+            pgUI.showLog("Could not get Sounds fileSystem");
         }
         */
     },
@@ -213,7 +213,7 @@ var pgFile = {
         if(pgFile.useWebFS) {
             var data = localStorage.getItem(filename);
             if(data && data.length) {
-                pgUI_showLog("Reading file: " + filename +" size: "+data.length);
+                pgUI.showLog("Reading file: " + filename +" size: "+data.length);
                 var s = "";
                 try {
                     s = JSON.parse(data);
@@ -236,7 +236,7 @@ var pgFile = {
             function win(file) {
                 var reader = new FileReader();
                 reader.onloadend = function (evt) {
-                    pgUI_showLog("read success: "+filename);
+                    pgUI.showLog("read success: "+filename);
                     var s = "";
                     try {
                         if(parse)
@@ -245,7 +245,7 @@ var pgFile = {
                             s = evt.target.result
                     }
                     catch (err) {
-                        pgUI_showError(err.message);
+                        pgUI.showError(err.message);
                     }
                     if(s==="")
                         callback(false, s);
@@ -256,20 +256,23 @@ var pgFile = {
             }
         }
         function fail(evt) {
-            pgUI_showLog("Could not read file: "+filename);
+            pgUI.showLog("Could not read file: "+filename);
             callback(false, null);
         }
     },
-    writeFile: function(filename, struct, callback) {
+    writeFile: function(filename, struct, callback, log) {
+        log = typeof(log)!=="undefined" ? log : true;
         var data = JSON.stringify(struct);
-        pgFile.writeData(filename, data, callback);
+        pgFile.writeData(filename, data, callback, log);
     },
-    writeData: function(filename, data, callback) {
+    writeData: function(filename, data, callback, log) {
+        log = typeof(log)!=="undefined" ? log : true;
         callback = typeof(callback)!=="undefined" ? callback : function(){};
         //if(filename.indexOf("com.")==0)
         //    filename = pgFile.getPersistURL() +"/" +filename;
         if(pgFile.useWebFS) {
-            pgUI_showLog("Writing file: " + filename +" size: "+data.length);
+            if(log)
+                pgUI.showLog("Writing file: " + filename +" size: "+data.length);
             var oldData = localStorage.getItem(filename);
             localStorage.removeItem(filename);
             var len = localStorage.length;
@@ -277,12 +280,13 @@ var pgFile = {
                 localStorage.setItem(filename, data);
             }
             catch (err) {
-                pgUI_showLog(err);
-                pgUI.showDialog({title: "Storage Error", true: "OK"},
-                           "<p>"+err.message+"</p>" +
-                           "<p>Try deleting local files to increase available space,<br/>"+
-                           "and removing and \"data:\" links from the category settings.</p>",
-                           callback.bind(false, ""));
+                if(log) {
+                    pgUI.showLog(err);
+                    pgUI.showDialog({title: "Storage Error", true: "OK"},
+                        "<p>" + err.message + "</p>" +
+                        "<p>Try deleting events to increase available space.</p>",
+                        callback.bind(false, ""));
+                }
                 return;
             }
             var s = (len < localStorage.length);
@@ -297,18 +301,21 @@ var pgFile = {
             ent.createWriter(win1, fail1);
             function win1(writer) {
                 writer.onwrite = function(evt) {
-                    pgUI_showLog("write success: "+filename);
+                    if(log)
+                        pgUI.showLog("write success: "+filename);
                     callback(true, ent.toURL());
                 };
                 writer.onerror = function(evt) {
-                    pgUI_showWarn("Write failed: " +filename +", " + evt.toString());
+                    if(log)
+                        pgUI.showWarn("Write failed: " +filename +", " + evt.toString());
                     callback(false, "");
                 };
                 writer.write(data);
             }
         }
         function fail1(evt) {
-            pgUI_showWarn("write fail: "+filename);
+            if(log)
+                pgUI.showWarn("write fail: "+filename);
             callback(false, "");
         }
     },
@@ -319,14 +326,14 @@ var pgFile = {
             ent.createWriter(win, fail);
             function win(writer) {
                 writer.onwrite = function(evt) {
-                    pgUI_showLog("write success: "+filename);
+                    pgUI.showLog("write success: "+filename);
                     callback(true);
                 };
                 writer.write(data);
             }
         }
         function fail(evt) {
-            pgUI_showLog("write fail: "+filename);
+            pgUI.showLog("write fail: "+filename);
             callback(false);
         }
     },
@@ -367,7 +374,7 @@ var pgFile = {
                         callback(true, ent.toURL());
                     },
                     function(err) {
-                        pgUI_showLog("Error copying temp file("+src+"): " + err.source);
+                        pgUI.showLog("Error copying temp file("+src+"): " + err.source);
                         callback(false, src);
                     }
                 );
@@ -390,7 +397,7 @@ var pgFile = {
             }
         }
         function fail(err) {
-            pgUI_showLog("Error copying temp file("+src+"): " + err.message);
+            pgUI.showLog("Error copying temp file("+src+"): " + err.message);
             callback(false);
         }
     },
@@ -418,7 +425,7 @@ var pgFile = {
             lastCB();
         }
         function fail(error) {
-            pgUI_showError("Failed to read entry: " + error.message);
+            pgUI.showError("Failed to read entry: " + error.message);
             doneCB();
         }
     },
@@ -441,7 +448,7 @@ var pgFile = {
             callback(files);
         }
         function fail(error) {
-            pgUI_showLog("Failed to read directory: " + dir);
+            pgUI.showLog("Failed to read directory: " + dir);
             callback([]);
         }
     },
@@ -474,11 +481,11 @@ var pgFile = {
             }
             promise.resolve();
             function success() {
-                pgUI_showLog("Moved file: " +oldFN+ ", "+ newFN);
+                pgUI.showLog("Moved file: " +oldFN+ ", "+ newFN);
                 syncSoon(true);
             }
             function fail(){
-                pgUI_showLog("Didn't move file: " +oldFN+ ", "+ newFN);
+                pgUI.showLog("Didn't move file: " +oldFN+ ", "+ newFN);
             }
         }
     },
@@ -538,11 +545,11 @@ var pgFile = {
         // mime type: "audio/mp4";
         xhr.send(formData);  // multipart/form-data
         function successCB(evt) {
-            pgUI_showLog("Response: " + evt.target.status + ", " + evt.target.response);
+            pgUI.showLog("Response: " + evt.target.status + ", " + evt.target.response);
             callback(true);
         }
         function failCB(evt) {
-            pgUI_showLog("Error: " + evt.target.status);
+            pgUI.showLog("Error: " + evt.target.status);
             callback(false);
         }
     },
@@ -615,8 +622,14 @@ var pgFile = {
                 params.action   = "uploadFile";
                 options.params  = params;
 
-                var ft = new FileTransfer();
-                ft.upload(fileURL, encodeURI(postURL), success, fail, options);
+                try {
+                    var ft = new FileTransfer();
+                    ft.upload(fileURL, encodeURI(postURL), success, fail, options);
+                }
+                catch (err) {
+                    pgUI.showWarn("Could not upload file: " +fileURL);
+                    promise.resolve();
+                }
             }
             function success(r) {
                 if(r.responseCode===200) {
@@ -631,19 +644,19 @@ var pgFile = {
                         entry.remove();
                         // xxx we should not have knowledge of the note tool in the file system layer
                         UI.note.audioFileUploaded(filename);
-                        pgUI_showLog("Posted file: "+fileURL+" to: "+encodeURI(postURL));
-                        pgUI_showLog("Response = " + r.response + "Sent = "     + r.bytesSent);
+                        pgUI.showLog("Posted file: "+fileURL+" to: "+encodeURI(postURL));
+                        pgUI.showLog("Response = " + r.response + "Sent = "     + r.bytesSent);
                     }
                 }
                 else {
-                    pgUI_showWarn("Could not upload file: " +r.responseCode +" "+ r.response);
+                    pgUI.showWarn("Could not upload file: " +r.responseCode +" "+ r.response);
                 }
                 promise.resolve();
             }
             function fail(error) {
-                pgUI_showLog("Could not upload "+fileURL+". Code = " + error.code);
-                pgUI_showLog("upload error source " + error.source);
-                pgUI_showLog("upload error target " + error.target);
+                pgUI.showLog("Could not upload "+fileURL+". Code = " + error.code);
+                pgUI.showLog("upload error source " + error.source);
+                pgUI.showLog("upload error target " + error.target);
                 promise.resolve();
             }
         }
@@ -659,6 +672,3 @@ var pgFile = {
         return path.split('.').pop();
     }
 };
-
-//
-// calling this without a callback has nasty syncronization effects; we proceed to call other functions before init completes.

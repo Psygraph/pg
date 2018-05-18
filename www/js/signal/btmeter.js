@@ -41,7 +41,7 @@ Bluetoothometer.prototype.stopNotification = function(service, characteristic) {
 };
 Bluetoothometer.prototype.readBT = function(service, characteristic, readCB, writeCB) {
     if(!this.device) {
-        pgUI_showError("Tried to read from non-existent device");
+        pgUI.showError("Tried to read from non-existent device");
         return;
     }
     ble.read(this.device.id,
@@ -50,7 +50,7 @@ Bluetoothometer.prototype.readBT = function(service, characteristic, readCB, wri
 };
 Bluetoothometer.prototype.writeBT = function(service, characteristic, bytes, readCB, writeCB) {
     if(!this.device) {
-        pgUI_showError("Tried to read from non-existent device");
+        pgUI.showError("Tried to read from non-existent device");
         return;
     }
     ble.write(this.device.id,
@@ -87,7 +87,7 @@ GenericMeter.prototype.update = function(show, data) {
         }
     }
     catch(err) {
-        pgUI_showWarn(err.toString());
+        pgUI.showWarn(err.toString());
         data = {period:1000, data:{}};
     }
     return data;
@@ -165,7 +165,7 @@ GenericMeter.prototype.pickServiceCharacteristic = function(callback) {
             return;
         }
         var service = this.device.services[sID];
-        pgUI_showLog("services returned with: " + service );
+        pgUI.showLog("services returned with: " + service );
         var characteristics = this.device.characteristics;
         var cIDs = [];
         for(var i=0; i<characteristics.length; i++) {
@@ -185,7 +185,7 @@ GenericMeter.prototype.pickServiceCharacteristic = function(callback) {
                 return;
             }
             var characteristic = cIDs[cID];
-            pgUI_showLog('Adding service ' + service + '; characteristic:' + characteristic);
+            pgUI.showLog('Adding service ' + service + '; characteristic:' + characteristic);
             callback(service, characteristic);
         }
     }
@@ -237,7 +237,7 @@ GenericMeter.prototype.read = function(obj) {
             }
             var time = pgUtil.getCurrentTime();
             var val = [time, num];
-            pgUI_showLog("Read data: "+val);
+            pgUI.showLog("Read data: "+val);
             this.pushData(val);
         }
         else {
@@ -365,7 +365,7 @@ PGMeter.prototype.update = function(show, data) {
         }
     }
     catch(err) {
-        pgUI_showWarn(err.toString());
+        pgUI.showWarn(err.toString());
         data = {period:1000, data:{}};
     }
     return data;
@@ -459,7 +459,7 @@ PGMeter.prototype.read = function(type, a) {
     if(!this.running)
         return;
     if(this.signals.indexOf(type)===-1 && (type !=="analog")) {
-        pgUI_showWarn("Not logging signal: "+type);
+        pgUI.showWarn("Not logging signal: "+type);
         return;
     }
     if(type==="temperature") {
@@ -598,7 +598,7 @@ PGMooshimeter.prototype.update = function(show, data) {
         }
     }
     catch(err) {
-        pgUI_showWarn(err.toString());
+        pgUI.showWarn(err.toString());
         data = {period:1000, data:{}};
     }
     return data;
@@ -676,7 +676,7 @@ PGMooshimeter.prototype.initializeMeter = function() {
         this.meter.sendCommand('ch2:mapping 1');
     }
     else {
-        pgUI_showError("unknown meter type");
+        pgUI.showError("unknown meter type");
     }
 
     //this.meter.sendCommand('reboot 0'); // logging interval in seconds

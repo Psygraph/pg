@@ -18,6 +18,7 @@ Map.prototype.constructor = Map;
 
 Map.prototype.update = function(show, data) {
     if(show) {
+        this.data = data;
         pgLocation.locationChecker(true);
         if (!this.map) {
             this.createMap();
@@ -25,32 +26,31 @@ Map.prototype.update = function(show, data) {
         }
 
         pgLocation.getCurrentLocation(this.updateLocation.bind(this));
-        this.addLines(data);
-        this.addMarkers(data);
+        this.addLines(this.data);
+        this.addMarkers(this.data);
         this.center(false);
     }
     else {
         pgLocation.locationChecker(false);
     }
-    return data;
+    return this.data;
 };
 
-Map.prototype.settings = function(show, data) {
+Map.prototype.settings = function(show) {
     if(show) {
-        $("#map_showMarkers").prop("checked", data.showMarkers).checkboxradio("refresh");
-        $("#map_showPaths").prop("checked", data.showPaths).checkboxradio("refresh");
-        $("#map_provider").val(data.provider).trigger("change");
+        $("#map_showMarkers").prop("checked", this.data.showMarkers).checkboxradio("refresh");
+        $("#map_showPaths").prop("checked", this.data.showPaths).checkboxradio("refresh");
+        $("#map_provider").val(this.data.provider).trigger("change");
     }
     else {
-        data.showMarkers  = $("#map_showMarkers")[0].checked;
-        data.showPaths    = $("#map_showPaths")[0].checked;
-        data.provider     = $("#map_provider").val();
-        data.lastPoint    = this.lastPoint;
-        this.addTileLayer(data);
-        this.addMarkers(data);
-        this.addLines(data);
+        this.data.showMarkers  = $("#map_showMarkers")[0].checked;
+        this.data.showPaths    = $("#map_showPaths")[0].checked;
+        this.data.provider     = $("#map_provider").val();
+        this.data.lastPoint    = this.lastPoint;
+        this.addTileLayer();
+        this.addMarkers();
+        this.addLines();
     }
-    return data;
 };
 
 Map.prototype.getPageData = function() {
@@ -154,8 +154,7 @@ Map.prototype.markPoint = function(point) {
                   data: {location: [time, point.lat, point.lng, point.alt]} };
     event.data.title = "unnamed";
     pg.addNewEvents(event, true);
-    var data = this.getPageData();
-    this.addMarkers(data);
+    this.addMarkers();
     UI.map.closePopups();
 };
 
@@ -190,8 +189,7 @@ Map.prototype.center = function(doPopup) {
 };
 
 Map.prototype.createMap = function() {
-    var data = this.getPageData();
-    var latlng = {lat: data.lastPoint.lat, lng: data.lastPoint.lng};
+    var latlng = {lat: this.data.lastPoint.lat, lng: this.data.lastPoint.lng};
     var opts = {
         zoomControl:        false,
         center:             latlng,
@@ -202,18 +200,18 @@ Map.prototype.createMap = function() {
     };
     this.map = L.map('mapid', opts);
     this.popup = L.popup();
-    this.addTileLayer(data);
+    this.addTileLayer();
     this.map.attributionControl.setPrefix(''); // the "powered by leaflet" control is a bit much.
     this.map.on('dblclick', this.onMapDblClick.bind(this));
     this.map.on('click', this.onMapClick.bind(this));
-    this.addMarkers(data);
-    this.addLines(data);
+    this.addMarkers();
+    this.addLines();
     //this.createButtons();
 };
 
-Map.prototype.addTileLayer = function(data) {
+Map.prototype.addTileLayer = function() {
     var url, attrib;
-    if(data.provider === "MapBox") {
+    if(this.data.provider === "MapBox") {
         //url = 'https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png';
         url = 'https://{s}.tiles.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.png?access_token=';
         //url = 'https://{s}.tiles.mapbox.com/v4/mapbox.mapbox-terrain-v2/{z}/{x}/{y}.png?access_token=';
@@ -222,10 +220,10 @@ Map.prototype.addTileLayer = function(data) {
         url += 'pk.eyJ1IjoicHN5Z3JhcGgiLCJhIjoiYkd1eWVITSJ9.tXut1t0FMolAcxZRowrlqw';
         attrib = '<a href="" onclick="pgUtil.openWeb(\'http://www.mapbox.com/about/maps\')" >Terms &amp; Feedback</a>';
     }
-    else if(data.provider === "ArcGIS") {
+    else if(this.data.provider === "ArcGIS") {
         url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
         attrib = '<a href="" onclick="pgUtil.openWeb(\'http://www.esri.com\')" title="Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community" >Tiles &copy; Esri</a>';}
-    else if(data.provider === "OSM") {
+    else if(this.data.provider === "OSM") {
         url    = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
         attrib = 'Map data © <a href="" onclick="pgUtil.openWeb(\'http://openstreetmap.org\');">OpenStreetMap</a>';
     }
@@ -282,8 +280,7 @@ Map.prototype.setMarkerName = function(id) {
                 event[E_DATA].title = name;
                 var success = pg.changeEventAtID(id, event);
             }
-            var data = this.getPageData();
-            this.addMarkers(data);
+            this.addMarkers(this.data);
         }
         resetPage();
     }
@@ -303,10 +300,10 @@ Map.prototype.showMarkerText = function(id) {
     }
 };
 
-Map.prototype.addMarkers = function(data) {
+Map.prototype.addMarkers = function() {
     var markerIndex = this.marker.length;
     if(markerIndex === 0) {
-        var latlng = {lat: data.lastPoint.lat, lng: data.lastPoint.lng};
+        var latlng = {lat: this.data.lastPoint.lat, lng: this.data.lastPoint.lng};
         addMarker.call(this, markerIndex++, latlng);
     }
     // remove old markers
@@ -315,7 +312,7 @@ Map.prototype.addMarkers = function(data) {
         this.marker.splice(markerIndex,1);
     }    
     var events;
-    if( data.showMarkers )
+    if( this.data.showMarkers )
         events = pg.getEvents(pg.category());
     else
         events = pg.getSelectedEvents(pg.category());
@@ -372,10 +369,10 @@ Map.prototype.addMarkers = function(data) {
     }
 };
 
-Map.prototype.addLines = function(data) {
+Map.prototype.addLines = function() {
     var lineIndex = this.line.length;
     if(lineIndex === 0) {
-        var latlng = {lat: data.lastPoint.lat, lng: data.lastPoint.lng};
+        var latlng = {lat: this.data.lastPoint.lat, lng: this.data.lastPoint.lng};
         addLine.call(this, lineIndex++, [latlng]);
     }
     // remove old lines
@@ -385,7 +382,7 @@ Map.prototype.addLines = function(data) {
     }
     //add new lines
     var events;
-    if( data.showPaths )
+    if( this.data.showPaths )
         events = pg.getEvents(pg.category());
     else
         events = pg.getSelectedEvents(pg.category());

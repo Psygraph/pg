@@ -10,25 +10,27 @@ var app = {
     pagesLoaded  : $.Deferred(),
     pagesRemaining : 0,
     firstPage: true,
+    debug: true,
+    pause: false,
 
     onPageReady : function() {
-        pgUI_showLog("onPageReady");
+        pgUI.showLog("onPageReady");
         app.pageReady.resolve();
     },
     onDevReady : function() {
-        pgUI_showLog("onDevReady");
+        pgUI.showLog("onDevReady");
         app.devReady.resolve();
     },
     onMobileReady : function() {
-        pgUI_showLog("onMobileReady");
+        pgUI.showLog("onMobileReady");
         app.mobileReady.resolve();
     },
     onJQMReady : function() {
-        pgUI_showLog("onJQMReady");
+        pgUI.showLog("onJQMReady");
         app.jqmReady.resolve();
     },
     onPagesLoaded : function() {
-        pgUI_showLog("onPagesLoaded");
+        pgUI.showLog("onPagesLoaded");
         app.pagesLoaded.resolve();
     },
     // Application Constructor
@@ -38,7 +40,7 @@ var app = {
         // device ready
         var browser = document.URL.match(/^https?:/);
         if(browser) {
-            pgUI_showLog("Simulating deviceready event");
+            pgUI.showLog("Simulating deviceready event");
             this.onDevReady();
         }
         else {
@@ -115,9 +117,9 @@ var app = {
         var title = pgUtil.titleCase(page);
         // get the header from the template
         if(page === "categories" ||
-            page === "about"    ||
-            page === "help"     ||
-            page === "dialog"   ||
+            page === "about"     ||
+            page === "help"      ||
+            page === "dialog"    ||
             page === "preferences"
         ) {
             var headT  = $("#simple_header_template").prop('content');
@@ -186,7 +188,7 @@ var app = {
         }
     },
     pageInitFinished: function(page) {
-        pgUI_showLog("Loaded page: "+page);
+        pgUI.showLog("Loaded page: "+page);
         app.pagesRemaining--;
         if(! app.pagesRemaining) {
             app.onPagesLoaded();
@@ -201,9 +203,23 @@ var app = {
         window.addEventListener("resize",   onResize,   false);
         window.addEventListener("keydown",  onKeyDown,  false);
         $("body").on("vclick", singleClick );
-        pgLogin.begin();
+        app.login();
+    },
+    login: function() {
+        if(app.pause)
+            setTimeout(app.login, 4000);
+        else
+            pgLogin.begin();
+    },
+    setDebug: function(yn) {
+        app.debug = (typeof(yn)!=="undefined") ? yn : app.debug;
+        if(app.debug) {
+            $(".debug").css({'display' : ""});
+        }
+        else {
+            $(".debug").css({'display' : "none"});
+        }
     }
-
 };
 
 // Three infrastructure components can load independently, then we load all components

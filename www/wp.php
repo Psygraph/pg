@@ -7,6 +7,16 @@ $username = urldecode($_REQUEST['username']);
 $cert     = urldecode($_REQUEST['cert']);
 $server   = urldecode($_REQUEST['server']);
 
+$hist = 7;
+if($_REQUEST['hist']) {
+    $hist = urldecode($_REQUEST['hist']);
+}
+
+$category = "*";
+if($_REQUEST['category']) {
+    $category = urldecode($_REQUEST['category']);
+}
+
 if(! $server || $server == "") {
     $server = "https://psygraph.com/wp-content/plugins/psygraph/pg";
 }
@@ -15,6 +25,8 @@ $script = "var WORDPRESS   = true;\n"        .
           "var WP_USERNAME = '$username';\n" .
           "var WP_CERT     = '$cert';\n"     .
           "var WP_SERVER   = '$server';\n"   .
+          "var WP_HIST     = '$hist';\n"     .
+          "var WP_CATEGORY = '$category';\n"      .
           "function WP_EXTRA() {\n"          .
           "}\n"         ;
 

@@ -32,7 +32,7 @@ LocalDevice.prototype.update = function(show, data) {
         }
     }
     catch(err) {
-        pgUI_showWarn(err.toString());
+        pgUI.showWarn(err.toString());
         data = {};
     }
     return data;

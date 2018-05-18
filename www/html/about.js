@@ -11,18 +11,20 @@ function About() {
 About.prototype = Object.create(ButtonPage.prototype);
 About.prototype.constructor = About;
 
-About.prototype.update = function(show) {
-    if(!show)
-        return;
-    this.trials = new Arr();
-    this.resize();
+About.prototype.update = function(show, data) {
+    if(show) {
+        this.data = data;
+        this.trials = new Arr();
+        this.resize();
+    }
+    return this.data;
 };
 
-About.prototype.settings = function() {
-    if(arguments.length) {
+About.prototype.settings = function(show) {
+    if(show) {
     }
     else {
-	    return {version:1};
+        this.data.version = 1;
     }
 };
 

@@ -26,7 +26,7 @@ Clock.prototype.countdownMode = function() {
 Clock.prototype.start = function() {
     if(this.running) {
         clearInterval(this.timerID);
-        pgUI_showWarn("start() called without stop()");
+        pgUI.showWarn("start() called without stop()");
     }
     var delegate       = function(that, method) { return function() { return method.call(that) } };
     this.startTime = new Date().getTime();
@@ -38,7 +38,7 @@ Clock.prototype.start = function() {
 Clock.prototype.startFromTime = function(startTime) {
     if(this.running) {
         clearInterval(this.timerID);
-        pgUI_showWarn("startFromTime() called without stop()");
+        pgUI.showWarn("startFromTime() called without stop()");
     }
     var delegate       = function(that, method) { return function() { return method.call(that) } };
     this.totalElapsed = 0;
@@ -90,7 +90,7 @@ Clock.prototype.getElapsed = function() {
 };
 Clock.prototype.getRemaining = function() {
     if(!this.countdownMode())
-        pgUI_showError("Call to remaining time in stopwatch mode.");
+        pgUI.showError("Call to remaining time in stopwatch mode.");
     var elapsed = this.getElapsed();    
     var remain = this.countdownTime - elapsed;
     remain = Math.max(0, remain);

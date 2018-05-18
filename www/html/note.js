@@ -4,13 +4,14 @@ function Note() {
     // audio recording
     this.eid           = 0;
     this.audioFilename = "";
+    this.recording     = false;
 }
 
 Note.prototype = Object.create(ButtonPage.prototype);
 Note.prototype.constructor = Note;
 
 Note.prototype.update = function(show, data) {
-    ButtonPage.prototype.update.call(this, show, data);
+    this.data = ButtonPage.prototype.update.call(this, show, data);
     if(show) {
         //this.createEnhancedEditor(data.enhancedEditor);
         this.updateText();
@@ -18,34 +19,34 @@ Note.prototype.update = function(show, data) {
         this.resize();
     }
     else {
-        data.lastText = {
+        this.data.lastText = {
             'title': this.getNoteTitle(),
             'text':  this.getNoteText()
         };
         // stop recording if we leave the page.
-        if(this.running)
+        if(this.recording)
             this.stop();
         //if(tinyMCE.activeEditor)
         //    tinyMCE.activeEditor.selection.collapse();
     }
-    return data;
+    return this.data;
 };
 
-Note.prototype.settings = function(show, data) {
+Note.prototype.settings = function(show) {
     if(show) {
-        $("#note_addText").prop("checked", data['addText']).checkboxradio("refresh");
-        $("#note_addLocation").prop("checked", data['addLocation']).checkboxradio("refresh");
-        $("#note_showConfirmation").prop("checked", data['showConfirmation']).checkboxradio("refresh");
-        //$("#note_enhancedEditor").prop("checked", data['enhancedEditor']).checkboxradio("refresh");
+        $("#note_addText").prop("checked", this.data.addText).checkboxradio("refresh");
+        $("#note_addLocation").prop("checked", this.data.addLocation).checkboxradio("refresh");
+        $("#note_showConfirmation").prop("checked", this.data.showConfirmation).checkboxradio("refresh");
+        //$("#note_enhancedEditor").prop("checked", this.data.enhancedEditor).checkboxradio("refresh");
     }
     else {
-        data.addText=          $("#note_addText")[0].checked;
-        data.addLocation=      $("#note_addLocation")[0].checked;
-        data.showConfirmation= $("#note_showConfirmation")[0].checked;
-        //data.enhancedEditor=   $("#note_enhancedEditor")[0].checked
-        //this.createEnhancedEditor(data.enhancedEditor);
+        this.data.addText=          $("#note_addText")[0].checked;
+        this.data.addLocation=      $("#note_addLocation")[0].checked;
+        this.data.showConfirmation= $("#note_showConfirmation")[0].checked;
+        //this.data.enhancedEditor=   $("#note_enhancedEditor")[0].checked
+        //this.createEnhancedEditor(this.data.enhancedEditor);
     }
-    return data;
+    return this.data;
 };
 Note.prototype.resize = function() {
     Page.prototype.resize.call(this, false);
@@ -56,8 +57,7 @@ Note.prototype.resize = function() {
     var buttonHeight = $("#note_submit").outerHeight(true);
     var textContainerHeight = win.height - (header+subheader+titleHeight+buttonHeight+12);
     var textContainerHeight = Math.max(textContainerHeight, 240);
-    var data = this.getPageData();
-    if(data.addText) {
+    if(this.data.addText) {
         $("#noteTextContainer").show();
     }
     else {
@@ -128,16 +128,16 @@ note.prototype.createEnhancedEditor = function(show) {
 };
 */
 Note.prototype.updateText = function() {
-    var data = this.getPageData();
-    $("#noteTitle").val(data.lastText.title);
+    $("#noteTitle").val(this.data.lastText.title);
     //if(data.enhancedEditor)
     //    tinyMCE.activeEditor.setContent(s.text, {format : 'raw'});
     //else
-    $("#noteText").val(data.lastText.text);
+    $("#noteText").val(this.data.lastText.text);
 };
 
-Note.prototype.getPageData = function() {
-    var data = pg.getPageData("note", pg.category());
+Note.prototype.getPageData = function(cat) {
+    cat = (typeof(cat) !== "undefined") ? cat : pg.category();
+    var data = ButtonPage.prototype.getPageData.call(this, cat);
     if(! ('addText' in data))
         data.addText          = false;
     if(! ('addLocation' in data))
@@ -152,9 +152,8 @@ Note.prototype.getPageData = function() {
 };
 
 Note.prototype.audioFileUploaded = function(filename) {
-    var data = this.getPageData();
     // user notification is now achieved via email from the server.
-    //if(data.showConfirmation)
+    //if(this.data.showConfirmation)
     //    pgUI.showAlert("Uploaded file: "+filename+", removed from local file system.");
 };
 
@@ -170,13 +169,13 @@ Note.prototype.start = function(restart) {
     this.recording      = true;
     this.eid            = pg.uniqueEventID();
     this.audioFilename  = pgAudio.getRecordFilename(this.eid);
-    pgAudio.record(audioCB, this.audioFilename);
+    pgAudio.record(audioCB.bind(this), this.audioFilename);
     return false;
 
     function audioCB(success, meter) {
         if(typeof(meter)!=="undefined") {
             // display metering information
-            $('#note_stop').fadeTo(meter.sec, 0.4 + 0.6*meter.max);
+            this.stopID.fadeTo(meter.sec, 0.4 + 0.6*meter.max);
             return;
         }
         if(success) {
@@ -185,7 +184,7 @@ Note.prototype.start = function(restart) {
         else {
             UI.note.eid=0;
         }
-        $('#note_stop').css('opacity', '1');
+        this.stopID.css('opacity', '1');
         UI.note.recording = false;
     }
 };
@@ -221,8 +220,7 @@ Note.prototype.reset = function() {
         this.eid           = pg.uniqueEventID();
     }
     
-    var data = this.getPageData();
-    if(data.addLocation) {
+    if(this.data.addLocation) {
         pgLocation.getCurrentLocation(posCB.bind(this));
     }
     else {
@@ -231,7 +229,7 @@ Note.prototype.reset = function() {
     return false;
     
     function posCB(path) {
-        if(typeof(path)=="string") {
+        if(typeof(path)==="string") {
             // xxx handle error
         }
         else if(path.length) {
@@ -264,12 +262,11 @@ Note.prototype.reset = function() {
 
         // erase the data, since it has been submitted.
         this.eid = 0;
-        data.lastText = {'title': "", 'text': ""};
-        this.setPageData(data);
+        this.data.lastText = {'title': "", 'text': ""};
         this.updateText();
         this.updateAudio();
 
-        if(data.showConfirmation) {
+        if(this.data.showConfirmation) {
             var includedData = [];
             if (hasText)
                 includedData.push("text");
@@ -298,7 +295,7 @@ Note.prototype.updateAudio = function() {
 };
 
 Note.prototype.playRecorded = function() {
-    var fn  = pgAudio.getRecordFilename(this.eid);
+    var fn = pgAudio.getRecordFilename(this.eid);
     pgAudio.playRecorded(this.eid, fn);
 };
 Note.prototype.deleteRecorded = function() {
@@ -313,11 +310,10 @@ Note.prototype.getNoteTitle = function() {
 };
 
 Note.prototype.getNoteText = function() {
-    var data     = this.getPageData();
     var noteText = "";
-    if(data.addText)
+    if(this.data.addText)
         noteText = $("#noteText").val();
-    //if(data.enhancedEditor) {
+    //if(this.data.enhancedEditor) {
     //    this.createEnhancedEditor(true);
     //    if(tinyMCE.activeEditor.getContent({format : 'text'}) != "")
     //        noteText = tinyMCE.activeEditor.getContent({format : 'raw'});

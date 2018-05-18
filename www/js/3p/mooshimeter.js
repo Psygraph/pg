@@ -216,12 +216,12 @@ Mooshimeter.prototype.readFromMeter = function(bytes) {
                     return;
             }
             if(node.ntype === NTYPE.PLAIN) {
-                pgUI_showError("bad ntype");
+                pgUI.showError("bad ntype");
             }
             else if(node.ntype === NTYPE.CHOOSER)
                 node.notification_handler(this, b.get(1));
             else if(node.ntype === NTYPE.LINK)
-                pgUI_showError("bad ntype");
+                pgUI.showError("bad ntype");
             else if (node.ntype === NTYPE.VAL_U8)
                 node.notification_handler(this, b.get(1));
             else if (node.ntype === NTYPE.VAL_U16)
@@ -252,7 +252,7 @@ Mooshimeter.prototype.readFromMeter = function(bytes) {
                 node.notification_handler(this, b.get(4, true, "float"));
             }
             else 
-                pgUI_showError('Unknwn');
+                pgUI.showError('Unknwn');
             this.aggregate = this.aggregate.slice(b.i);
         }
         catch(UnderflowException) {

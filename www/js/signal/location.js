@@ -78,7 +78,7 @@ Locometer.prototype.update = function(show, data) {
         }
     }
     catch(err){
-        pgUI_showWarn(err.toString());
+        pgUI.showWarn(err.toString());
         data = {running: false, opts:this.opts, cordovaOpts:this.cordovaOpts};
     }
     return data;
@@ -134,7 +134,7 @@ Locometer.prototype.settingsDialog = function(callback) {
 Locometer.prototype.start = function(restart) {
     this.locationChecker(false);
     if(this.running) {
-        pgUI_showError("Location data already being gathered.");
+        pgUI.showError("Location data already being gathered.");
         return;
     }
     this.createData(["location"]);
@@ -178,13 +178,13 @@ Locometer.prototype.start = function(restart) {
         }
     }
     function failureCB(error) {
-        pgUI_showError('GeoLocation error' + error.toString());
+        pgUI.showError('GeoLocation error' + error.toString());
         if(this.callback)
             this.callback("Unknown error");
     }
     function locationCB(pdata) {
         if(typeof(pdata) === "string") {
-            pgUI_showError('GeoLocation error: "' +pdata +'", lowering accuracy.');
+            pgUI.showError('GeoLocation error: "' +pdata +'", lowering accuracy.');
             this.cordovaOpts.enableHighAccuracy = false;
         }
     }
@@ -273,7 +273,7 @@ Locometer.prototype.getCurrentLocation  = function(callback) {
     }
     function failCB(err) {
         if(!this.warned) {
-            pgUI_showWarn("Could not get the current location: " + err.message + ". Are GPS and/or cell networks available?");
+            pgUI.showWarn("Could not get the current location: " + err.message + ". Are GPS and/or cell networks available?");
             this.warned = true;
         }
         callback([]);
@@ -321,7 +321,7 @@ Locometer.prototype.addToPath = function(time, location) {
     if(location.altitude)
         alt = location.altitude;
     if(typeof(lat)==="undefined" || typeof(lng)==="undefined") {
-        pgUI_showWarn("Received empty location");
+        pgUI.showWarn("Received empty location");
         return;
     }
     for(var i=0; i<this.data.location.length; i++) {
@@ -330,7 +330,7 @@ Locometer.prototype.addToPath = function(time, location) {
             return;
         }
         else if(this.data.location[i][0] === time) {
-            pgUI_showLog("Multiple locations with the same timestamp.");
+            pgUI.showLog("Multiple locations with the same timestamp.");
         }
     }
     this.pushData([ time, lat, lng, alt ]);

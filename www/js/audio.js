@@ -18,7 +18,7 @@ var pgAudio = {
         else if(device.platform==="Android")
             ext = "aac"; // amr
         else
-            pgUI_showLog("Error: unkonwn platform");
+            pgUI.showLog("Error: unkonwn platform");
         return ext;
     },
     getRecordFilename: function(eid, ext) {
@@ -160,7 +160,7 @@ var pgAudio = {
         if(src.indexOf("http") !== 0 &&
            src.indexOf("file") !== 0 &&
            src.indexOf("data:") !== 0) {
-            if(forNotification) {
+            if(!pgUtil.isWebBrowser() && forNotification) {
                 if(device.platform==="iOS")
                     src = "file://media/"+src;
                 else
@@ -182,10 +182,10 @@ var pgAudio = {
                     //    url = "file://data/data/com.psygraph.pg/files/Sounds/" +pgFile.getFileName(url);
                 }
                 callback(url);
-                pgUI_showLog("Created local audio file ("+url+") from ("+src+").");
+                pgUI.showLog("Created local audio file ("+url+") from ("+src+").");
             }
             else {
-                pgUI_showWarn("Could not create local audio file ("+url+") from ("+src+").");
+                pgUI.showWarn("Could not create local audio file ("+url+") from ("+src+").");
                 callback(src);
             }
         }
@@ -214,7 +214,7 @@ var pgAudio = {
                 if (pgAudio.alarmer == null) {
                     pgAudio.alarmer = $("#alarm")[index];
                     pgAudio.alarmer.addEventListener("error",
-                                                     function(err){pgUI_showLog("Cannot alarm: " + err.message)}
+                                                     function(err){pgUI.showLog("Cannot alarm: " + err.message)}
                     );
                 }
                 else {
@@ -234,7 +234,7 @@ var pgAudio = {
                 var promise = pgAudio.alarmer.play();
                 if (promise !== undefined) {
                     promise.catch(function() {
-                            pgUI_showLog("Cannot create alarm (audio autoplay disabled?)");
+                            pgUI.showLog("Cannot create alarm (audio autoplay disabled?)");
                         });
                 }
             }
@@ -252,14 +252,14 @@ var pgAudio = {
         // pgAudio.beep(); We are getting a weird non-error
         if(!err.hasOwnProperty("message")) {
             if(err.hasOwnProperty("code") && err.code)
-                pgUI_showLog("Error playing recorded file");
+                pgUI.showLog("Error playing recorded file");
             return;
         }
         if(pgAudio.player[index]) {
             pgAudio.player[index].release();
             pgAudio.player[index] = null;
         }
-        pgUI_showLog("Error playing file: " + err.message);
+        pgUI.showLog("Error playing file: " + err.message);
     },
     beep: function() {
         if(navigator.notification) {
@@ -309,7 +309,7 @@ var pgAudio = {
             }
         }
         function errorCallback(perm) {
-            pgUI_showWarn('Audio permission not turned on');
+            pgUI.showWarn('Audio permission not turned on');
         }
     },
     record: function(callback, filename) {
@@ -326,11 +326,11 @@ var pgAudio = {
                         pgAudio.recorder.release();
                         pgAudio.recorder = null;
                     }
-                    pgUI_showLog('Recording file error');
+                    pgUI.showLog('Recording file error');
                 }
                 else {
                     path = pgAudio.mkNiceDir(path);
-                    pgUI_showLog("Recording filename: " + path);
+                    pgUI.showLog("Recording filename: " + path);
                     // Record audio
                     pgAudio.recorder = new Media(path, deviceSuccess.bind(this), deviceFail.bind(this));
                     pgAudio.recorder.startRecord();
@@ -366,14 +366,14 @@ var pgAudio = {
 	        recordCallback(callback, 200);
         }
         function webFail(callback, error) {
-            pgUI_showLog('Recording failed (error code ' + error.code + ')');
+            pgUI.showLog('Recording failed (error code ' + error.code + ')');
             callback(false);
         }
         function deviceSuccess(e){
             callback(true);
         }
         function deviceFail(e){
-            pgUI_showError("Recording failed: "+JSON.stringify(e));
+            pgUI.showError("Recording failed: "+JSON.stringify(e));
             callback(false);
         }
 	    // Periodically make callbacks with amplitude information.
@@ -386,7 +386,7 @@ var pgAudio = {
 		        setTimeout(function(){recordCallback(callback,ms);}, ms);
             }
             function error(err) {
-                pgUI_showLog(err);
+                pgUI.showLog(err);
             }
 	    }
     },
@@ -440,7 +440,7 @@ var pgAudio = {
                 pgRecorder.callback(true);
             }
             pgAudio.recorder = null;
-            pgUI_showLog("Finished recording");
+            pgUI.showLog("Finished recording");
         }
     }
 };

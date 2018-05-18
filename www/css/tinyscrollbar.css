@@ -4,7 +4,7 @@
     xxxmargin: 20px 0 10px;
 }
 .pgscrollbar .viewport {
-    width: 90%;
+    xxwidth: 90%;
     height: 200px;
     overflow: hidden;
     position: relative;

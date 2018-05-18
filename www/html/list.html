@@ -22,9 +22,21 @@
             </div>
         </div>
         <div id="list_divider"></div>
-        <div id="list_table" class="scrollable">
-            <table id="eventlist" class="data">
-            </table>
+
+        <div id="list_scrollbar" class="pgscrollbar">
+            <div class="scrollbar">
+                <div class="track">
+                    <div class="thumb">
+                        <div class="end"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="listDiv" class="viewport">
+                <div d="list_table" class="xxxscrollable overview">
+                    <table id="eventlist" class="data">
+                    </table>
+                </div>
+            </div>
         </div>
 
         <div data-role="popup" id="list_select">
@@ -32,6 +44,7 @@
                 <li data-role="list-divider"><i>Select events</i></li>
                 <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('all');">Select all</a></li>
                 <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('none');">Select none</a></li>
+                <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('range');">Select range</a></li>
                 <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('tool:home');">home</a></li>
                 <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('tool:stopwatch');">stopwatch</a></li>
                 <li data-icon="false"><a href="" class="" onclick="return UI.list.selectEvents('tool:counter');">counter</a></li>

@@ -1,11 +1,12 @@
 
 function List() {
     Page.call(this, "list");
-    this.initialized = false;
-    this.categoryCache = null;
-    this.scroll = null;
-    this.lastSelected = null;
-};
+    this.initialized    = false;
+    this.categoryCache  = null;
+    this.lastSelected   = null;
+    this.selectingRange = false;
+    this.scrollbar = tinyscrollbar($("#list_scrollbar")[0]);
+}
 
 List.prototype = Object.create(Page.prototype);
 List.prototype.constructor = List;
@@ -13,6 +14,7 @@ List.prototype.constructor = List;
 List.prototype.update = function(show, data) {
     this.lastSelected = null;
     if(show) {
+        this.data = data;
         // select according to the selectedEvents list
         if (!this.initialized || !pgUtil.equal(pg.categories, this.categoryCache)) {
             this.categoryCache = pgUtil.deepCopy(pg.categories);
@@ -38,22 +40,22 @@ List.prototype.update = function(show, data) {
         var s = "";
         s += "<thead><tr>";
         var nCols = 0;
-        if (data.showID) {
+        if (this.data.showID) {
             s += "<th class=data>ID</th>";
             nCols++;
         }
-        if (data.showDate) {
+        if (this.data.showDate) {
             s += "<th class=data>Time</th>";
             nCols++;
         }
-        if (data.showPage) {
+        if (this.data.showPage) {
             if (pg.category() === "*")
                 s += "<th class=data>Category, Tool, Type</th>";
             else
                 s += "<th class=data>Tool, Type</th>";
             nCols++;
         }
-        if (data.showData) {
+        if (this.data.showData) {
             s += "<th class=data>Data</th>";
             nCols++;
         }
@@ -62,25 +64,25 @@ List.prototype.update = function(show, data) {
         var eventsDisplayed = false;
         for (var i = 0; i < events.length; i++) {
             var e = pgUtil.parseEvent(events[i]);
-            if (data.pageFilter.indexOf(e.page) === -1)
+            if (this.data.pageFilter.indexOf(e.page) === -1)
                 continue;
             eventsDisplayed = true;
             s += "<tr class='data eid' id=\"" + e.id.toString() + "\">";
-            if (data.showID) {
+            if (this.data.showID) {
                 var id = e.id.toString();
                 s += "<td class=data>" + id + "<input type='checkbox' onclick='return UI.list.itemClick("+id+");' id=\"cb_" + id + "\" value='";
                 s += "' /></td>";
             }
-            if (data.showDate) {
+            if (this.data.showDate) {
                 s += "<td class=data>" + pgUtil.getDateString(e.start) + "</td>";
             }
-            if (data.showPage) {
+            if (this.data.showPage) {
                 if (pg.category() === "*")
                     s += "<td class=data>" + e.category + ", " + e.page + ", " + e.type + "</td>";
                 else
                     s += "<td class=data>" + e.page + ", " + e.type + "</td>";
             }
-            if (data.showData) {
+            if (this.data.showData) {
                 var edata = pgUtil.displayEventData(e);
                 s += "<td class=data>" + edata + "</td>";
             }
@@ -103,25 +105,24 @@ List.prototype.update = function(show, data) {
     }
     else {
     }
-    return data;
+    return this.data;
 };
 
-List.prototype.settings = function(show, data) {
+List.prototype.settings = function(show) {
     if (show) {
-        $("#list_pageSelect").val(data.pageFilter).trigger("change");
-        $("#list_showID").prop("checked", data.showID).checkboxradio("refresh");
-        $("#list_showDate").prop("checked", data.showDate).checkboxradio("refresh");
-        $("#list_showPage").prop("checked", data.showPage).checkboxradio("refresh");
-        $("#list_showData").prop("checked", data.showData).checkboxradio("refresh");
+        $("#list_pageSelect").val(this.data.pageFilter).trigger("change");
+        $("#list_showID").prop("checked", this.data.showID).checkboxradio("refresh");
+        $("#list_showDate").prop("checked", this.data.showDate).checkboxradio("refresh");
+        $("#list_showPage").prop("checked", this.data.showPage).checkboxradio("refresh");
+        $("#list_showData").prop("checked", this.data.showData).checkboxradio("refresh");
     }
     else {
-        data.pageFilter= $("#list_pageSelect").val();
-        data.showID= $("#list_showID")[0].checked;
-        data.showDate= $("#list_showDate")[0].checked;
-        data.showPage= $("#list_showPage")[0].checked;
-        data.showData= $("#list_showData")[0].checked;
+        this.data.pageFilter= $("#list_pageSelect").val();
+        this.data.showID= $("#list_showID")[0].checked;
+        this.data.showDate= $("#list_showDate")[0].checked;
+        this.data.showPage= $("#list_showPage")[0].checked;
+        this.data.showData= $("#list_showData")[0].checked;
     }
-    return data;
 };
 
 List.prototype.getPageData = function() {
@@ -163,16 +164,25 @@ List.prototype.resize = function() {
             listHeight += $(this).outerHeight(true);
         });
     containerHeight = win.height - (header+subheader+controls);
+    //$("#list_table").css({
+    //            'height':   containerHeight+"px",
+    //            'width':    width+"px"
+    //            });
+    //$("#eventList").css({
     $("#list_table").css({
                 'height':   containerHeight+"px",
-                'width':    width+"px"
+                //'width':    width+"px",
+                //'overflow': "scroll"
                 });
-    $("#eventList").css({
-            'height':   listHeight+"px",
-                'width':    width+"px",
-                'overflow': "scroll"
-                });
-    $("#"+this.name+"_page div.main.content").css({'overflow': "hidden"});
+    //$("#"+this.name+"_page div.main.content").css({'overflow': "hidden"});
+
+    $("#list_scrollbar").css({
+        'height': containerHeight+"px"
+    });
+    $("#listDiv").css({
+        height:   containerHeight+"px"
+    });
+    this.scrollbar.update({trackSize: containerHeight});
 };
 
 List.prototype.eventSelected = function(e) {
@@ -190,7 +200,7 @@ List.prototype.eventSelected = function(e) {
     if(id) {
         this.listSelectEvent(id);
         // select all rows between row and this.lastSelected
-        if(this.lastSelected && e.shiftKey) {
+        if(this.lastSelected && (e.shiftKey || this.selectingRange)) {
             thisE = pg.getEventFromID(id);
             lastE = pg.getEventFromID(this.lastSelected);
             if(id === this.lastSelected)
@@ -206,14 +216,16 @@ List.prototype.eventSelected = function(e) {
                 nextRow = $("#"+ lastE[E_ID])[0].nextSibling;
                 lastRow = $(row)[0].previousSibling;
             }
-            if(nextRow !== lastRow.nextSibling)
-                while(nextRow) {
+            if(nextRow !== lastRow.nextSibling) {
+                while (nextRow) {
                     id = parseInt(nextRow.id);
                     this.listSelectEvent(id);
-                    if(nextRow===lastRow)
+                    if (nextRow === lastRow)
                         break;
                     nextRow = nextRow.nextSibling;
                 }
+            }
+            this.selectingRange = false;
         }
         else {
             this.lastSelected = id;
@@ -230,8 +242,7 @@ List.prototype.itemClick = function(id) {
 List.prototype.listSelectEvent = function(id) {
     var row = $("#" +id);
     var checkbox = null;
-    var data = this.getPageData();
-    if(data.showID)
+    if(this.data.showID)
         checkbox = $("#cb_" + id);
     if(pg.isEventSelected(id)) {
         pg.unselectEvent( id );
@@ -293,11 +304,36 @@ List.prototype.selectEvents = function(selection) {
         pg.unselectEvents(pg.category());
         this.selectEvents("");
     }
+    else if(selection === "range") { // select none
+        //pgUI.showDialog({title: "Enter start date", true: "OK", false: "Cancel"},
+        //    "<input id=\"list_dateStart\" type=\"text\" data-role=\"date\">",
+        //    pwcb.bind(this)
+        //);
+        this.selectingRange = true;
+    }
     else {
         console.log ("Unknown selection: " + selection);
     }
     $('#list_select').popup().popup('close');
     return false;
+    /*
+    function pwcb(clickedOK) {
+        if(clickedOK) {
+            var date = $('#list_dateStart').datepicker( "getDate" );
+            var startTime = date.getTime();
+            var events = pg.getEvents();
+            var ids = [];
+            for (var i = 0; i < events.length; i++) {
+                var e = pgUtil.parseEvent(events[i]);
+                if (e.start < startTime)
+                    ids[ids.length] = e.id;
+            }
+            if(ids.length)
+                pg.selectEvents(ids);
+        }
+        gotoPage("list");
+    }
+    */
 };
 
 List.prototype.selectAction = function(selection) {
@@ -313,17 +349,17 @@ List.prototype.selectAction = function(selection) {
     else if(selection.substring(0,4) === "cat:") {
         var cat = selection.substring(4,selection.length);
         pg.changeEventCategory(id, cat);
-        this.update(true, this.getPageData());
+        this.update(true, this.data);
     }
     else if(selection === "delete") {
         pg.deleteEventIDs(id);
         syncSoon();
-        this.update(true, this.getPageData());
+        this.update(true, this.data);
     }
     else if(selection === "clearCache") {
         pg.deleteEventIDs(id, false);
         syncSoon();
-        this.update(true, this.getPageData());
+        this.update(true, this.data);
     }
     else {
         console.log ("Unknown selection: " + selection);

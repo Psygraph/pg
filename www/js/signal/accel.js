@@ -29,7 +29,7 @@ Accelerometer.prototype.update = function(show, data) {
         }
     }
     catch(err){
-        pgUI_showWarn(err.toString());
+        pgUI.showWarn(err.toString());
         data = {running:false, period:250, data:{}};
     }
     return data;
@@ -51,7 +51,7 @@ Accelerometer.prototype.settingsDialog = function(callback) {
 
 Accelerometer.prototype.start = function(restart) {
     if(this.running) {
-        pgUI_showWarn("Accel already running");
+        pgUI.showWarn("Accel already running");
         return;
     }
     this.createData(["acceleration"]);
@@ -83,7 +83,7 @@ Accelerometer.prototype.readSuccess = function(accel) {
     this.pushData([ accel.timestamp, accel.x, accel.y, accel.z ]);
 };
 Accelerometer.prototype.readError = function(obj) {
-    pgUI_showError("Could not gather acceleration data.");
+    pgUI.showError("Could not gather acceleration data.");
 };
 
 // watch a running cyclometer for a shake

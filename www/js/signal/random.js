@@ -23,7 +23,7 @@ RandomMeter.prototype.update = function(show, data) {
         }
     }
     catch(err) {
-        pgUI_showWarn(err.toString());
+        pgUI.showWarn(err.toString());
         data = {period:1000, data:{}};
     }
     return data;

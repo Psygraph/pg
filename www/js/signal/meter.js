@@ -107,7 +107,7 @@ Meter.prototype.read = function(type, bytes) {
 Meter.prototype.readSuccess = function(obj) {
 };
 Meter.prototype.readError = function(obj) {
-    pgUI_showWarn("Bluetooth read Error : " + JSON.stringify(obj));
+    pgUI.showWarn("Bluetooth read Error : " + JSON.stringify(obj));
 };
 Meter.prototype.write = function(bytes) {
 };
@@ -116,7 +116,7 @@ Meter.prototype.writeSuccess = function(msg) {
 Meter.prototype.writeError = function(error) {
     var msg = "";
     if(typeof(error)==="object") {
-        pgUI_showLog("Error is object");
+        pgUI.showLog("Error is object");
         if("error" in error && "message" in error) {
             msg = "Error on " + error.error + ": " + error.message;
         }
@@ -127,14 +127,14 @@ Meter.prototype.writeError = function(error) {
             msg = error.toString();
     }
     else {
-        pgUI_showLog("Error is string");
+        pgUI.showLog("Error is string");
         msg = error;
     }
     // xxx
     //if(msg.indexOf("isconnected") !== -1) {
     //    this.disconnect();
     //}
-    pgUI_showError(msg);
+    pgUI.showError(msg);
 };
 Meter.prototype.decodeUint32 = function(bytes) {
     return bytes[0] + bytes[1] *256 +bytes[2] *256*256 + bytes[3] *256*256*256;

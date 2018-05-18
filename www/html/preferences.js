@@ -3,7 +3,6 @@
 var Preferences = function () {
     Page.call(this, "preferences");
     this.initialized = false;
-    this.setDebug();
 };
 
 Preferences.prototype = Object.create(Page.prototype);
@@ -11,13 +10,14 @@ Preferences.prototype.constructor = Preferences;
 
 Preferences.prototype.update = function(show, data) {
     if(show) {
+        this.data = data;
         if(!this.initialized) {
             if(pgUtil.isWebBrowser()) {
                 $("#BTDiv").hide();
             }
             this.initialized = true;
         }
-        data = this.settings(show, data);
+        this.settings(show);
         // Optionally get a location before starting a bluetooth scan
         //pgLocation.getCurrentLocation(posCB);
         posCB();
@@ -25,27 +25,27 @@ Preferences.prototype.update = function(show, data) {
     }
     else {
         pgBluetooth.stopScan(function(){});
-        data = this.settings(show, data);
+        this.settings(show);
     }
-    return data;
+    return this.data;
 
     function posCB(loc) {
-        pgUI_showLog("Bluetooth scan starting...");
+        pgUI.showLog("Bluetooth scan starting...");
         var devs = $("#BTDevices");
         pgBluetooth.startScan(UI.preferences.btCallback);
         UI.preferences.btSetCurrentDevice();
     }
 };
 
-Preferences.prototype.settings = function(show, data) {
+Preferences.prototype.settings = function(show) {
     if (show) {
         // public access and debug
-        $("#preferences_debug").prop('checked', data.debug).checkboxradio("refresh");
+        $("#preferences_debug").prop('checked', app.debug).checkboxradio("refresh");
         var user = $("#preferences_username");
         user.val(pg.username);
         user.prop('readonly', pg.loggedIn);
 
-        if(pg.debug())
+        if(app.debug)
             $("#serverDiv").show();
         else
             $("#serverDiv").hide();
@@ -58,7 +58,7 @@ Preferences.prototype.settings = function(show, data) {
             $("#preferences_email").parent().hide();
         }
         else {
-            $("#preferences_wifiOnly").prop('checked', data.wifiOnly).checkboxradio("refresh");
+            $("#preferences_wifiOnly").prop('checked', this.data.wifiOnly).checkboxradio("refresh");
         }
         var loginString;
         if(pg.loggedIn) {
@@ -72,16 +72,14 @@ Preferences.prototype.settings = function(show, data) {
         $('#preferences_login').val(loginString).button("refresh");
     }
     else {
-        data.debug = $("#preferences_debug")[0].checked ? 1 : 0;
-        this.setDebug( data.debug );
+        app.setDebug(!! $("#preferences_debug")[0].checked);
         if(!pg.loggedIn) {
             pg.server   = $("#preferences_server").val();
             pg.username = $("#preferences_username").val();
         }
         if(!pgUtil.isWebBrowser())
-            data.wifiOnly = $("#preferences_wifiOnly")[0].checked;
+            this.data.wifiOnly = $("#preferences_wifiOnly")[0].checked;
     }
-    return data;
 };
 
 Preferences.prototype.resize = function() {
@@ -91,7 +89,7 @@ Preferences.prototype.resize = function() {
 Preferences.prototype.getPageData = function() {
     var data = pg.getPageData("preferences", "Uncategorized");
     if(! ('debug' in data))
-        data.debug = 0;
+        data.debug = false;
     if(! ('wifiOnly' in data))
         data.wifiOnly = true;
     return data;
@@ -103,10 +101,9 @@ Preferences.prototype.getEmail = function() {
 
 Preferences.prototype.submitSettings = function(doClose) {
     if(doClose!=="cancel") {
-        var data = this.getPageData();
-        data = this.settings(false, data);
+        this.settings(false);
         pmtime = pgUtil.getCurrentTime();
-        pg.setPageData(pmtime, data, "preferences", "Uncategorized");
+        pg.setPageData(pmtime, this.data, "preferences", "Uncategorized");
     }
     if(doClose!=="apply")
         gotoPage( pg.page() );
@@ -114,33 +111,21 @@ Preferences.prototype.submitSettings = function(doClose) {
 
 Preferences.prototype.loginUser = function() {
     var onSettingsPage = (getPage()==="preferences");
-    var data = this.getPageData();
     var username = $('#preferences_username').val();
     var server   = $('#preferences_server').val();
     var cert     = pg.cert;
     pgLogin.loginUserAndServer(username, server, true);
 };
 
-Preferences.prototype.setDebug = function(yn) {
-    var data = this.getPageData();
-    yn = (typeof(yn)!=="undefined") ? yn : data.debug;
-    if(yn) {
-        $(".debug").css({'display' : ""});
-    }
-    else {
-        $(".debug").css({'display' : "none"});
-    }
-};
-
 Preferences.prototype.btConnect = function() {
     var name = pgBluetooth.deviceName();
     var btDev = $("#BTDevices").val();
     if(name!=="none") {
-        pgUI_showLog("Bluetooth disconnecting from device: " + btDev);
+        pgUI.showLog("Bluetooth disconnecting from device: " + btDev);
         btDev = "none";
     }
     else {
-        pgUI_showLog("Bluetooth connecting to device: " + btDev);
+        pgUI.showLog("Bluetooth connecting to device: " + btDev);
     }
     pgBluetooth.stopScan(cb);
     function cb() {
@@ -186,7 +171,7 @@ Preferences.prototype.btCallback = function() {
 
 Preferences.prototype.btSetCurrentDevice = function() {
     var name = pgBluetooth.deviceName();
-    pgUI_showLog("Bluetooth connected to device: " + name);
+    pgUI.showLog("Bluetooth connected to device: " + name);
     var label = "Connect to: ";
     var devs     = $("#BTDevices");
     var settings = $("#BTSettings");

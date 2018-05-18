@@ -76,7 +76,7 @@ UXML.prototype.getThings = function(node) {
             }
         }
         else {
-            pgUI_showError("Unknown tag: "+ node.tagName);
+            pgUI.showError("Unknown tag: "+ node.tagName);
         }
     }
     return things;
@@ -104,7 +104,7 @@ function xmlRpcSend(url, args) {
         return str;
     }
     catch (err) {
-        pgUI_showLog("Error: " + err.name);
+        pgUI.showLog("Error: " + err.name);
         return "";
     }
 

@@ -224,9 +224,6 @@ function PG() {
         var data = this.getPageData(page, category);
         return data[value];
     };
-    this.debug = function() {
-        return this.getPageDataValue("preferences", "Uncategorized", "debug");
-    };
     this.getReadOnly = function() {
         return this.readOnly;
     };
@@ -315,7 +312,7 @@ function PG() {
             var event = this.getEventFromID(this.selectedEvents[i]);
             if(!event) {
                 var id = this.selectedEvents[i];
-                pgUI_showLog("CANNOT FIND SELECTED EVENT: " +id);
+                pgUI.showLog("CANNOT FIND SELECTED EVENT: " +id);
                 this.unselectEvent(id);
             }
             else if(pgUtil.sameType(event[E_CAT], cat))
@@ -546,7 +543,7 @@ function PG() {
     };
     this.getEventsAtTime = function(time) {
         if(time < 0) {
-            pgUI_showError("Invalid query at a negative time.");
+            pgUI.showError("Invalid query at a negative time.");
             return [];
         }
         var cat = pg.category();
@@ -566,7 +563,7 @@ function PG() {
                                    category: this.events[i][E_CAT],
                                    page:     this.events[i][E_PAGE],
                                    type:     this.events[i][E_TYPE],
-                                   data:     this.events[i][E_DATA],
+                                   data:     this.events[i][E_DATA]
                     };
                 }
             }
@@ -627,7 +624,7 @@ function PG() {
     this.addEventDataField = function(id, name, value) {
         var e = this.getEventFromID(id);
         e[E_DATA][name] = value;
-        pgUI_showLog(JSON.stringify(e[E_DATA]));
+        pgUI.showLog(JSON.stringify(e[E_DATA]));
         this.changeEventAtID(id,e);
     };
     // this method should be used to trigger a server update.
@@ -745,14 +742,23 @@ var pgUtil = {
     //    var s = d.toISOString().slice(0, 23).replace('T', ' ');
     //    return s;
     //},
+    zpad: function(no, digits) {
+        no = no.toString();
+        while(no.length < digits)
+            no = '0' + no;
+        return no;
+    },
+    getDBStringFromMS: function(ms, displayMillis) {
+        var str = pgUtil.getStringFromMS(ms, displayMillis);
+        var arr = str.split(":");
+        for(var i=0; i<arr.length; i++)
+            arr[i] = pgUtil.zpad(arr[i], 2);
+        while(arr.length < 4)
+            arr.unshift("00");
+        return arr.join(":");
+    },
     getStringFromMS: function(ms, displayMillis) {
         displayMillis = (typeof(displayMillis)!=="undefined") ? displayMillis : false;
-        var zpad = function(no, digits) {
-            no = no.toString();
-            while(no.length < digits)
-                no = '0' + no;
-            return no;
-        };
         var e = {};
         e.milliseconds = ms % 1000;
         ms = Math.floor(ms / 1000);
@@ -767,21 +773,21 @@ var pgUtil = {
         var ans;
         // add seconds
         if(e.days || e.hours || e.minutes) {
-            ans = zpad(e.seconds,2);
+            ans = pgUtil.zpad(e.seconds,2);
         }
         else {
-            ans = e.seconds;
+            ans = "" + e.seconds;
         }
         // add minutes
         if(e.days || e.hours) {
-            ans = zpad(e.minutes,2) + ":" + ans;
+            ans = pgUtil.zpad(e.minutes,2) + ":" + ans;
         }
         else if(e.minutes) {
             ans = e.minutes + ":" + ans;
         }
         // add hours
         if(e.days) {
-            ans = zpad(e.hours,2) + ":" + ans;
+            ans = pgUtil.zpad(e.hours,2) + ":" + ans;
         }
         else if(e.hours) {
             ans = e.hours + ":" + ans;
@@ -792,7 +798,7 @@ var pgUtil = {
         }
         // add milliseconds at centisecond resolution
         if(displayMillis)
-            ans += "." + zpad(Math.floor(e.milliseconds/10),2);
+            ans += "." + pgUtil.zpad(Math.floor(e.milliseconds/10),2);
         return ans;
     },
     getMSFromString: function(s) {
@@ -1032,6 +1038,13 @@ var pgUtil = {
                         $(self).dequeue();
                     }, time);
             });
+    },
+    debugDelay: function(callback) {
+        var doCB = false;
+        if(debug)
+            callback();
+        else
+            setTimeout(function(){debugDelay(callback);}, 4000);
     },
     sameType: function(a,b) {
         if(a === "*" || b === "*" || a === b)

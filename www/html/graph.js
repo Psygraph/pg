@@ -9,30 +9,30 @@ Graph.prototype.constructor = Graph;
 
 Graph.prototype.update = function(show, data) {
     if(show) {
+        this.data = data;
         if (!this.graph) {
             this.graph = new GraphComponent('graph_graph', 'lines');
-            this.graph.create(data.signals);
+            this.graph.create(this.data.signals);
         }
         this.resize();
         this.updateGraph();
     }
     else {
     }
-    return data;
+    return this.data;
 };
 
-Graph.prototype.settings = function(show, data) {
+Graph.prototype.settings = function(show) {
     if(show) {
-        $("#graph_signals").val(data.signals).change();
-        $("#graph_minMS").val(data.minMS);
+        $("#graph_signals").val(this.data.signals).change();
+        $("#graph_minMS").val(this.data.minMS);
     }
     else {
-        data.signals = $("#graph_signals").val() || [];
-        data.minMS   = Math.max(1, parseInt($("#graph_minMS").val()));
-        this.graph.create(data.signals);
-        this.graph.setMinPeriod(data.minMS);
+        this.data.signals = $("#graph_signals").val() || [];
+        this.data.minMS   = Math.max(1, parseInt($("#graph_minMS").val()));
+        this.graph.create(this.data.signals);
+        this.graph.setMinPeriod(this.data.minMS);
     }
-    return data;
 };
 
 Graph.prototype.resize = function() {
@@ -59,12 +59,11 @@ Graph.prototype.getPageData = function() {
 };
 
 Graph.prototype.updateGraph = function() {
-    var data = this.getPageData();
     //var interval = this.graph.computeNumericInterval(data.interval);
     this.graph.clearPoints();
 
-    for(var sig =0; sig<data.signals.length; sig++) {
-        var signal = data.signals[sig];
+    for(var sig =0; sig<this.data.signals.length; sig++) {
+        var signal = this.data.signals[sig];
         // Acceleration
         if (signal === "acceleration") {
             var events = pg.getSelectedEvents(pg.category());
@@ -144,7 +143,7 @@ Graph.prototype.updateGraph = function() {
             }
         }
         else {
-            pgUI_showError("Unknown signal specified: "+signal);
+            pgUI.showError("Unknown signal specified: "+signal);
         }
     }
     this.graph.endAddPoints();

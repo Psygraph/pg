@@ -47,18 +47,39 @@
             <input type="checkbox" id="timer_calendar" />
         </div-->
 
-        <div class="ui-field-contain no-field-separator" data-role="controlgroup">
+        <!--div class="ui-field-contain no-field-separator" data-role="controlgroup">
             <legend></legend>
             <div class="ui-grid-a">
                 <div class="ui-block-a">
                     <label for="countdown_setDuration">Coundown duration:</label>
-                    <input id="countdown_setDuration" class="half_clock_widget" type="text" value="00:00.00" />
+                    <input id="countdown_setDuration" class="half_clock_widget" type="text"/>
                 </div>
                 <div class= "ui-block-b">
                     <label for="countdown_setRandom">Random increment:</label>
-                    <input id="countdown_setRandom"   class="half_clock_widget" type="text" value="00:00.00" />
+                    <input id="countdown_setRandom"   class="half_clock_widget" type="text"/>
                 </div>
             </div>
+        </div-->
+
+        <div>
+            <label for="countdown_setDuration">Coundown duration:</label>
+            <input id="countdown_setDuration" class="half_clock_widget" type="text"
+                   data-role="datebox" data-options='{"mode":"durationbox",
+                   "durationStep":1, "buttonIcon":"cog", "useFocus": true,
+                   "overrideDurationFormat": "%Dd:%Dl:%DM:%DS",
+                   "overrideSetTimeButtonLabel": "Coundown duration:",
+                   "overrideSetDurationButtonLabel": "Apply"
+                   }' />
+        </div>
+        <div>
+            <label for="countdown_setRandom">Random increment:</label>
+            <input id="countdown_setRandom"   class="half_clock_widget" type="text"
+                   data-role="datebox" data-options='{"mode":"durationbox",
+                   "durationStep":1, "buttonIcon":"cog", "useFocus": true,
+                   "overrideDurationFormat": "%Dd:%Dl:%DM:%DS",
+                   "overrideSetTimeButtonLabel": "Random increment:",
+                   "overrideSetDurationButtonLabel": "Apply"
+                   }' />
         </div>
 
         <div class="buttons"></div>

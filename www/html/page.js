@@ -1,5 +1,6 @@
 var Page = function(name) {
     this.name = name;
+    this.data = {};
 
     // the following two fields are used only during settings initialization.
     // they should probably be removed
@@ -9,17 +10,18 @@ var Page = function(name) {
 
 Page.prototype.constructor = Page;
 
-Page.prototype.hasSignal = function(signal, data) {
-    data= typeof(data)!=="undefined" ? data : this.getPageData();
-    return data.signals.indexOf(signal) >= 0;
+Page.prototype.hasSignal = function(signal) {
+    //data= typeof(data)!=="undefined" ? data : this.getPageData();
+    return this.data.signals.indexOf(signal) >= 0;
 };
 
 Page.prototype.update = function(show, data) {
-    return data;
+    if(show)
+        this.data = data;
+    return this.data;
 };
 
-Page.prototype.settings = function(show, data) {
-    return data;
+Page.prototype.settings = function(show) {
 };
 
 Page.prototype.lever = function(arg) {
@@ -46,7 +48,8 @@ Page.prototype.resize = function(scrollable) {
         var win    = pgUI.getWindowDims();
         var width  = this.contentWidth();
         var totalHeight = header;
-        scrollDiv  = $("#"+this.name+"_page div.main.content");
+        var scrollDiv  = $("#"+this.name+"_page div.main.content");
+        scrollDiv.css({'overflow': "auto"});
         scrollDiv  = (typeof(scrollDiv)!=="undefined") ? scrollDiv : $("#"+this.name+"_main");
         scrollDiv.children().each(function(){
                 totalHeight = totalHeight + $(this).outerHeight(true);
@@ -59,7 +62,6 @@ Page.prototype.resize = function(scrollable) {
                     'width':    width+"px",
                     'overflow': "auto"
                     });
-        $("#"+this.name+"_page div.main.content").css({'overflow': "auto"});
     }
     else {
         var head   = this.headerHeight();
@@ -263,7 +265,6 @@ Page.prototype.displayEventData = function(e) {
 
 Page.prototype.createSettings = function() {
     var page     = pg.page();
-    var category = pg.category();
     /*
     var pc = $("#"+page+"_category");
     pc.empty();
@@ -278,8 +279,7 @@ Page.prototype.createSettings = function() {
                 gotoCategory(category);
         });
     */
-    var data = UI[page].getPageData(page, pg.category());
-    UI[page].settings(true, data);
+    UI[page].settings(true);
 };
 
 Page.prototype.submitSettings = function(doClose) {
@@ -294,8 +294,8 @@ Page.prototype.submitSettings = function(doClose) {
     // now safe to make a copy of the pg, which might have been changed by the previous calls.
     this.localPG.copy(pg, false);
 
-    var data = UI[page].getPageData(page, pg.category());
-    var newPageData = UI[page].settings(false, data);
+    UI[page].settings(false);
+    var newPageData = UI[page].data;
     if(getPage()==="categories" &&
        !pgUtil.equal(this.localPG.categories, pg.categories)) {
         pg.setCategories(this.localPG.categories);
@@ -392,7 +392,9 @@ ButtonPage.prototype.constructor = ButtonPage;
 
 ButtonPage.prototype.setRunning = function(running) {
     running = running || false;
-    this.setPageDataField("running",running);
+    //pgUI.showLog("Setting running status to "+running+" for page: "+this.name+", cat: "+pg.category());
+    //console.trace();
+    this.data.running = running;
     if(running) {
         this.startID.hide().prop('disabled', true);
         this.stopID.show().prop('disabled', false);
@@ -407,7 +409,7 @@ ButtonPage.prototype.setRunning = function(running) {
     }
 };
 ButtonPage.prototype.isRunning = function() {
-    return this.getPageDataField("running");
+    return this.data.running;
 };
 ButtonPage.prototype.lever = function(arg) {
     if(arg==="left") {
@@ -431,44 +433,44 @@ ButtonPage.prototype.buttonClick = function(type) {
 };
 ButtonPage.prototype.tripleClick = function() {
     pgUI.showButtons(true);
-    //this.setRunning(this.running);
 };
 
 ButtonPage.prototype.update = function(show, data) {
-    try {
-        if (show) {
-            this.setRunning(data.running);
+    this.data = Page.prototype.update.call(this, show, data);
+    if (show) {
+        try {
+            this.setRunning(this.data.running);
         }
-        else {
-            data.running = this.isRunning();
+        catch (err) {
+            pgUI.showWarn(err.toString());
+            this.data.running = false;
+            this.setRunning(this.data.running);
         }
     }
-    catch(err) {
-        showWarning(err.toString());
-        data.running = false;
-        this.setRunning(data.running);
-    }
-    return data;
+    return this.data;
 };
 
 ButtonPage.prototype.start = function (restart) {
-    restart = restart || false;
-    if(this.running && !this.restart) {
-        // some button pages (e.g. counter) do not have a running status
-        //pgUI_showError("Clock is already running.");
-    }
     this.setRunning(true);
     syncSoon();
 };
 ButtonPage.prototype.stop = function() {
     if(!this.isRunning()) {
-        pgUI_showError("Clock is already stopped");
+        pgUI.showError("Clock is already stopped");
     }
     this.setRunning(false);
     syncSoon();
 };
 ButtonPage.prototype.reset = function() {
     syncSoon();
+};
+
+ButtonPage.prototype.getPageData = function(cat) {
+    cat = (typeof(cat) !== "undefined") ? cat : pg.category();
+    var data = Page.prototype.getPageData.call(this, cat);
+    if(! ('running' in data))
+        data.running = false;
+    return data;
 };
 
 

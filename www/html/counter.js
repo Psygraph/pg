@@ -21,7 +21,7 @@ Counter.prototype = Object.create(ButtonPage.prototype);
 Counter.prototype.constructor = Counter;
 
 Counter.prototype.update = function(show, data) {
-    ButtonPage.prototype.update.call(this, show, data);
+    this.data = ButtonPage.prototype.update.call(this, show, data);
     if(show) {
         if (!this.initialized) {
             this.initialized = true;
@@ -37,36 +37,36 @@ Counter.prototype.update = function(show, data) {
                 this.count = e.data.count;
         }
         this.setValue();
-        this.setMotionResponse(data.motionAlarm, data.motionVal);
+        this.setMotionResponse(this.data.motionAlarm, this.data.motionVal);
         this.resize();
     }
     else {
         this.setMotionResponse("none");
     }
-    return data;
+    return this.data;
 };
 
-Counter.prototype.settings = function(show, data) {
+Counter.prototype.settings = function(show) {
     if(show) {
-        $("#counter_target").val(data.countTarget).change();
-        $("#counter_motionSlider").val(data.motionVal).change();
-        $("#counter_motionAlarm").val(data.motionAlarm).change();
-        //$("#counter_showEnso").prop("checked", data.showEnso).checkboxradio('refresh');
-        $("#counter_targetBehavior").val(data.countTargetBehavior).change();
+        $("#counter_target").val(this.data.countTarget).change();
+        $("#counter_motionSlider").val(this.data.motionVal).change();
+        $("#counter_motionAlarm").val(this.data.motionAlarm).change();
+        //$("#counter_showEnso").prop("checked", this.data.showEnso).checkboxradio('refresh');
+        $("#counter_targetBehavior").val(this.data.countTargetBehavior).change();
         if(pgUtil.isWebBrowser()) {
             $("#counter_motion").hide();
         }
     }
     else {
         if(! pgUtil.isWebBrowser()) {
-            data.motionAlarm  = $("#counter_motionAlarm").val();
-            data.motionVal    = parseFloat($("#counter_motionSlider").val());
+            this.data.motionAlarm  = $("#counter_motionAlarm").val();
+            this.data.motionVal    = parseFloat($("#counter_motionSlider").val());
         }
-        //data.showEnso            = $("#counter_showEnso")[0].checked;
-        data.countTarget         = parseInt($("#counter_target").val());
-        data.countTargetBehavior = $("#counter_targetBehavior").val();
+        //this.data.showEnso            = $("#counter_showEnso")[0].checked;
+        this.data.countTarget         = parseInt($("#counter_target").val());
+        this.data.countTargetBehavior = $("#counter_targetBehavior").val();
     }
-    return data;
+    return this.data;
 };
 
 Counter.prototype.resize = function() {
@@ -74,8 +74,7 @@ Counter.prototype.resize = function() {
 };
 
 Counter.prototype.setValue = function() {
-    var data = this.getPageData();
-    var countTarget = data.countTarget;
+    var countTarget = this.data.countTarget;
     //var category = pg.category();
     //var count = 0;
     //if(this.event[category]) {
@@ -84,7 +83,7 @@ Counter.prototype.setValue = function() {
     var count = this.count;
 
     this.edit.val(count);
-    if(!data.showEnso || !countTarget) {
+    if(!this.data.showEnso || !countTarget) {
         this.enso.trigger('configure', {fgColor: "rgba(0,0,0,0)"});
     }
     else {
@@ -94,7 +93,7 @@ Counter.prototype.setValue = function() {
             this.enso.trigger('configure', this.knobOptsAtTarget);
         else
             this.enso.trigger('configure', this.knobOptsOverTarget);
-        var frac = 100 * (this.count) / data.countTarget;
+        var frac = 100 * (this.count) / this.data.countTarget;
         this.enso.val(frac).trigger('change');
     }
 };
@@ -106,27 +105,27 @@ Counter.prototype.setMotionResponse = function(response, val) {
         pgAccel.start();
     }
     function onMotion(motion) {
-        var data = UI.counter.getPageData();
-        if(data.motionAlarm==="beep") {
+        if(this.data.motionAlarm==="beep") {
             pgAudio.beep();
         }
-        else if(data.motionAlarm==="sound") {
+        else if(this.data.motionAlarm==="sound") {
             pgAudio.alarm(pg.category(), false, cb);
         }
-        else if(data.motionAlarm==="silent") {
+        else if(this.data.motionAlarm==="silent") {
         }
         else {
-            pgUI_showLog("Error in motion callback");
+            pgUI.showLog("Error in motion callback");
         }
-        UI.counter.start();
+        this.start();
         function cb(idx) {
             //setTimeout(pgAudio.stopAlarm.bind(pgAudio, idx), 4000);
         }
     }
 };
 
-Counter.prototype.getPageData = function() {
-    var data = pg.getPageData("counter", pg.category());
+Counter.prototype.getPageData = function(cat) {
+    cat = (typeof(cat) !== "undefined") ? cat : pg.category();
+    var data = ButtonPage.prototype.getPageData.call(this, cat);
     if(! ('motionAlarm' in data))
         data.motionAlarm = "none";
     if(! ('motionVal' in data))
@@ -144,10 +143,9 @@ Counter.prototype.start = function(restart, cause) {
     restart = restart || false;
     cause = (typeof(cause)!=="undefined") ? cause : 'button';
     ButtonPage.prototype.start.call(this,restart);
-    var data = this.getPageData();
     var category = pg.category();
     this.count ++;
-    var eventData = {countTarget: data.countTarget,
+    var eventData = {countTarget: this.data.countTarget,
         count: this.count};
     var event = {page: "counter",
         type: "count",
@@ -155,7 +153,7 @@ Counter.prototype.start = function(restart, cause) {
         start: pgUtil.getCurrentTime(),
         data: eventData
     };
-    this.setPageDataField("event",event);
+    //this.data.event = event;
     pg.addNewEvents(event, true);
     this.setValue();
     this.stop();
@@ -182,9 +180,8 @@ Counter.prototype.stop = function() {
 
 Counter.prototype.reset = function() {
     ButtonPage.prototype.reset.call(this);
-    var data = this.getPageData();
     var category = pg.category();
-    var target = data.countTarget;
+    var target = this.data.countTarget;
     var count = this.count;
 
     this.feedback(count, target);
@@ -212,10 +209,9 @@ Counter.prototype.reset = function() {
 };
 
 Counter.prototype.feedback = function(count, target) {
-    var data = this.getPageData();
     if(count && target) {
         var correct = (count === target);
-        if(data.countTargetBehavior === "sound")
+        if(this.data.countTargetBehavior === "sound")
             pgAudio.reward(correct);
     }
 };

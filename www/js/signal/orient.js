@@ -28,7 +28,7 @@ Orientometer.prototype.update = function(show, data) {
         }
     }
     catch(err){
-        pgUI_showWarn(err.toString());
+        pgUI.showWarn(err.toString());
         data = {running:false, period:250, data:{}};
     }
     return data;
@@ -51,7 +51,7 @@ Orientometer.prototype.settingsDialog = function(callback) {
 // Start watching the accelerometer
 Orientometer.prototype.start = function(restart) {
     if (this.running) {
-        pgUI_showError("Orientation already running");
+        pgUI.showError("Orientation already running");
         return;
     }
     this.createData(["orientation"]);
@@ -74,7 +74,7 @@ Orientometer.prototype.readSuccess = function(heading) {
 };
 
 Orientometer.prototype.readError = function(compassError) {
-    pgUI_showError('Compass error: ' + compassError.code);
+    pgUI.showError('Compass error: ' + compassError.code);
 };
 
 

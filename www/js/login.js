@@ -20,34 +20,37 @@ Login.prototype.begin = function() {
 
     function fileReady() {
         if (WORDPRESS === true) {
-            // these WP_* variables are all set if index.html is served by wp.php
+            // the WP_* variables are set if index.html is served by wp.php
+            UI.screenshot = "wordpress,";
             pg.setReadOnly(true);
             PGEN.login(WP_USERNAME,
-                this.passwordCB.bind(this, WP_SERVER, WP_USERNAME, "", WP_CERT, this.endLogin.bind(this, this.wordpress.bind(this))));
+                this.passwordCB.bind(this, WP_SERVER, WP_USERNAME, "", WP_CERT,
+                    this.endLogin.bind(this, this.wordpress.bind(this, WP_HIST, WP_CATEGORY))));
         }
         else {
+            UI.screenshot = "not wordpress,";
             PGEN.readPG(localFileCB.bind(this));
         }
     }
     function localFileCB(success, struct) {
         if(success) {
-            var cert = "";
-            if(pgUtil.getCurrentTime() < struct.certExpiration)
-                cert = struct.cert;
-            
             if(struct.loggedIn && pg.online) {
                 var server   = struct.server;
                 var username = struct.username;
                 var pluginIndex = server.indexOf("/wp-content");
                 if(pluginIndex !== -1)
                     server = server.substr(0, pluginIndex);
-                PGEN.login(username,
-                    this.passwordCB.bind(this, server, username, "", cert, this.endLogin.bind(this)));
+                var callb = function(){};
+                if(struct.cert!="" && pgUtil.getCurrentTime() < struct.certExpiration)
+                    callb = this.passwordCB.bind(this, server, username, "", struct.cert, this.endLogin.bind(this));
+                else
+                    callb = this.getPassword.bind(this, server, username, this.endLogin.bind(this));
+                PGEN.login(username, callb);
                 return;
             }
         }
         else {
-            pgUI_showError("Failed to read data, writing data now will erase previous settings.");
+            pgUI.showError("Failed to read data, writing data now will erase previous settings.");
         }
         PGEN.login(pg.username, cb.bind(this));
         function cb(success) {
@@ -56,27 +59,27 @@ Login.prototype.begin = function() {
     }
 };
 
-Login.prototype.wordpress = function() {
+Login.prototype.wordpress = function(nDays, category) {
     // If we were started by wordpress, execute whatever actions might be desired
-    pgUI_showLog("Starting wordpress actions...");
+    pgUI.showLog("Starting wordpress actions...");
     if(pg.categories.indexOf("*")<0)
         pg.categories.push("*");
     PGEN.downloadEvents(cb);
     function cb(success) {
         if(!success)
-            pgUI_showWarn("Failed to download events.");
+            pgUI.showWarn("Failed to download events.");
         // update settings
         gotoPage("home");
-        gotoCategory("*");
-        UI.home.setPageDataField("history", 8);
+        gotoCategory(category);
+        UI.home.setPageDataField("history", ""+nDays);
         UI.home.setPageDataField("interval", "day");
-        UI.home.setPageDataField("signals", ["home", "stopwatch", "counter", "timer", "note"]);
+        UI.home.setPageDataField("signals", ["stopwatch", "counterCorrect", "timer", "timerMindful"]);
         showPage(true);
         // generate a screenshot of the home page.
-        UI.home.graph.makeImage(writeImage.bind(this, "home.png"));
+        UI.home.graph.makeImage(category, writeImage.bind(this, "home.png"));
         if (typeof(WP_EXTRA) === "function")
             WP_EXTRA();
-        pgUI_showLog("Wordpress actions finished.");
+        pgUI.showLog("Wordpress actions finished.");
     }
     function writeImage(fn, url) {
         UI.screenshot = url;
@@ -91,7 +94,7 @@ Login.prototype.beginLogin = function(callback) {
     if(navigator.splashscreen)
         navigator.splashscreen.hide();
     pgUI.showBusy(true);
-    pgUI_showLog("LOGIN_BEGIN");
+    pgUI.showLog("LOGIN_BEGIN");
     this.loggingIn = true;
     // If we find one of these files sitting around, we encountered a login error.
     // So we ask the user if they wish to reset the local files.
@@ -113,7 +116,7 @@ Login.prototype.beginLogin = function(callback) {
             if(success) {
                 pgFile.deleteFile("com.psygraph.pg");
                 pgFile.deleteFile("com.psygraph.events");
-                pgUI_showLog("Error: Deleted PG on user request.");
+                pgUI.showLog("Error: Deleted PG on user request.");
                 this.logoutAndErase(cb2.bind(this, event));
             }
             else
@@ -133,8 +136,9 @@ Login.prototype.hasFinishedLogin = function() {
 Login.prototype.endLogin = function(callback) {
     callback = callback || function(){};
     pgUI.showBusy(false);
-    pgUI_showLog("LOGIN_END");
+    pgUI.showLog("LOGIN_END");
     this.loggingIn = false;
+    app.debug = false;
     logEvent("login");
     //pgFile.deleteFile("com.psygraph.lastError");
     PGEN.readPsygraph(cb.bind(this));
@@ -223,7 +227,7 @@ Login.prototype.loginUserAndServer = function(username, server, onSettingsPage) 
                 );
             }
             else {
-                pgUI_showLog("Error logging in: " + err);
+                pgUI.showLog("Error logging in: " + err);
                 f.call(this);
             }
         }
@@ -298,6 +302,16 @@ Login.prototype.serverLoginCB = function(server, username, callback, success) {
     }
 };
 
+Login.prototype.logoutCB = function(success) {
+    if(!success) {
+        pgUI.showAlert("Logout failure");
+    }
+    UI.home.status(false);
+    pgUI.showBusy(false);
+    $(".loginButton").html("Login");
+    $('#login').val("Login").button("refresh");
+};
+
 Login.prototype.logoutAndErase = function(callback) {
     callback = typeof(callback)!=="undefined" ? callback : function(){};
     PGEN.logout(this.logoutCB.bind(this), true);
@@ -310,15 +324,6 @@ Login.prototype.logoutAndErase = function(callback) {
 Login.prototype.getDefaultServerURL = function() {
     return "https://psygraph.com";
 };
-
-Login.prototype.logoutCB = function(success) {
-    if(!success) {
-        pgUI.showAlert("Logout failure");
-    }
-    UI.home.status(false);
-    pgUI.showBusy(false);
-};
-
 
 
 var pgLogin = new Login();

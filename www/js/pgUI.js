@@ -98,6 +98,7 @@ var pgUI = {
         }
     },
     showAlert: function(message, title, cb) {
+        pgUI.writeLog(message);
         title   = typeof(title)!=="undefined" ? title : "Alert";
         message = pgUtil.escape(message, false, false);
         title   = pgUtil.escape(title, false, false);
@@ -192,25 +193,45 @@ var pgUI = {
             gotoPage("help");
         }
         else {
-            pgUI_showError("Unknown menu command");
+            pgUI.showError("Unknown menu command");
         }
         return true;
+    },
+
+    log: [],
+    writeLog: function(msg) {
+        if(app.debug) {
+            pgUI.log.push(msg);
+            pgFile.writeFile("com.psygraph.log", pgUI.log, function () {
+            }, false);
+        }
+    },
+
+    showDebug: function(msg) {
+        console.log(msg);
+        pgUI.writeLog(msg);
+    },
+    showLog: function(msg) {
+        console.log(msg);
+        pgUI.writeLog(msg);
+    },
+    showWarn: function(msg) {
+        msg = 'WARNING: ' +msg;
+        console.warn(msg);
+        if(app.debug) {
+            pg.addNewEvents({page: "home", type: "warn", data: {'text': msg}}, true);
+        }
+        pgUI.writeLog(msg);
+    },
+    showError: function(msg) {
+        msg = 'ERROR: ' +msg;
+        console.error(msg);
+        if(app.debug) {
+            pg.addNewEvents({page: "home", type: "error", data: {'text': msg}}, true);
+        }
+        pgUI.writeLog(msg);
     }
 };
 
 
-function pgUI_showLog(msg) {
-    console.log(msg);
-}
-function pgUI_showWarn(msg) {
-    console.warn('WARNING: ' +msg);
-    if(pg.debug()) {
-        pg.addNewEvents({page: "home", type: "warn", data: {'text': msg}}, true);
-    }
-}
-function pgUI_showError(msg) {
-    console.error('ERROR: ' +msg);
-    if(pg.debug()) {
-        pg.addNewEvents({page: "home", type: "error", data: {'text': msg}}, true);
-    }
-}
+

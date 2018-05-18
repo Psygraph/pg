@@ -68,13 +68,13 @@ function onPause() {
     //cordova.plugins.backgroundMode.enable();
     syncSoon();
     pg.background = true;
-    pgUI_showLog("Entering pause state...");
+    pgUI.showLog("Entering pause state...");
     showPage(false);
     //logEvent("pause");
 }
 function onResume() {
     pg.background = false;
-    pgUI_showLog("Resuming...");
+    pgUI.showLog("Resuming...");
     showPage(true);
     syncSoon();
     //logEvent("resume");
@@ -90,7 +90,7 @@ function onError(err) {
     if(pgLogin.loggingIn) {
         pgUI.showAlert(text, title);
     }
-    else if(pg.debug()) {
+    else if(app.debug) {
         pgUI.showAlert(text, title);
     }
     // returning true overrides the default window behaviour (i.e. we handled the error).
@@ -117,12 +117,12 @@ function logEvent(type, data) {
         if (pgLogin.loggingIn) {
             pgFile.writeFile("com.psygraph.lastError", event);
         }
-        if (pg.debug()) {
+        if (app.debug) {
             pg.addNewEvents(event, true);
             syncSoon();
         }
         else {
-            if (pg.debug()) {
+            if (app.debug) {
                 pg.addNewEvents(event, true);
                 syncSoon();
             }
@@ -248,7 +248,7 @@ function onKeyPress(e) {
                 if(def.length===1)
                     def.click();
                 else
-                    pgUI_showLog("Too many defaults");
+                    pgUI.showLog("Too many defaults");
                 break;
             default:
                 return true;
@@ -277,7 +277,7 @@ function onResize() {
 function syncSoon(force) {
     force = force || false;
     clearTimeout(UI.window.t);
-    UI.window.t = setTimeout(timeout.bind(this,force), 4000);
+    UI.window.t = setTimeout(timeout.bind(this,force), 2000);
     function timeout(force) {
         if(pgLogin.hasFinishedLogin()) {
             logEvent("update");
@@ -338,7 +338,7 @@ function gotoSection(section) {
     else if(section==="")
         ;
     else
-        pgUI_showError("Unknown section: " + section);
+        pgUI.showError("Unknown section: " + section);
 }
 function gotoSectionMain() {
     var page = getPage();
@@ -369,8 +369,7 @@ function gotoPage(newPage) {
     UI.lastPage = oldPage;
     // save page data
     if(oldPage && UI[oldPage]) {
-        var data = UI[oldPage].getPageData();
-        data = UI[oldPage].update(false, data);
+        var data = UI[oldPage].update(false, null);
         UI[oldPage].setPageData(data);
     }
     // change the PG page
@@ -416,15 +415,19 @@ function gotoPage(newPage) {
 }
 function showPage(show) {
     var page = getPage();
-    var data = UI[page].getPageData();
     if(show) { // show (update) the page
+        var data = UI[page].getPageData();
         UI[page].update(true, data);
     }
     else { // hide the page, save the data
-        data = UI[page].update(false, data);
+        var data = UI[page].update(false, null);
         UI[page].setPageData(data);
-        syncSoon();
     }
+}
+function savePage() {
+    var page = pg.page();
+    var data = UI[page].data;
+    UI[page].setPageData(data);
 }
 function resetPage() {
     // This is basically a same-page transition.
@@ -487,17 +490,19 @@ function gotoCategory(num) {
     // update the category value
     num = num < 0 ? 0 : num;
     num = num > pg.numCategories()-1 ? pg.numCategories()-1 : num;
+    // no need to change the current category
+    //if(pg.categoryIndex === num)
+    //    return;
     // update the stylesheet URL
     var page = getPage();
 
     // save page state, goto new category, load page state
-    var data = UI[page].getPageData();
-    data = UI[page].update(false, data);
+    var data = UI[page].update(false, null);
     UI[page].setPageData(data);
 
     pg.categoryIndex = num;
 
-    data = UI[page].getPageData();
+    var data = UI[page].getPageData();
     UI[page].update(true, data);
 
     var cd = pg.getCategoryData(pg.category());
@@ -522,6 +527,7 @@ function setPageChangeCallback(cb) {
 */
 // SERVER COMMUNICATION ==========================================
 
+var numTimeouts = 0;
 function postData(data, callback, isAsync) {
     if(callback === undefined)
         callback = function(){};
@@ -531,7 +537,7 @@ function postData(data, callback, isAsync) {
     if(data.action === "login" || data.action === "checkUser") {
         url = data.server + "/server.php";
         if(!pg.online) {
-            pgUI_showLog("Not online, but tried: "+data.action);
+            pgUI.showLog("Not online, but tried: "+data.action);
             return callback(false, null);
         }
     }
@@ -552,13 +558,13 @@ function postData(data, callback, isAsync) {
         contentType: "application/json; charset=utf-8",
         dataType:    "json",
         data:        dat,
-        cache:       false,
         success:     ajaxSuccess,
         error:       ajaxError
     });
     function ajaxSuccess(d) {
-        if(d.error) {
-            pgUI_showLog(d.error);
+        numTimeouts = 0;
+        if(d.hasOwnProperty('error')) {
+            pgUI.showLog(d.error);
             callback(false, d);
         }
         else {
@@ -566,10 +572,20 @@ function postData(data, callback, isAsync) {
         }
     }
     function ajaxError(request, status, error) {
-        pgUI_showLog("ERROR: " + status + ", " + error);
-        if(request.responseText)
-            pgUI_showLog(request.responseText);
-        callback(false, null);
+        if(status==="timeout" && ++numTimeouts <= 2) {
+            pgUI.showWarn("AJAX timeout, retrying");
+            // This will allow transmission of large arrays, but leads to memory errors.
+            // We need better data storage than JSON over HTTP...
+            //data.timeout = data.timeout*2;
+            postData(data, callback, isAsync);
+        }
+        else {
+            pgUI.showWarn("AJAX ERROR: " + data.action +": "+ status + ", " + error);
+            if(request.hasOwnProperty('responseText'))
+                pgUI.showLog(request.responseText);
+            numTimeouts = 0;
+            callback(false, null);
+        }
     }
 }
 
@@ -599,7 +615,7 @@ var PGEN = {
         pg.useServer = true;
         server = PGEN.augmentServerURL(server);
         if(!pg.online)
-            pgUI_showLog("VerifyUser called when not online");
+            pgUI.showLog("VerifyUser called when not online");
         postData({'action': "checkUser", 'server': server, 'username': username}, verifyCB, false);
         function verifyCB(status, d) {
             if(status) {
@@ -610,11 +626,11 @@ var PGEN = {
                 pg.server = server;
                 // was connectivity bad, or was the username unknown?
                 if(!d) {
-                    pgUI_showLog("Could not connect to server for verification");
+                    pgUI.showLog("Could not connect to server for verification");
                     callback("server");
                 }
                 else {
-                    pgUI_showLog("Plugin or user not found in WordPress");
+                    pgUI.showLog("Plugin or user not found in WordPress");
                     callback("user");
                 }
             }
@@ -627,7 +643,7 @@ var PGEN = {
             if(success) {
                 if(username!==newPG.username) {
                     // ??? should we write different (local) files for each username?
-                    pgUI_showWarn("User '"+username+"' inheriting settings of '" +newPG.username +"'");
+                    pgUI.showWarn("User '"+username+"' inheriting settings of '" +newPG.username +"'");
                 }
                 pg.copySettings(newPG, true);
             }
@@ -641,7 +657,7 @@ var PGEN = {
         // xxx we need to heavily comment this logic...
         pg.useServer = true;
         server = PGEN.augmentServerURL(server);
-        pgUI_showLog("Attempted server login: " + server);
+        pgUI.showLog("Attempted server login: " + server);
         var loginSuccess = false;
         postData({'action': "login", 'server': server, 'username': username, 'cert': cert, 'password': password}, validated);
 
@@ -743,37 +759,46 @@ var PGEN = {
             gotoPage(pg.page());
         }
     },
-    synchronize: function (callback, force) {
-        callback = (typeof(callback)==="undefined") ? (function fx(){}) : callback;
-        force = force || false;
-        // Update the pg, do the callback
-        PGEN.writePG(pg, cb);
+    synchronize: function (force, callback) {
+        force    = force    || false;
+        callback = callback || function fx(){};
 
-        if(! (pg.dirty() || force) )
+        savePage(); // update data of current page
+
+        if(!pg.dirty() && !force) {
+            PGEN.writePG(pg, cb);
             return;
+        }
 
         updateState(false);
-
         pgFile.writeFile("com.psygraph.state", UI.state);
         //if(!quick) // Doing this on the settings pages will blow away any of the user's changes.
         //    resetPage();
-
-        PGEN.writeEvents(pg, moreSync);  // write the events locally
-        function cb() {
-            UI.home.status();
-            callback();
+        if(pg.loggedIn && pg.online) {
+            PGEN.uploadEvents(uploadFiles); // synchonize all events with the server
         }
-        function moreSync(success) {
+        else
+            writeEvents();
+
+        function uploadFiles(success) {
+            PGEN.uploadFiles(false, writeEvents);
+        }
+        function writeEvents() {
+            PGEN.writeEvents(pg, writePG);  // write the events locally
+        }
+        function writePG(success) {
             if(success) {
-                if(pg.loggedIn && pg.online) {
-                    PGEN.uploadEvents(); // synchonize all events with the server
-                    PGEN.uploadFiles(false);
-                }
                 pg.dirty(false);
             }
             else {
                 pgUI.showAlert("Could not save pg events file", "Error");
             }
+            PGEN.writePG(pg, cb);
+        }
+
+        function cb() {
+            UI.home.status();
+            callback();
         }
     },
     writePsygraph: function(data, callback) {
@@ -845,8 +870,7 @@ var PGEN = {
             if(success) {
                 pg.events         = data.events;
                 pg.deletedEvents  = data.deletedEvents;
-                if(data.selectedEvents)
-                    pg.selectedEvents = data.selectedEvents;
+                pg.selectedEvents = data.selectedEvents;
             }
             pgFile.readFile("com.psygraph.state", cbState);
         }
@@ -855,7 +879,7 @@ var PGEN = {
                 UI.state = data;
             }
             else {
-                pgUI_showLog("Could not read state file.");
+                pgUI.showLog("Could not read state file.");
             }
             updateState(true);
             if(callback)
@@ -869,7 +893,7 @@ var PGEN = {
     updateSettings: function(newPG, callback) {
         if(pg.useServer && !pg.getReadOnly()) {
             pgUI.showBusy(true);
-            pgUI_showLog("Writing settings to the server");
+            pgUI.showLog("Writing settings to the server");
             postData({'action': "settings", 'pg': pgUtil.encode(newPG, true) },
                 function(success, request){getDataURL(success, request, newPG, callback)});
         }
@@ -902,21 +926,31 @@ var PGEN = {
     },
     // download events from the server
     downloadEvents: function(callback) {
+        var lastOffset = 0;
         if(!(pg.loggedIn && pg.online)) {
             pgUI.showAlert("You must be online and logged in to download events.");
             //$('#home_action').popup('close');
             callback(true);
         }
         else {
-            postData({action: "getEventArray", timeout: 12000}, createEvents );
+            postData({action: "getEventArray", timeout: 12000, offset: 0}, createEvents );
         }
-        function createEvents(success, data) {
+        function createEvents(success, rslt) {
             if(success) {
-                pg.addEventArray(data, false, true);
-                PGEN.writeEvents(pg, cb);
+                pg.addEventArray(rslt.data, false, true);
+                if (rslt.offset == 0) {
+                    PGEN.writeEvents(pg, cb);
+                }
+                else {
+                    lastOffset = rslt.offset;
+                    postData({action: "getEventArray", timeout: 12000, offset: lastOffset}, createEvents);
+                }
             }
-            else
+            else {
+                pgUI.showBusy(false);
+                pgUI.showAlert("GetEventArray timeout at event offset: " + lastOffset);
                 cb();
+            }
             function cb() {
                 callback(success);
             }
@@ -932,9 +966,8 @@ var PGEN = {
         pgFile.uploadAudioFiles(force, callback);
     },
     // upload events to the server
-    uploadEvents: function() {
-        //callback = (typeof(callback)!="undefined")? callback : function(){};
-        var callback = function(){};
+    uploadEvents: function(callback) {
+        callback = callback || function(){};
         if(!(pg.loggedIn && pg.online)) {
             pgUI.showAlert("You must be online and logged in to upload events.");
             return;
@@ -960,11 +993,13 @@ var PGEN = {
                     pg.deleteDeletedEventIDs(data.ids);
                 }
                 else
-                    pgUI_showLog("ERROR: Could not delete events.");
+                    pgUI.showLog("ERROR: Could not delete events.");
             }
         }
         function uploadCreatedEvents(callback) {
-            var nEvents = 100;
+            var nEvents = 40;
+            var success = true;
+            var async = true;
             for(var i=0; i<pg.events.length; i+=nEvents) {
                 var startIndex = i;
                 var endIndex   = Math.min(i+nEvents-1, pg.events.length-1);
@@ -980,18 +1015,17 @@ var PGEN = {
                         startTime: pg.events[endIndex][1],
                         endTime:   pg.events[startIndex][1]
                     };
-                    postData({action: "setEventArray", data: toSet, timeout: 16000},
-                        function(tf,dat){cbAfterCount(tf,dat)} );
+                    postData({action: "setEventArray", data: toSet, timeout: 12000},
+                        function(tf,dat){cbAfterCount(tf,dat)}, async );
                 }
             }
-            function cbAfterCount(success, data) {
-                if(success) {
+            resetPage(); // in case the page had been cacheing event ID's
+            callback(success);
+            function cbAfterCount(s, data) {
+                if(s) {
                     pg.changeEventIDs(data.idlist);
-                    resetPage(); // in case the page had been cacheing event ID's
-                    /// xxx we should only write the events once.
-                    PGEN.writeEvents(pg);
                 }
-                callback(success);
+                success = success && s;
                 //pg.deleteEventsInRange(data.startTime, data.endTime);
                 //pg.deleteDeletedEventsInRange(data.startTime, data.endTime+1);
             }
@@ -1033,7 +1067,7 @@ var PGEN = {
         }
         else if(selection === "downloadEvents") {
             pgUI.showBusy(true);
-            PGEN.downloadEvents(cb);
+            PGEN.downloadEvents(cb, false);
         }
         else if(selection === "uploadFiles") {
             pgUI.showBusy(true);
@@ -1071,15 +1105,15 @@ var PGEN = {
                 deleteEverythingCB.bind(this));
         }
         else {
-            pgUI_showLog ("Unknown selection: " + selection);
+            pgUI.showLog ("Unknown selection: " + selection);
         }
-        function cb(success) {
+        function cb(success, changePage) {
+            changePage = typeof("changePage") !== "undefined" ? changePage : true;
             pgUI.showBusy(false);
-            if(!success) {
-                pgUI.showAlert("Command failed.");
+            if (changePage) {
+                gotoPage(pg.page());
+                //resetPage();
             }
-            gotoPage(pg.page());
-            //resetPage();
         }
         function deleteEventsCB(success) {
             if(success) {

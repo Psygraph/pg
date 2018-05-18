@@ -9,25 +9,25 @@ Help.prototype.constructor = Help;
 
 Help.prototype.update = function(show, data) {
     if(show) {
-        if(data.intro) {
+        this.data = data;
+        if(this.data.intro) {
             // optionally show an intro to the application
         }
         this.resize();
     }
     else {
-        data.intro = false;
+        this.data.intro = false;
         this.setIntro(false);
     }
-    return data;
+    return this.data;
 };
 
-Help.prototype.settings = function(show, data) {
+Help.prototype.settings = function(show) {
     if(show) {
     }
     else {
-        data = {version:1};
+        this.data = {version:1};
     }
-    return data;
 };
 
 Help.prototype.resize = function() {

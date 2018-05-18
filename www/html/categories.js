@@ -31,16 +31,17 @@ Categories.prototype.constructor = Categories;
 
 Categories.prototype.update = function(show, data) {
     if(show) {
-        data = this.settings(show,data);
+        this.data = data;
+        this.settings(show);
         this.resize();
     }
     else {
-        data = this.settings(show,data);
+        this.settings(show);
     }
-    return data;
+    return this.data;
 };
 
-Categories.prototype.settings = function(show, data) {
+Categories.prototype.settings = function(show) {
     var category = pg.category();
     if(typeof(this.src[category])==="undefined")
         this.src[category] = {};
@@ -65,10 +66,10 @@ Categories.prototype.settings = function(show, data) {
 
         var limit = 64;
         // ### style ###
-        var styleVal = data.style;
-        if(data.style.length > limit) {
-            this.src[category].styleEdit = data.style;
-            styleVal = data.style.substring(0,limit) + " ...";
+        var styleVal = this.data.style;
+        if(this.data.style.length > limit) {
+            this.src[category].styleEdit = this.data.style;
+            styleVal = this.data.style.substring(0,limit) + " ...";
         }
         var strings = ["default.css"];
         if(pgUtil.isWebBrowser())
@@ -76,13 +77,13 @@ Categories.prototype.settings = function(show, data) {
         this.displaySelect("styleEdit", strings, styleVal);
 
         // ### color ###
-        this.colorPicker.setColor(data.color);
+        this.colorPicker.setColor(this.data.color);
 
         // ### sound ###
-        var soundVal = data.sound;
-        if(data.sound.length > limit) {
-            this.src[category].soundEdit = data.sound;
-            soundVal = data.sound.substring(0,limit) + " ...";
+        var soundVal = this.data.sound;
+        if(this.data.sound.length > limit) {
+            this.src[category].soundEdit = this.data.sound;
+            soundVal = this.data.sound.substring(0,limit) + " ...";
         }
         strings = ["default.mp3"];
         if(pgUtil.isWebBrowser())
@@ -90,10 +91,10 @@ Categories.prototype.settings = function(show, data) {
         this.displaySelect("soundEdit", strings, soundVal);
 
         // ### text ###
-        var textVal = data.text;
-        if(data.text.length > limit) {
-            this.src[category].textEdit = data.text;
-            textVal = data.text.substring(0,limit) + " ...";
+        var textVal = this.data.text;
+        if(this.data.text.length > limit) {
+            this.src[category].textEdit = this.data.text;
+            textVal = this.data.text.substring(0,limit) + " ...";
         }
         strings = ["default.xml"];
         if(pgUtil.isWebBrowser())
@@ -101,7 +102,7 @@ Categories.prototype.settings = function(show, data) {
         this.displaySelect("textEdit", strings, textVal);
 
         // ### calendar ###
-        $("#categories_calendar").prop('checked', data.calendar).checkboxradio("refresh");
+        $("#categories_calendar").prop('checked', this.data.calendar).checkboxradio("refresh");
 
         if(!pgUtil.isWebBrowser()) {
             pgFile.listDir(pgFile.getMediaURL(),"css", this.addSelect.bind(this, "styleEdit", styleVal) );
@@ -124,29 +125,28 @@ Categories.prototype.settings = function(show, data) {
         //cats.push("*");
         this.localPG.setCategories(cats);
 
-        data.color    = this.colorPicker.colorHex;
-        data.style    = $("#styleEdit")[0].value;
-        data.sound    = $("#soundEdit")[0].value;
-        data.text     = $("#textEdit")[0].value;
-        data.calendar = $("#categories_calendar")[0].checked ? 1 : 0;
+        this.data.color    = this.colorPicker.colorHex;
+        this.data.style    = $("#styleEdit")[0].value;
+        this.data.sound    = $("#soundEdit")[0].value;
+        this.data.text     = $("#textEdit")[0].value;
+        this.data.calendar = $("#categories_calendar")[0].checked ? 1 : 0;
 
         // If they have selected files without the data: URI scheme,
         // removed our cached values.
-        if(data.style.substring(0,5) !== "data:")
+        if(this.data.style.substring(0,5) !== "data:")
             delete this.src[category].styleEdit;
-        if(data.sound.substring(0,5) !== "data:")
+        if(this.data.sound.substring(0,5) !== "data:")
             delete this.src[category].soundEdit;
-        if(data.text.substring(0,5) !== "data:")
+        if(this.data.text.substring(0,5) !== "data:")
             delete this.src[category].textEdit;
         // if those values were stored as encoded files, set those values
         if(typeof(this.src[category].styleEdit)!=="undefined")
-            data.style = this.src[category].styleEdit;
+            this.data.style = this.src[category].styleEdit;
         if(typeof(this.src[category].soundEdit)!=="undefined")
-            data.sound = this.src[category].soundEdit;
+            this.data.sound = this.src[category].soundEdit;
         if(typeof(this.src[category].textEdit)!=="undefined")
-            data.text  = this.src[category].textEdit;
+            this.data.text  = this.src[category].textEdit;
     }
-    return data;
 };
 
 Categories.prototype.updateCategory = function() {

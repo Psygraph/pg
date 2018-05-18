@@ -15,7 +15,9 @@ function GraphComponent(elementID, style) {
         'home',
         'stopwatch',
         'timer',
+        'timerMindful',
         'counter',
+        'counterCorrect',
         'note',
         'acceleration',
         'orientation',
@@ -51,22 +53,12 @@ GraphComponent.prototype.palatte = function(groupName) {
         'rgba(84,89,95,1.0)', '#54595f',
         'rgba(55,183,167,1.0)', '#37b7a7',
         'rgba(233,229,33,1.0)', '#e9e521',
-        'rgba(207,194,194,1.0)', '#cfc2c2',
-        'rgba(104,179,90,1.0)', '#68af5a',
-        'rgba(0,86,145,1.0)', '#005691'
-    ];
-    var p2 = [
-        'rgba(0,0,0,1.0)', '#000000',
-        'rgba(224,91,67,1.0)', '#e05b43',
-        'rgba(0,42,61,1.0)', '#002a3d',
-        'rgba(0,114,26,1.0)', '#00727e',
         'rgba(255,198,46,1.0)', '#ffc62e',
-        'rgba(152,34,21,1.0)', '#982215',
+        'rgba(104,179,90,1.0)', '#68af5a',
+        'rgba(0,86,145,1.0)', '#005691',
         'rgba(161,115,24,1.0)', '#a17318',
-        'rgba(233,229,33,1.0)', '#e9e521',
-        'rgba(84,89,95,1.0)', '#54595f',
+        'rgba(114,114,26,1.0)', '#72727e',
         'rgba(207,194,194,1.0)', '#cfc2c2',
-        'rgba(244,239,239,1.0)', '#f4efef'
     ];
     return p1[index];
 };
@@ -96,8 +88,10 @@ GraphComponent.prototype.addGroupOpts = function(groupName) {
     var index = this.groupID[groupName];
     if( groupName === "home"      ||
         groupName === "stopwatch" ||
-        groupName === "timer"     ||
         groupName === "counter"   ||
+        groupName === "counterCorrect"   ||
+        groupName === "timer"     ||
+        groupName === "timerMindful"     ||
         groupName === "note"
     ) {
         trace.type  = "bar";
@@ -307,12 +301,14 @@ GraphComponent.prototype.addPoints = function(group, points, addBreak) {
     this.plot(group, points, addBreak);
 };
 
-GraphComponent.prototype.addBars = function(group, points) {
+GraphComponent.prototype.addBars = function(group, points, pointsStacked) {
     //this.padding = interval/2;
     var len = points.x.length;
     if(len === 0)
         return;
     this.plot(group, points);
+    if(typeof(pointsStacked)!=="undefined")
+        this.plot(group, pointsStacked);
 };
 GraphComponent.prototype.changeLabels = function(from, to) {
     var update = {name:""};
@@ -337,7 +333,7 @@ GraphComponent.prototype.endAddPoints = function(maxWindowLen) {
 GraphComponent.prototype.plot = function(group, points, addBreak) {
     var index = this.getGroupIndex(group);
     if(index===-1) {
-        pgUI_showError("Unknown group");
+        pgUI.showError("Unknown group");
     }
     else {
         var pts = {};
@@ -369,7 +365,14 @@ GraphComponent.prototype.flipPoints = function(pts) {
 };
 
 
-GraphComponent.prototype.makeImage = function(callback) {
+GraphComponent.prototype.makeImage = function(title, callback) {
+    var layout = {
+        title: title,
+        "titlefont": {
+            "size": 16
+        }
+    };
+    Plotly.relayout(this.elementID, layout);
     Plotly.toImage(this.elementID, {format: 'png', width: 800, height: 600}).then(callback);
     //Plotly.toImage(this.elementID, {format: 'png', width: 800, height: 600}).then(callback);
 };

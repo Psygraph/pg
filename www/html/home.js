@@ -10,31 +10,32 @@ Home.prototype.constructor = Home;
 
 Home.prototype.update = function(show, data) {
     if(show) {
+        this.data = data;
         if (!this.graph) {
             this.graph   = new GraphComponent("home_graph", "bar");
         }
         this.status();
+        this.graph.create(this.data.signals, this.graph.computeNumericInterval(this.data.interval));
+        this.updateGraph();
         this.resize();
-        this.updateGraph(data);
     }
     else {
     }
-    return data;
+    return this.data;
 };
 
-Home.prototype.settings = function(show, data) {
+Home.prototype.settings = function(show) {
     if(show) {
-        $("#home_history").val(data.history).change();
-        $("#home_interval").val(data.interval).change();
-        $("#home_signals").val(data.signals).change();
+        $("#home_history").val(this.data.history).change();
+        $("#home_interval").val(this.data.interval).change();
+        $("#home_signals").val(this.data.signals).change();
     }
     else {
-        data.history  = parseInt($("#home_history").val());
-        data.interval = $("#home_interval").val();
-        data.signals  = $("#home_signals").val();
-        this.graph.create(data.signals, this.graph.computeNumericInterval(data.interval));
+        this.data.history  = parseInt($("#home_history").val());
+        this.data.interval = $("#home_interval").val();
+        this.data.signals  = $("#home_signals").val();
+        this.graph.create(this.data.signals, this.graph.computeNumericInterval(this.data.interval));
     }
-    return data;
 };
 Home.prototype.resize = function() {
     Page.prototype.resize.call(this, false);
@@ -68,8 +69,7 @@ Home.prototype.getPageData = function() {
 };
 
 Home.prototype.getOptions = function() {
-    var data     = this.getPageData();
-    var interval = this.graph.computeNumericInterval(data.interval);
+    var interval = this.graph.computeNumericInterval(this.data.interval);
     var options  = {
         orientation:   'bottom',
         timeAxis: {scale: interval, step: 1},
@@ -77,24 +77,26 @@ Home.prototype.getOptions = function() {
     };
 };
 
-Home.prototype.updateGraph = function(data) {
-    data = data || this.getPageData();
-    this.graph.create(data.signals, this.graph.computeNumericInterval(data.interval));
-    var interval   = this.graph.computeNumericInterval(data.interval);
-    var nIntervals = data.history;
+Home.prototype.updateGraph = function() {
+    var interval   = this.graph.computeNumericInterval(this.data.interval);
+    var nIntervals = this.data.history;
     var now        = pgUtil.getCurrentTime();
     //var cutoff = now  - interval * nIntervals;
 
     var homePts;
     var stopwatchPts;
     var counterPts;
+    var counterCorrectPts;
     var timerPts;
+    var timerMindfulPts;
     var notePts;
-    var showHome      = this.hasSignal("home",data);
-    var showStopwatch = this.hasSignal("stopwatch",data);
-    var showCounter   = this.hasSignal("counter",data);
-    var showTimer     = this.hasSignal("timer",data);
-    var showNote      = this.hasSignal("note",data);
+    var showHome      = this.hasSignal("home");
+    var showStopwatch = this.hasSignal("stopwatch");
+    var showCounter   = this.hasSignal("counter");
+    var showCounterCorrect   = this.hasSignal("counterCorrect");
+    var showTimer     = this.hasSignal("timer");
+    var showTimerMindful     = this.hasSignal("timerMindful");
+    var showNote      = this.hasSignal("note");
     // Total time
     if(showHome) {
         var pts = {x:[],y:[]};
@@ -113,24 +115,23 @@ Home.prototype.updateGraph = function(data) {
     // Total time
     if(showStopwatch) {
         var pts = {x:[],y:[]};
-        var events = pg.getEvents(pg.category());
+        var events = pg.getEventsInPage("stopwatch", pg.category());
         for (var i=0; i<events.length; i++) {
             var e = pgUtil.parseEvent(events[i]);
             //if(e.start < cutoff)
             //    break;
-            if(e && e.type==="interval") {
+            if(e.type==="interval") {
                 // floating-point hours
-                if(e.page==="stopwatch") {
-                    pts.x.push(new Date(e.start));
-                    pts.y.push(e.duration / (60*60*1000.0));
-                }
+                pts.x.push(new Date(e.start));
+                pts.y.push(e.duration / (60*60*1000.0));
             }
         }
         stopwatchPts = this.computeIntervals(pts, now, interval, nIntervals, "sum");
     }
-    // correctCount
-    if(showCounter) {
+    // count
+    if(showCounter || showCounterCorrect) {
         var pts = {x:[],y:[]};
+        var ptsCorrect = {x:[],y:[]};
         var events = pg.getEventsInPage("counter", pg.category());
         for (var i=0; i<events.length; i++) {
             var e = pgUtil.parseEvent(events[i]);
@@ -140,15 +141,23 @@ Home.prototype.updateGraph = function(data) {
                 var val = e.data.count;
                 if(e.data.countTarget)
                     val = (e.data.count === e.data.countTarget) ? 1 : 0;
+                ptsCorrect.x.push(new Date(e.start));
+                ptsCorrect.y.push(val);
+            }
+            else {
+                var val = 1;
                 pts.x.push(new Date(e.start));
                 pts.y.push(val);
             }
         }
-        counterPts = this.computeIntervals(pts, now, interval, nIntervals, "mean");
+        counterPts = this.computeIntervals(pts, now, interval, nIntervals, "sum");
+        ptsCorrect = scalePoints(ptsCorrect, pts);
+        counterCorrectPts = this.computeIntervals(ptsCorrect, now, interval, nIntervals, "mean");
     }
-    // mindful
-    if(showTimer) {
+    // timer
+    if(showTimer || showTimerMindful) {
         var pts = {x:[],y:[]};
+        var ptsMindful = {x:[],y:[]};
         var events = pg.getEventsInPage("timer", pg.category());
         for (var i=0; i<events.length; i++) {
             var e = pgUtil.parseEvent(events[i]);
@@ -156,11 +165,18 @@ Home.prototype.updateGraph = function(data) {
             //    break;
             if(e.type==="response" && typeof(e.data['mindful'])!=="undefined") {
                 var val = e.data.mindful ? 1 : 0;
+                ptsMindful.x.push(new Date(e.start));
+                ptsMindful.y.push(val);
+            }
+            if(e.type==="interval") {
+                // floating-point hours
                 pts.x.push(new Date(e.start));
-                pts.y.push(val);
+                pts.y.push(e.duration / (60*60*1000.0));
             }
         }
-        timerPts = this.computeIntervals(pts, now, interval, nIntervals, "mean");
+        timerPts = this.computeIntervals(pts, now, interval, nIntervals, "sum");
+        ptsMindful = scalePoints(ptsMindful, pts);
+        timerMindfulPts = this.computeIntervals(ptsMindful, now, interval, nIntervals, "mean");
     }
     // analytic
     if(showNote) {
@@ -177,24 +193,6 @@ Home.prototype.updateGraph = function(data) {
         notePts = this.computeIntervals(pts, now, interval, nIntervals, "binary");
     }
 
-    // make count bar height equal to time bar height
-    if(showHome || showStopwatch) {
-        var scalePts = showHome ? homePts : stopwatchPts;
-        for (var i = 0; i < scalePts.y.length; i++) {
-            if(showCounter) {
-                var correct = counterPts.y[i];
-                counterPts.y[i] = (correct) * scalePts.y[i];
-            }
-            if(showTimer) {
-                var correct = timerPts.y[i];
-                timerPts.y[i] = (correct) * scalePts.y[i];
-            }
-            if(showNote) {
-                var correct = notePts.y[i];
-                notePts.y[i] = (correct) * scalePts.y[i];
-            }
-        }
-    }
     if(showHome) {
         this.graph.addBars("home", this.graph.flipPoints(homePts));
     }
@@ -204,14 +202,26 @@ Home.prototype.updateGraph = function(data) {
     if(showCounter) {
         this.graph.addBars("counter", this.graph.flipPoints(counterPts));
     }
+    if(showCounterCorrect) {
+        this.graph.addBars("counterCorrect", this.graph.flipPoints(counterCorrectPts));
+    }
     if(showTimer) {
         this.graph.addBars("timer", this.graph.flipPoints(timerPts));
+    }
+    if(showTimerMindful) {
+        this.graph.addBars("timerMindful", this.graph.flipPoints(timerMindfulPts));
     }
     if(showNote) {
         this.graph.addBars("note", this.graph.flipPoints(notePts));
     }
-    //this.graph.changeLabels(["stopwatch","counter"], ["time","correct count"]);
-    //this.graph.redraw(new Date(now -nIntervals*interval), new Date(now));
+    // make ptsToScale (0-1) equal to height of scalePts
+    function scalePoints(ptsToScale, scalePts) {
+        for (var i = 0; i < scalePts.y.length; i++) {
+            var correct = ptsToScale.y[i];
+            ptsToScale.y[i] = (correct) * scalePts.y[i];
+        }
+        return ptsToScale;
+    }
 };
 
 Home.prototype.status = function(onlineStatus) {

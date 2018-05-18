@@ -31,7 +31,7 @@ BluetoothDevice.prototype.update = function(show, data) {
         }
     }
     catch(err) {
-        pgUI_showWarn(err.toString());
+        pgUI.showWarn(err.toString());
         data = {};
     }
     return data;
@@ -78,7 +78,7 @@ BluetoothDevice.prototype.startScan = function(cback) {
     if(pgUtil.isWebBrowser() || this.scanning)
         return;
     this.scanning = true;
-    pgUI_showLog("Starting bluetooth scan...");
+    pgUI.showLog("Starting bluetooth scan...");
     ble.startScan([],startScanSuccess.bind(this), cback);
 
     function startScanSuccess(result) {
@@ -86,7 +86,7 @@ BluetoothDevice.prototype.startScan = function(cback) {
                 return device.id === result.id;
             })) {
             if(typeof(result.name)!=="undefined")
-                pgUI_showLog('FOUND DEVICE:'  + result.name);
+                pgUI.showLog('FOUND DEVICE:'  + result.name);
             this.foundDevices.push(result);
             cback();
         }
@@ -102,8 +102,8 @@ BluetoothDevice.prototype.stopScan = function(cb) {
     else {
         cb(true);
     }
-    function resolve(){pgUI_showLog('scan finished.'); cb(true);}
-    function reject(){pgUI_showLog('scan finished.'); cb(false);}
+    function resolve(){pgUI.showLog('scan finished.'); cb(true);}
+    function reject(){pgUI.showLog('scan finished.'); cb(false);}
 };
 BluetoothDevice.prototype.isConnected = function() {
     if(this.meter)
@@ -138,13 +138,13 @@ BluetoothDevice.prototype.connect = function(name, callback) {
             address = btDevs[i].id;
         }
     }
-    pgUI_showLog('Connecting to device: ' + address + "...");
+    pgUI.showLog('Connecting to device: ' + address + "...");
     pgUI.showBusy(true);
     ble.connect(address, connectSuccess.bind(this), handleError.bind(this));
 
     function connectSuccess(result) {
         pgUI.showBusy(false);
-        pgUI_showLog("Connect success");
+        pgUI.showLog("Connect success");
         var services = result.services;
 
         if(this.isPGMeter(services)) {
@@ -189,7 +189,7 @@ BluetoothDevice.prototype.connect = function(name, callback) {
             this.disconnect();
             pgUI.showAlert(msg, "Bluetooth Device:");
         }
-        pgUI_showError(msg);
+        pgUI.showError(msg);
     }
 };
 

@@ -54,7 +54,7 @@ Notify.prototype.update = function(show, data) {
         }
     }
     catch(err){
-        pgUI_showWarn(err.toString());
+        pgUI.showWarn(err.toString());
         data = {alertIndices: {}};
 
     }
@@ -63,7 +63,7 @@ Notify.prototype.update = function(show, data) {
 
 Notify.prototype.setNotification = function(category, atTime, countdownTime, hasText, hasSound) {
     if(this.alertIndices[category] && this.alertIndices[category].length) {
-        pgUI_showLog("Error: pending notification in " + category);
+        pgUI.showLog("Error: pending notification in " + category);
         this.removeCategory(category);
     }
     this.alertIndices[category] = [];
@@ -93,7 +93,7 @@ Notify.prototype.setNotification = function(category, atTime, countdownTime, has
             }
             this.alertIndices[category].push(id);
         }
-        pgUI_showLog("Set "+category+" notification for: " + atTime);
+        pgUI.showLog("Set "+category+" notification for: " + atTime);
     }
 };
 
@@ -139,6 +139,8 @@ Notify.prototype.getOpts = function(category, atTime, countdownTime, txt, sound)
     
 // Call any missed callbacks that have elapsed.
 Notify.prototype.callElapsed = function(category, running) {
+    this.removeCategory(category);
+    /*
     if (this.usePlugin) {
         cordova.plugins.notification.local.getAll(notifyCB.bind(this, category, running), this);
     }
@@ -153,25 +155,33 @@ Notify.prototype.callElapsed = function(category, running) {
         this.clicked = [];
 
         for(var note in notifications) {
-            pgUI_showLog("notification: " + notifications[note].data);
-            if(!notifications[note].isTriggered())
-                continue;
-            var data = notifications[note].data;
-            if(typeof(data)==="string") // weirdness in the recent notifcation
+            cordova.plugins.notification.local.isTriggered(notifications[note].id, cb.bind(this, notifications[note]));
+        }
+
+        function cb(notification, triggered) {
+            var data = JSON.parse(notification.data);
+            if (typeof(data) === "string") // weirdness in the recent release of local.notification
                 data = JSON.parse(data);
-            if( category === data.category ) {
-                this.removeID(notifications[note].id);
-                var latestData      = {};
-                latestData.alarm    = true;
-                latestData.time     = 0;
-                latestData.category = category;
-                latestData.elapsed  = false;
-                latestData.time     = pgUtil.getCurrentTime(); // we regard the alarm as having elapsed... now.
-                latestData.id       = pg.uniqueEventID();
-                this.callback("elapsed", latestData, running);
+            if (category === data.category) {
+                pgUI.showLog("Removing notification " + notification.id  + ": "+ notification.data);
+                this.removeID(notification.id, true);
+                var currentTime = pgUtil.getCurrentTime();
+                if(triggered && false) {
+                    //if (!triggered)
+                    //    pgUI.showLog("Notification should have triggered: " + notifications[note].id);
+                    var latestData = {};
+                    latestData.alarm = true;
+                    latestData.time = 0;
+                    latestData.category = category;
+                    latestData.elapsed = false;
+                    latestData.time = currentTime; // we regard the alarm as having elapsed... now.
+                    latestData.id = pg.uniqueEventID();
+                    this.callback("elapsed", latestData, running);
+                }
             }
         }
     }
+    */
 };
 
 Notify.prototype.removeCategory = function(category) {
@@ -185,52 +195,50 @@ Notify.prototype.removeCategory = function(category) {
         }
         catch(err) {
         }
-        this.alertIndices[category] = [];
     }
     else
-        cordova.plugins.notification.local.getAll(cb.bind(this));
-    function cb(notifications) {
-        if(!notifications)
-            pgUI_showLog("Invalid NULL notification in removeList");
-        else if(Array.isArray(notifications)) {
-            for(var n in notifications)
-                process(notifications[n]);
-        }
-        else
-            process(notifications);
-        this.alertIndices[category] = [];
-        function process(note) {
-            var id   = note.id;
-            var data = JSON.parse(note.data);
-            // xxx This is broken upstream: it should not be double-encoded.
-            data = JSON.parse(data);
-            if(data.category === category) {
-                // only cancel scheduled notifications, otherwise the sound will stop playing (Android)
-                if(cordova.plugins.notification.local.isTriggered(id)) {
-                    setTimeout( cordova.plugins.notification.local.cancel.bind(this,id), 4000);
-                }
-                else {
-                    cordova.plugins.notification.local.cancel( id );
-                }
-            }
-        }
-    }
+        cordova.plugins.notification.local.getAll(this.remove.bind(this, category));
+    this.alertIndices[category] = [];
 };
+
 Notify.prototype.removeID = function(id) {
-    for(ndx in this.alertIndices) {
-        for(i in this.alertIndices[ndx]) {
+    for (ndx in this.alertIndices) {
+        for (i in this.alertIndices[ndx]) {
             if (this.alertIndices[ndx][i] === id) {
                 this.alertIndices[ndx].slice(i, 1);
                 break;
             }
         }
     }
-    if(this.usePlugin) {
-        cordova.plugins.notification.local.cancel( id );
+    if (this.usePlugin) {
+        cordova.plugins.notification.local.get(id, this.remove.bind(this, "*"));
     }
     else {
         clearTimeout(id);
     }
+};
+
+Notify.prototype.remove = function(category, notifications) {
+    for (var n in notifications) {
+        var notification = notifications[n];
+        var data = JSON.parse(notification.data);
+        data = JSON.parse(data);
+        if(category==="*" || data.category===category) {
+            var triggered = data.time < 1000 +pgUtil.getCurrentTime();
+            // only cancel triggered notifications after a timeout, otherwise the sound will stop playing
+            if (triggered) {
+                setTimeout( this.cancel.bind(this,notification.id, data.time), 12000);
+            }
+            else {
+                this.cancel(notification.id, data.time);
+            }
+        }
+    }
+};
+
+Notify.prototype.cancel = function(id, time) {
+    pgUI.showLog("cancelling notification: " + time);
+    cordova.plugins.notification.local.cancel(id);
 };
 
 Notify.prototype.removeAll = function() {
@@ -282,10 +290,10 @@ Notify.prototype.alarm = function(opts) {
 };
 
 Notify.prototype.survey = function(notification) {
-    pgUI_showLog("Survey");
+    pgUI.showLog("Survey");
 };
 Notify.prototype.surveyResponse = function(tf, notification, eopts) {
-    pgUI_showLog("Survey Response");
+    pgUI.showLog("Survey Response");
     var data = JSON.parse(notification.data);
     data.survey = tf;
     if(this.callback) {
