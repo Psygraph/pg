@@ -3,7 +3,6 @@
 var Categories = function () {
     Page.call(this, "categories");
     this.src = {};
-    this.updating = false;
     this.selectizeOpts = {
         plugins: ['remove_button'],
         delimiter: ',',
@@ -46,7 +45,6 @@ Categories.prototype.settings = function(show) {
     if(typeof(this.src[category])==="undefined")
         this.src[category] = {};
     if(show) {
-        this.updating = true;
         dispCategories = pgUtil.deepCopy(pg.categories);
         dispCategories.shift();   // remove "Uncateogrized"
         //dispCategories.pop();   // remove "*"
@@ -55,7 +53,6 @@ Categories.prototype.settings = function(show) {
         cats.selectize(this.selectizeOpts);
 
         // current category
-
         this.catChoice.empty();
         for(var i=0; i<pg.categories.length; i++) {
             var cat = pg.categories[i];
@@ -65,16 +62,20 @@ Categories.prototype.settings = function(show) {
         this.catChoice.trigger("change");
 
         var limit = 64;
+
         // ### style ###
         var styleVal = this.data.style;
         if(this.data.style.length > limit) {
             this.src[category].styleEdit = this.data.style;
             styleVal = this.data.style.substring(0,limit) + " ...";
         }
-        var strings = ["default.css"];
-        if(pgUtil.isWebBrowser())
-            strings = ["default.css","allGrey.css"];
-        this.displaySelect("styleEdit", strings, styleVal);
+        if(pgUtil.isWebBrowser()) {
+            var strings = ["default.css", "allGrey.css"];
+            this.addSelect("styleEdit", styleVal, strings);
+        }
+        else {
+            pgFile.listDir(pgFile.getMediaURL(), "css", this.addSelect.bind(this, "styleEdit", styleVal));
+        }
 
         // ### color ###
         this.colorPicker.setColor(this.data.color);
@@ -85,10 +86,13 @@ Categories.prototype.settings = function(show) {
             this.src[category].soundEdit = this.data.sound;
             soundVal = this.data.sound.substring(0,limit) + " ...";
         }
-        strings = ["default.mp3"];
-        if(pgUtil.isWebBrowser())
-            strings = ["default.mp3","alarm.mp3","bell.mp3","bike.mp3","birds.mp3","crickets.mp3","hyoshigi.mp3","mokugyo.mp3","singingBowl.mp3","taiko.mp3"];
-        this.displaySelect("soundEdit", strings, soundVal);
+        if(pgUtil.isWebBrowser()) {
+            var strings = ["default.mp3", "alarm.mp3", "bell.mp3", "bike.mp3", "birds.mp3", "crickets.mp3", "hyoshigi.mp3", "mokugyo.mp3", "singingBowl.mp3", "taiko.mp3"];
+            this.addSelect("soundEdit", soundVal, strings);
+        }
+        else {
+            pgFile.listDir(pgFile.getMediaURL(), "mp3", this.addSelect.bind(this, "soundEdit", soundVal));
+        }
 
         // ### text ###
         var textVal = this.data.text;
@@ -96,19 +100,16 @@ Categories.prototype.settings = function(show) {
             this.src[category].textEdit = this.data.text;
             textVal = this.data.text.substring(0,limit) + " ...";
         }
-        strings = ["default.xml"];
-        if(pgUtil.isWebBrowser())
-            strings = ["default.xml","christian.xml","einstein.xml","lojong.xml","twain.xml", "xkcd.xml"];
-        this.displaySelect("textEdit", strings, textVal);
+        if(pgUtil.isWebBrowser()) {
+            var strings = ["default.xml", "christian.xml", "einstein.xml", "lojong.xml", "twain.xml", "xkcd.xml"];
+            this.addSelect("textEdit", textVal, strings);
+        }
+        else {
+            pgFile.listDir(pgFile.getMediaURL(), "xml", this.addSelect.bind(this, "textEdit", textVal));
+        }
 
         // ### calendar ###
         $("#categories_calendar").prop('checked', this.data.calendar).checkboxradio("refresh");
-
-        if(!pgUtil.isWebBrowser()) {
-            pgFile.listDir(pgFile.getMediaURL(),"css", this.addSelect.bind(this, "styleEdit", styleVal) );
-            pgFile.listDir(pgFile.getMediaURL(),"mp3", this.addSelect.bind(this, "soundEdit", soundVal) );
-            pgFile.listDir(pgFile.getMediaURL(),"xml", this.addSelect.bind(this, "textEdit", textVal) );
-        }
 
         // show the applyAll button?
         $('#applyAllCategories').parent().hide();
@@ -116,7 +117,6 @@ Categories.prototype.settings = function(show) {
         if(pgUtil.isWebBrowser()) {
             $("#categories_calendarDiv").hide();
         }
-        this.updating = false;
     }
     else {
         // check if the categories themselves have changed
@@ -126,9 +126,9 @@ Categories.prototype.settings = function(show) {
         this.localPG.setCategories(cats);
 
         this.data.color    = this.colorPicker.colorHex;
-        this.data.style    = $("#styleEdit")[0].value;
-        this.data.sound    = $("#soundEdit")[0].value;
-        this.data.text     = $("#textEdit")[0].value;
+        this.data.style    = $("#styleEdit").val();
+        this.data.sound    = $("#soundEdit").val();
+        this.data.text     = $("#textEdit").val();
         this.data.calendar = $("#categories_calendar")[0].checked ? 1 : 0;
 
         // If they have selected files without the data: URI scheme,
@@ -181,9 +181,10 @@ Categories.prototype.submitSettings = function(doClose) {
         gotoPage( pg.page() );
 };
 */
-Categories.prototype.getPageData = function(category) {
-    category = category || pg.category();
-    var data = pg.getPageData("categories", category);
+
+Categories.prototype.getPageData = function(cat) {
+    cat = cat || pg.category();
+    var data = Page.prototype.getPageData.call(this, cat);
     if(! ('description' in data)) {
         data.description = "";
     }
@@ -209,6 +210,7 @@ Categories.prototype.resize = function() {
     Page.prototype.resize.call(this, true);
 };
 
+/*
 Categories.prototype.displaySelect = function(id, strings, text) {
     var el = $("#"+id);
     el.empty();
@@ -217,18 +219,19 @@ Categories.prototype.displaySelect = function(id, strings, text) {
     }
     el.val(text).trigger("change");
 };
-
+*/
 Categories.prototype.removeExt = function(txt) {
     return txt.slice(0, txt.length-4);
 };
 
 Categories.prototype.addSelect = function(id, selected, strings) {
-    var list = $("#"+id);
-    list.children().remove();
-    if(strings.indexOf(selected)===-1)
-        strings.push(selected);
-    for(var i=0; i<strings.length; i++) {
-        list.append(new Option(this.removeExt(strings[i]), strings[i]));
+    var list = $("#" +id);
+    if(list[0].length === 0) {
+        if (strings.indexOf(selected) === -1)
+            strings.push(selected);
+        for (var i = 0; i < strings.length; i++) {
+            list.append(new Option(this.removeExt(strings[i]), strings[i]));
+        }
     }
     list.val(selected);
     list.selectmenu("refresh");

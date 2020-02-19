@@ -230,18 +230,18 @@
 
       <template id="navmenu_template">
         <div class="sidenav">
-          <a href="" class="fast closebtn" onclick="pgUI.slideNav(false)">&times;</a>
+          <a href="" class="fast closebtn" onclick="pgUI.slideNav(false); return false;">&times;</a>
           <br/>
-          <a class="fast home_navlink navlink" onclick="gotoPage('home')" >Home</a>
+          <a class="fast home_navlink navlink" onclick="gotoPage('home'); return false;" >Home</a>
           <hr/>
-          <a class="fast stopwatch_navlink navlink" onclick="gotoPage('stopwatch')" >Stopwatch</a>
-          <a class="fast counter_navlink navlink" onclick="gotoPage('counter')" >Counter</a>
-          <a class="fast timer_navlink navlink" onclick="gotoPage('timer')" >Timer</a>
-          <a class="fast note_navlink navlink" onclick="gotoPage('note')" >Note</a>
+          <a class="fast stopwatch_navlink navlink" onclick="gotoPage('stopwatch'); return false;" >Stopwatch</a>
+          <a class="fast counter_navlink navlink" onclick="gotoPage('counter'); return false;" >Counter</a>
+          <a class="fast timer_navlink navlink" onclick="gotoPage('timer'); return false;" >Timer</a>
+          <a class="fast note_navlink navlink" onclick="gotoPage('note'); return false;" >Note</a>
           <hr/>
-          <a class="fast list_navlink navlink" onclick="gotoPage('list')" >List</a>
-          <a class="fast graph_navlink navlink" onclick="gotoPage('graph')" >Graph</a>
-          <a class="fast map_navlink navlink" onclick="gotoPage('map')" >Map</a>
+          <a class="fast list_navlink navlink" onclick="gotoPage('list'); return false;" >List</a>
+          <a class="fast graph_navlink navlink" onclick="gotoPage('graph'); return false;" >Graph</a>
+          <a class="fast map_navlink navlink" onclick="gotoPage('map'); return false;" >Map</a>
         </div>
       </template>
 

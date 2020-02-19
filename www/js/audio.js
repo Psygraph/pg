@@ -161,14 +161,21 @@ var pgAudio = {
            src.indexOf("file") !== 0 &&
            src.indexOf("data:") !== 0) {
             if(!pgUtil.isWebBrowser() && forNotification) {
-                if(device.platform==="iOS")
-                    src = "file://media/"+src;
-                else
-                    src = "file://media/"+src;
+                if (device.platform === "iOS") {
+                    src = "file://media/" + src;
+                }
+                else {
+                    src = "file://media/" + src;
+                }
             }
             else {
-                src = pgFile.getMediaURL() + "/" + src;
-                src = src.replace("file://", "");
+                if(device.platform==="iOS") {
+                    src = "media/" + src;
+                }
+                else {
+                    src = pgFile.getMediaURL() + "/" + src;
+                    //src = src.replace("file://", "");
+                }
             }
         }
         callback(src);
@@ -195,7 +202,7 @@ var pgAudio = {
         category = typeof(category)!=="undefined" ? category : pg.category();
         shakeToStop = typeof(shakeToStop)!=="undefined" ? shakeToStop : true;
         callback = typeof(callback)!=="undefined" ? callback : function(){};
-        pgAudio.getCategorySound(category, false, cb);
+        pgAudio.getCategorySound(category, false, cb.bind(this));
         function cb(src) {
             var index = -1;
             if(!pgUtil.isWebBrowser()) {
@@ -250,16 +257,16 @@ var pgAudio = {
     },
     playError: function(index, err) {
         // pgAudio.beep(); We are getting a weird non-error
-        if(!err.hasOwnProperty("message")) {
-            if(err.hasOwnProperty("code") && err.code)
-                pgUI.showLog("Error playing recorded file");
-            return;
-        }
         if(pgAudio.player[index]) {
             pgAudio.player[index].release();
             pgAudio.player[index] = null;
         }
-        pgUI.showLog("Error playing file: " + err.message);
+        if(err.hasOwnProperty("message")) {
+            pgUI.showLog("Error playing file: " + err.message);
+        }
+        else {
+            pgUI.showLog("Error playing recorded file");
+        }
     },
     beep: function() {
         if(navigator.notification) {

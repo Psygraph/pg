@@ -5,10 +5,10 @@ Clock = function(listener, resolution, alarm) {
     this.totalElapsed   = 0; // elapsed number of MS in total
     this.running        = false;
     this.countdownTime  = 0; // desired duration in MS
-    this.listener       = (listener != undefined ? listener : null); // * function to receive onTick events
-    this.tickResolution = (resolution != undefined ? resolution : 500); // * how long between each tick in milliseconds
+    this.listener       = (typeof(listener) !== "undefined" ? listener : null); // * function to receive onTick events
+    this.tickResolution = (typeof(resolution) !== "undefined" ? resolution : 500); // * how long between each tick in milliseconds
     this.timerID        = null;
-    this.callback       = (alarm != undefined ? alarm : null); // a callback for completion
+    this.callback       = (typeof(alarm) !== "undefined" ? alarm : null); // a callback for completion
     
     // * pretty static vars
     this.onesec  = 1000;
@@ -23,6 +23,7 @@ Clock.prototype.setCountdown = function(countdownTime) {
 Clock.prototype.countdownMode = function() {
     return this.countdownTime > 0;
 };
+/*
 Clock.prototype.start = function() {
     if(this.running) {
         clearInterval(this.timerID);
@@ -34,58 +35,57 @@ Clock.prototype.start = function() {
     //this.timerID = setInterval(this.onTick.bind(this), this.tickResolution);
     this.timerID = setInterval(delegate(this, this.onTick.bind(this)), this.tickResolution);
 };
-
-Clock.prototype.startFromTime = function(startTime) {
+*/
+Clock.prototype.start = function(startTime, elapsed) {
+    startTime = startTime || new Date().getTime();
+    elapsed = elapsed || 0;
     if(this.running) {
         clearInterval(this.timerID);
-        pgUI.showWarn("startFromTime() called without stop()");
+        pgUI.showWarn("start() called without stop()");
     }
     var delegate       = function(that, method) { return function() { return method.call(that) } };
-    this.totalElapsed = 0;
     this.startTime = startTime;
+    this.totalElapsed = elapsed;
     this.running = true;
     //this.timerID = setInterval(this.onTick.bind(this), this.tickResolution);
     this.timerID = setInterval(delegate(this, this.onTick.bind(this)), this.tickResolution);
+    this.onTick();
 };
-Clock.prototype.stop = function() {
-    var finished = false;
-    if(finished) {
-        // set to make sure that any subsequent calls to getRemaining return zero
-        this.countdownTime = 0;
-    }
-    else if(this.running) {
-        var stopTime = new Date().getTime();
+Clock.prototype.stop = function(elapsed) {
+    if(typeof(elapsed) !== "undefined")
+        this.totalElapsed = elapsed;
+    if(this.running) {
+        //var stopTime = new Date().getTime();
         if(this.timerID != null) {
             clearInterval(this.timerID);
             this.timerID = null;
         }
         this.running = false;
-        var elapsed = stopTime - this.startTime;
-        this.totalElapsed += elapsed;
-        // one last callback
     }
+    //var elapsed = stopTime - this.startTime;
+    // one last callback
     this.onTick();
 };
 Clock.prototype.running = function() {
     return this.timerID != null;
 };
 Clock.prototype.reset = function(startTime) {
-    this.startTime = startTime || pgUtil.getCurrentTime();
+    this.startTime = startTime;
     this.totalElapsed = 0;
     // if watch is running, reset it to current time
     this.onTick();
 };
+/*
 Clock.prototype.restart = function() {
     this.stop();
     this.reset();
     this.start();
 };
+*/
 Clock.prototype.getElapsed = function() {
-    // * if watch is stopped, use that date, else use now
-    var elapsed = 0;
+    var elapsed = this.totalElapsed;
     if(this.running)
-        elapsed = new Date().getTime() - this.startTime;
-    elapsed += this.totalElapsed;
+        elapsed += (new Date().getTime() - this.startTime);
     return elapsed;
 };
 Clock.prototype.getRemaining = function() {
@@ -99,24 +99,23 @@ Clock.prototype.getRemaining = function() {
 Clock.prototype.finished = function() {
     return this.getRemaining() === 0;
 };
-
+/*
 Clock.prototype.setElapsed = function(days, hours, mins, secs) {
-    this.stop();
-    this.reset();
     this.totalElapsed = 0;
     this.totalElapsed += days * this.oneday;
     this.totalElapsed += hours * this.onehour;
     this.totalElapsed += mins  * this.onemin;
     this.totalElapsed += secs  * this.onesec;
     this.totalElapsed = Math.max(this.totalElapsed, 0); // * No negative numbers
+    this.stop(this.totalElapsed);
     this.onTick();
 };
 Clock.prototype.setElapsedMS = function(milliseconds) {
-    this.stop();
-    this.reset();
     this.totalElapsed = milliseconds;
+    this.stop(this.totalElapsed);
     this.onTick();
 };
+*/
 Clock.prototype.toString = function() {
     var ms = this.getElapsed();
     return this.stringFromMS(ms);
@@ -124,12 +123,14 @@ Clock.prototype.toString = function() {
 Clock.prototype.stringFromMS = function(ms) {
     return pgUtil.getStringFromMS(ms, true);
 };
+/*
 Clock.prototype.MSFromString = function(s) {
     return pgUtil.getMSFromString(s);
 };
 Clock.prototype.setListener = function(listener) {
     this.listener = listener;
 };
+*/
 // * triggered every <resolution> ms
 Clock.prototype.onTick = function() {
     var elapsed = this.getElapsed();
@@ -149,4 +150,3 @@ Clock.prototype.onTick = function() {
     }
 };
 
-// }}}

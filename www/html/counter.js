@@ -37,11 +37,11 @@ Counter.prototype.update = function(show, data) {
                 this.count = e.data.count;
         }
         this.setValue();
-        this.setMotionResponse(this.data.motionAlarm, this.data.motionVal);
+        this.setMotionResponse(true);
         this.resize();
     }
     else {
-        this.setMotionResponse("none");
+        this.setMotionResponse(false);
     }
     return this.data;
 };
@@ -62,7 +62,7 @@ Counter.prototype.settings = function(show) {
             this.data.motionAlarm  = $("#counter_motionAlarm").val();
             this.data.motionVal    = parseFloat($("#counter_motionSlider").val());
         }
-        //this.data.showEnso            = $("#counter_showEnso")[0].checked;
+        //this.data.showEnso          = $("#counter_showEnso")[0].checked;
         this.data.countTarget         = parseInt($("#counter_target").val());
         this.data.countTargetBehavior = $("#counter_targetBehavior").val();
     }
@@ -98,12 +98,17 @@ Counter.prototype.setValue = function() {
     }
 };
 
-Counter.prototype.setMotionResponse = function(response, val) {
-    pgAccel.offShake("accel");
-    if(response !== "none" && ! pgUtil.isWebBrowser()) {
-        pgAccel.onShake("accel", onMotion.bind(this), val);
+Counter.prototype.setMotionResponse = function(on) {
+    if( pgUtil.isWebBrowser() )
+        return;
+    if(on && this.data.motionAlarm !== "none") {
+        pgAccel.onShake("accel", onMotion.bind(this), this.data.motionVal);
         pgAccel.start();
     }
+    else {
+        pgAccel.offShake("accel");
+    }
+
     function onMotion(motion) {
         if(this.data.motionAlarm==="beep") {
             pgAudio.beep();
@@ -129,7 +134,7 @@ Counter.prototype.getPageData = function(cat) {
     if(! ('motionAlarm' in data))
         data.motionAlarm = "none";
     if(! ('motionVal' in data))
-        data.motionVal = 6;
+        data.motionVal = 1;
     if(! ('showEnso' in data))
         data.showEnso = true;
     if(! ('countTarget' in data))

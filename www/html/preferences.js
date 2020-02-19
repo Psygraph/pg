@@ -87,7 +87,7 @@ Preferences.prototype.resize = function() {
 };
 
 Preferences.prototype.getPageData = function() {
-    var data = pg.getPageData("preferences", "Uncategorized");
+    var data = Page.prototype.getPageData.call(this, "Uncategorized");
     if(! ('debug' in data))
         data.debug = false;
     if(! ('wifiOnly' in data))

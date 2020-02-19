@@ -151,7 +151,7 @@ Home.prototype.updateGraph = function() {
             }
         }
         counterPts = this.computeIntervals(pts, now, interval, nIntervals, "sum");
-        ptsCorrect = scalePoints(ptsCorrect, pts);
+        //ptsCorrect = scalePoints(ptsCorrect, pts);
         counterCorrectPts = this.computeIntervals(ptsCorrect, now, interval, nIntervals, "mean");
     }
     // timer
@@ -175,7 +175,7 @@ Home.prototype.updateGraph = function() {
             }
         }
         timerPts = this.computeIntervals(pts, now, interval, nIntervals, "sum");
-        ptsMindful = scalePoints(ptsMindful, pts);
+        //ptsMindful = scalePoints(ptsMindful, pts);
         timerMindfulPts = this.computeIntervals(ptsMindful, now, interval, nIntervals, "mean");
     }
     // analytic

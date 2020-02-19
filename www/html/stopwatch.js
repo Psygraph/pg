@@ -71,12 +71,10 @@ Stopwatch.prototype.settings = function(show) {
 Stopwatch.prototype.refreshTimer = function() {
     var e = this.getElapsedStopwatch();
     if(this.isRunning()) {
-        this.clock.startFromTime(e.startTime - e.duration);
+        this.clock.start(e.startTime, e.duration);
     }
     else {
-        this.clock.stop();
-        var t = this.getElapsedStopwatch();
-        this.clock.setElapsedMS(e.duration);
+        this.clock.stop(e.duration);
     }
 };
 
@@ -138,11 +136,12 @@ Stopwatch.prototype.resize = function() {
         this.graph.redraw();
 };
 
-Stopwatch.prototype.start = function(restart) {
+Stopwatch.prototype.start = function(restart, time) {
     restart = restart || false;
+    time = time || pgUtil.getCurrentTime();
     ButtonPage.prototype.start.call(this, restart);
     if(!restart) {
-        this.data.startTime = pgUtil.getCurrentTime();
+        this.data.startTime = time;
     }
     this.refreshTimer();
     // start the graph and bluetooth device.
@@ -175,9 +174,9 @@ Stopwatch.prototype.hasDevice = function() {
     }
     return tf;
 };
-Stopwatch.prototype.stop = function() {
+Stopwatch.prototype.stop = function(time) {
+    time = time || pgUtil.getCurrentTime();
     ButtonPage.prototype.stop.call(this);
-    var time = pgUtil.getCurrentTime();
     this.clock.stop();
     this.stopGraph();
     var e = {type: "interval",
@@ -219,19 +218,26 @@ Stopwatch.prototype.stop = function() {
 };
 
 Stopwatch.prototype.reset = function() {
-    //if(!this.running)
-    //    return;
-    ButtonPage.prototype.reset.call(this);
     var time = pgUtil.getCurrentTime();
-    this.clock.reset(time);
-    this.graph.clearPoints();
-    this.watchCallback(this.clock.getElapsed());
-    var e = { type: "reset", start: time};
-    pg.addNewEvents(e, true);
-    if(this.clock.running) {
-        this.data.startTime = time;
+    if(this.isRunning()) {
+        this.stop(time-1);
+        createResetEvent.call(this, time);
+        this.start(false, time+1);
+    }
+    else {
+        createResetEvent.call(this, time);
+        this.watchCallback(this.clock.getElapsed());
     }
     return false;
+
+
+    function createResetEvent(time) {
+        ButtonPage.prototype.reset.call(this);
+        var e = { type: "reset", start: time};
+        pg.addNewEvents(e, true);
+        this.clock.reset(time);
+        this.graph.clearPoints();
+    }
 };
 
 Stopwatch.prototype.createGraph = function(show) {
@@ -246,9 +252,12 @@ Stopwatch.prototype.createGraph = function(show) {
         // graph the most recent event
         var e = this.getElapsedStopwatch();
         for(var i=0; i<e.eventIDs.length; i++) {
-            var event = pg.getEventFromID(e.eventIDs[i]);
-            var d = event[E_DATA];
-            this.addPoints(d);
+            var id = e.eventIDs[i];
+            if(pg.isEventSelected(id)) {
+                var event = pg.getEventFromID(id);
+                var d = event[E_DATA];
+                this.addPoints(d);
+            }
         }
         this.graph.endAddPoints(60*1000);
         this.signalStarted = {};
@@ -325,27 +334,43 @@ Stopwatch.prototype.watchCallback = function(ms) {
 };
 
 Stopwatch.prototype.getElapsedStopwatch = function() {
-    var e              = pg.getEventsInPage("stopwatch");
-    var startTime      = this.data.startTime;
-    var duration       = 0.0;
-    var running        = startTime !== 0;
-    var ids            = [];
+    var e               = pg.getEventsInPage("stopwatch");
+    var startTime       = this.data.startTime;
+    var duration = 0.0;
+    var running         = startTime !== 0;
+    var ids             = [];
+    var resetTime       = 0.0;
+    var eventStart      = 0.0;
+    var eventEnd        = 0.0;
+    var eventDur        = 0.0;
     for(var i=0; i<e.length; i++) {
         var event = pgUtil.parseEvent(e[i]);
         if(event.type === "interval") {
-            duration += event.duration;
-            ids.push(event.id);
+            eventStart = event.start;
+            eventEnd   = event.start + event.duration;
+            eventDur   = event.duration;
+            if(resetTime) {
+                // Add a portion of the event duration.
+                // This will never occur, since reset currently entails stopping and starting.
+                if (eventEnd > resetTime)
+                    duration += (eventEnd - resetTime);
+                break;
+            }
+            else {
+                duration += eventDur;
+                ids.push(event.id);
+            }
         }
         else if(event.type === "reset") {
-            if(!running)
-                startTime = event.start;
-            break;
+            if(resetTime)
+                continue;
+            resetTime = event.start;
         }
         else {
             console.log("Error: unknown event type: " + event.type);
         }
     }
-    // If we are running, the client should use the start time and duration.
+    // If we are running, the client should use the start time.
     // otherwise, the client should use the duration.
     return {startTime: startTime, duration: duration, running: running, eventIDs: ids};
 };

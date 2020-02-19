@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="description" content="The Psygraph Digital Mala" />
+    
+    <script type="text/javascript" src="js/3p/jquery-2.1.4.min.js"></script>
+    <title>Psygraph Help</title>
+  </head>
+  <body>
+    <div id="content">
+      <div id="help"></div>
+      <div id="home"></div>
+      <div id="stopwatch"></div>
+      <div id="timer"></div>
+      <div id="counter"></div>
+      <div id="note"></div>
+      <div id="list"></div>
+      <div id="graph"></div>
+      <div id="map"></div>
+      <div id="preferences"></div>
+      <div id="categories"></div>
+      <div id="eula"></div>
+    </div>
+
+    <script>
+      readFile("help");
+      readFile("home");
+      readFile("stopwatch");
+      readFile("timer");
+      readFile("counter");
+      readFile("note");
+      readFile("list");
+      readFile("graph");
+      readFile("map");
+      readFile("preferences");
+      readFile("categories");
+      readFile("eula");
+      
+      setTimeout(function(){alert($("#content").html());}, 3000)
+
+      function readFile(page) {
+      $.get("html/"+page+".html", "", complete);
+      function complete(txt, textStatus, jqXHR) {
+         txt = txt.replace("template","div");
+         txt = $(txt);
+         var node;
+         if(page=="help")
+             node = txt.find("#help_main");
+         else
+             node = txt.find("#"+page+"_help");
+         $("#"+page).append(node);
+         $("#"+page).append("<hr/>");
+      }
+      }
+    </script>
+  </body>
+</html>

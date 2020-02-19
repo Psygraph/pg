@@ -177,7 +177,7 @@ function PG() {
             }
             var U = new UXML(url);
             if(typeof(this.xml) === "undefined")
-                this.xml = {};
+                this.xml        = {};
             this.xml[cat]       = {};
             this.xml[cat].title = cat;
             this.xml[cat].text  = [];

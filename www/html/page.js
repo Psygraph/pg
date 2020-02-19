@@ -350,8 +350,8 @@ Page.prototype.settingsUpdateComplete = function(doClose, success) {
         //var styleEqual = pgUtil.equal(catData.style, newCatData.style);
         //var soundEqual = pgUtil.equal(catData.sound, newCatData.sound);
         var textEqual  = pgUtil.equal(catData.text, newCatData.text);
-        gotoPage("categories"); // changing the categories means we need to update the category widget.
-        gotoCategory(pg.categoryIndex);
+        //gotoPage("categories"); // changing the categories means we need to update the category widget.
+        //gotoCategory(pg.categoryIndex);
         //if(!soundEqual)
             pgAudio.alarm();
         if(!textEqual)
@@ -369,10 +369,12 @@ Page.prototype.settingsUpdateComplete = function(doClose, success) {
 
     function onClose() {
         gotoCategory(pg.categoryIndex);
-        if(doClose==="OK")
+        if(doClose==="OK") {
             gotoPage(pg.page());
-        else if(getPage==="categories")
-            gotoPage("categories"); // since the change was applied, reload the data to be sure we saved correctly
+        }
+        //else if (getPage() === "categories") {
+        //    gotoPage("categories");
+        //}
     }
     function writeCB(success) {
         if(!success)

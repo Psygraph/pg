@@ -32,12 +32,15 @@ Timer.prototype.update = function(show, data) {
                     continue;
                 //pgNotify.callElapsed(pg.category(), this.isRunning());
                 //this.recomputeCalendar();
-                this.restart(cat);
+                gotoCategory(cat);
+                this.restart(true);
             }
             this.popCategory();
-            this.restart(pg.category());
+            this.restart(true);
             this.initializing = false;
         }
+        else
+            this.restart(false);
         if(!this.initializing) {
             this.refreshTimer();
             this.resize();
@@ -74,10 +77,10 @@ Timer.prototype.refreshTimer = function() {
     this.clock.setCountdown(ctime);
     var e = this.getElapsedTimer();
     if(this.isRunning()) {
-        this.clock.startFromTime(e.startTime);
+        this.clock.start(e.startTime, e.duration);
     }
     else {
-        this.clock.setElapsedMS(e.duration);
+        this.clock.stop(e.duration);
     }
 };
 
@@ -200,14 +203,13 @@ Timer.prototype.timerCallback = function(ms) {
 // In Start, we call reset (if the timer is zero),
 // set the startTime to zero, schedule several interrupts,
 // and begin the clock.
-Timer.prototype.restart = function(cat) {
-    pgNotify.removeCategory(cat);
-    gotoCategory(cat);
+Timer.prototype.restart = function(resetNotifications) {
+    if(resetNotifications)
+        pgNotify.removeCategory(pg.category());
     var restart = this.isRunning();
     if(restart) {
-        pgUI.showLog("Calling restart for " +cat);
+        pgUI.showLog("Calling restart for " +pg.category());
         var time = pgUtil.getCurrentTime();
-        // see if we really should be running according to startTime and countdownTimes.
         var ctime = this.data.startTime;
         var i=0, j=0;
         for( ; i<this.data.countdownTimes.length; i++) {
@@ -222,20 +224,30 @@ Timer.prototype.restart = function(cat) {
             this.data.countdownTimes.shift();
         if(this.data.countdownTimes.length) { // there are still some alarms left
             ButtonPage.prototype.start.call(this, true);
-            this.setNotification(ctime);
+            // Since there might have been some completed time on the clock, subtract that from ctime.
+            if(this.data.countdownTimes.length) {
+                var e = this.getElapsedTimer();
+                ctime -= e.duration;
+                if(ctime <= 0)
+                    ctime = 100;
+            }
+            if(resetNotifications)
+                this.setNotification(ctime);
         }
         else {
             // we are actually stopped.
             ButtonPage.prototype.stop.call(this);
             this.data.startTime = 0;
-            this.unsetNotification();
+            if(resetNotifications)
+                this.unsetNotification();
         }
     }
 };
-Timer.prototype.start = function() {
-    var time = pgUtil.getCurrentTime();
+Timer.prototype.start = function(time) {
+    time = time || pgUtil.getCurrentTime();
     if (this.data.countdownTimes.length) {
-        var remaining = this.data.countdownTimes[0];
+        var e = this.getElapsedTimer();
+        var remaining = this.data.countdownTimes[0] - e.duration;
         ButtonPage.prototype.start.call(this, false);
         this.data.startTime = time;
         // Set notifications
@@ -247,37 +259,33 @@ Timer.prototype.stop = function(time) {
     time = (typeof(time) !== "undefined") ? time : pgUtil.getCurrentTime();
     ButtonPage.prototype.stop.call(this);
     this.unsetNotification();
-    this.clock.stop();
+    //this.clock.stop();
     pg.addNewEvents({
-        'page': "timer",
-        'type': "interval",
-        'start': this.data.startTime,
+        'page':     "timer",
+        'type':     "interval",
+        'start':    this.data.startTime,
         'duration': time - this.data.startTime
     }, true);
     this.data.startTime = 0;
     this.refreshTimer();
 };
 
-Timer.prototype.reset = function(time, edata) {
+Timer.prototype.reset = function(time) {
     time = (typeof(time) !== "undefined") ? time : pgUtil.getCurrentTime();
-    isNotification = (typeof(edata) !== "undefined");
     ButtonPage.prototype.reset.call(this);
+    var running = this.isRunning();
 
-    if(!isNotification) {
-        this.data.countdownTimes = this.computeNewCountdowns();
-        edata = {};
-        edata.resetTime = this.data.countdownTimes[0];
-        edata.elapsed = false;
-    }
-    else {
-        edata.elapsed = true;
+    if(running) {
+        this.stop(time - 1);
     }
     // add the new event
-    pg.addNewEvents({'page': "timer", 'type': "reset", 'start': time, 'data': edata}, true);
+    this.addResetEvent(time, false);
+    if(this.data.countdownTimes.length === 0) {
+        this.data.countdownTimes    = this.computeNewCountdowns();
+    }
     // If we are called from the pgNotify callback, reschedule
-    if(!isNotification && this.isRunning()) {
-        this.unsetNotification();
-        this.setNotification(time + this.data.countdownTimes[0]);
+    if(running) {
+        this.start(time+1);
     }
     // update the clock
     this.refreshTimer();
@@ -296,12 +304,19 @@ Timer.prototype.notify = function(scheduledTime, id, resetTime) {
     // update timers
     this.data.countdownTimes.shift();
     if(this.data.countdownTimes.length) {
-        // reset()
-        this.reset(scheduledTime, {resetTime: this.data.countdownTimes[0]});
+        this.addResetEvent(scheduledTime, true);
         // start()
-        this.start();
+        this.start(scheduledTime+1);
     }
 };
+Timer.prototype.addResetEvent = function(time, isNotification) {
+    edata = {};
+    edata.resetTime = this.data.countdownTimes[0];
+    edata.elapsed = isNotification;
+    // add the new event
+    pg.addNewEvents({'page': "timer", 'type': "reset", 'start': time, 'data': edata}, true);
+};
+
 /*
 Timer.prototype.recomputeCalendar = function(category) {
     category = category || pg.category();
@@ -336,67 +351,36 @@ Timer.prototype.getElapsedTimer = function() {
     // We are not allowed to use the page data in this computation.
     // however, the first event will have no prior reset events, so needs a starting value.
     //var countdownTime  = data.countdownTimes.length ? data.countdownTimes[0] : 0;
-    var duration       = 0.0;
-    var resetTime      = 0.0;
-    
-    if(running) {
-        var elapsedTime = 0.0;
-        for(var i=0; i<e.length; i++) {
-            var event = pgUtil.parseEvent(e[i]);
-            if(event.type==="interval") {
-                var eventStartTime = event.start;
-                var eventDuration  = event.duration;
-                var eventStopTime  = event.start + event.duration;
-                if(resetTime) {
-                    if(eventStopTime > resetTime) {
-                        elapsedTime += (eventStopTime-resetTime);
-                    }
-                    break;
+    var duration   = 0.0;
+    var resetTime  = 0.0;
+    var eventStart = 0.0;
+    var eventEnd   = 0.0;
+    var eventDur   = 0.0;
+
+    for(var i=0; i<e.length; i++) {
+        var event = pgUtil.parseEvent(e[i]);
+        if(event.type==="interval") {
+            eventStart = event.start;
+            eventDur   = event.duration;
+            eventEnd   = event.start + event.duration;
+            if(resetTime) {
+                if(eventEnd > resetTime) {
+                    duration += (eventEnd-resetTime);
                 }
-                else
-                    elapsedTime += event.duration;
+                break;
             }
-            else if(event.type === "reset") {
-                if(resetTime === 0) {
-                    resetTime     = event.start;
-                }
-                if(event.start > startTime) {
-                    startTime = event.start;
-                }
-            }
+            else
+                duration += event.duration;
         }
-        startTime -= elapsedTime;
+        else if(event.type === "reset") {
+            if(resetTime)
+                continue;
+            resetTime = event.start;
+        }
     }
-    else {
-        for(var i=0; i<e.length; i++) {
-            var event = pgUtil.parseEvent(e[i]);
-            if(event.type==="interval") {
-                var eventStartTime  = event.start;
-                var eventDuration   = event.duration;
-                var eventStopTime   = event.start + event.duration;
-                if(resetTime) {
-                    if(eventStopTime > resetTime) {
-                        // running at the time of the reset.
-                        if(eventStartTime > resetTime) {
-                            // error in event order
-                        }
-                        // stopped at the time of reset
-                        duration += (eventStopTime-resetTime);
-                    }
-                    break;
-                }
-                else
-                    duration += event.duration;
-            }
-            else if(event.type === "reset") {
-                if(!resetTime) {
-                    resetTime = event.start;
-                }
-            }
-        }
-        if(!this.data.countdownTimes.length)
+
+    if(!running && !this.data.countdownTimes.length)
             duration = 0;
-    }
     // If we are running, the client should use the start time.
     // otherwise, the client should use the duration.
     return {'startTime': startTime, 'duration': duration, 'running': running};
