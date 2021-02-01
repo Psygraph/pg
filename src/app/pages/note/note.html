@@ -1,0 +1,70 @@
+<header></header>
+<ion-content fullscreen="true">
+    <div id="note_page" class="page">
+
+        <div id="note_main" class="main content">
+            <div id="stopwatch_controls" class="inset">
+                <ion-input #noteTitle class="note" type="text" data-clear-btn="true" [(ngModel)]="title" placeholder="note title"></ion-input>
+                <ion-textarea *ngIf="addText" #noteText class="note" data-clear-btn="true" rows="8"
+                              [(ngModel)]="text" placeholder="note text"></ion-textarea>
+                <ion-grid #noteAudio *ngIf="showAudioControls">
+                    <ion-row>
+                        <ion-label>Audio:</ion-label>
+                        <ion-button (click)="onPlayRecorded()">Listen</ion-button>
+                        <ion-button (click)="onDeleteRecorded()">Delete</ion-button>
+                    </ion-row>
+                </ion-grid>
+                <buttons #note_buttons></buttons>
+            </div>
+        </div>
+
+        <div id="note_settings" class="settings content">
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Note Properties</ion-label>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Add GPS Position:</ion-label>
+                    <ion-checkbox [(ngModel)]="addLocation"></ion-checkbox>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Add Note Text:</ion-label>
+                    <ion-checkbox [(ngModel)]="addText"></ion-checkbox>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Show Confirmation:</ion-label>
+                    <ion-checkbox [(ngModel)]="showConfirmation"></ion-checkbox>
+                </ion-item>
+            </section>
+            <settingsButtons></settingsButtons>
+        </div>
+
+        <div id="note_info" class="info content">
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Info</ion-label>
+                </ion-item>
+                <p>
+                    The <strong>Note</strong> tool allows you create text notes and voice memos.
+                    Two text fields are displayed: one for the note title, and one for the note text.
+                    The right button records audio: the button turns red while recording, which you stop by pressing the
+                    button a second time.
+                    Notes are saved by pressing the left button, and saved as a blog post if you are logged in online.
+                </p>
+                <p>
+                    The settings allow you to:
+                </p>
+                <ul>
+                    <li>Attach a GPS position to the note.</li>
+                    <li>Add a text body to the note.</li>
+                    <li>Turn on/off the submit confirmation dialog.</li>
+                </ul>
+                <!--template>
+                    <img class="helpImage left" src="https://psygraph.com/webclient/help/note.png" alt="note" width="300" />
+                    <img class="helpImage right" src="https://psygraph.com/webclient/help/note_settings.png" alt="note_settings" width="300" />
+                </template-->
+            </section>
+        </div>
+    </div>
+</ion-content>
+<footer></footer>

@@ -1,0 +1,48 @@
+
+#home_status {
+  margin: 10px;
+  text-align: left;
+  font-size: 22px;
+}
+#home_status p {
+  margin: 10px;
+  text-align: left;
+  font-size: 22px;
+}
+#home_status p.banner {
+  margin: 10px;
+  text-align: center;
+}
+
+#statistics table {
+  border-collapse: collapse;
+}
+#statistics th {
+  border: 0px;
+  text-align: center;
+}
+#statistics th.col {
+  border: 0px;
+  text-align: right;
+}
+#statistics td {
+  border: 1px solid black;
+  text-align: center;
+}
+
+ion-fab-button {
+  --background: var(--ion-color-step-150, #fff);
+  --background-hover: var(--ion-color-step-200, #f2f2f2);
+  --background-focused: var(--ion-color-step-250, #d9d9d9);
+
+  --color: var(--ion-color-primary, #3880ff);
+}
+
+/*
+ * Material Design uses the ripple for activated
+ * so only style the iOS activated background
+ */
+.ios ion-fab-button {
+  --background-activated: var(--ion-color-step-250, #d9d9d9);
+}
+

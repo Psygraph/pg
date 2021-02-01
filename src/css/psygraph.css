@@ -1,0 +1,182 @@
+/* CSS for Psygraph client */
+/*
+==============================================================
+basic elements 
+==============================================================
+*/
+/*
+* {
+
+    user-select: text; //prevent copy paste, to allow, change 'none' to 'text'
+    -webkit-user-select: none;
+    -webkit-user-callout: none;
+    -webkit-touch-callout: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+*/
+html {
+    overscroll-behavior: none;
+}
+body {
+    border:  none;
+    -webkit-touch-callout: none;                /* prevent callout to copy image, etc when tap to hold */
+    -webkit-text-size-adjust: none;             /* prevent webkit from resizing text to fit */
+    -webkit-backface-visibility:hidden;
+    -webkit-overflow-scrolling: auto;
+    backface-visibility:hidden;
+    -ms-content-zooming: none;
+    background: var(--background);
+    background-color: var(--background);
+}
+p {
+    xxx-font-family: Helvetica;
+    xxx-font-size: 16px;
+    xxx-font-family:'HelveticaNeue-Light', 'HelveticaNeue', Helvetica, Arial, sans-serif;
+    xxtext-align: center;
+    xxvertical-align: middle;
+}
+h3 {
+    //letter-spacing: 0.1em;
+    //margin-bottom: 0;
+}
+a:link {
+    font-weight: bold;
+    text-decoration: none;
+}
+a,
+a:visited {
+    color: black;
+    font-weight: bold;
+    text-decoration: none;
+}
+a:hover, a:active {
+    text-decoration: underline;
+}
+ul,ol {
+    text-align: left;
+}
+
+input, textarea {
+    -webkit-user-select: text;
+    -webkit-user-callout: default;
+    -webkit-touch-callout: default;
+}
+
+textarea {
+    margin:       4px 4px 4px 4px;
+    border-width: 0em 0em 0em 0em;
+    padding:      0em 0em 0em 0em;
+    resize:       none;
+    wrap:         soft;
+}
+input {
+    margin: 0.2em;
+    border-width: 0em 0em 0em 0em;
+    padding: 0em 0em 0em 0em;
+    outline: 0 none; /* turn off button highlight */
+}
+
+/*
+==============================================================
+Strange browser directives
+==============================================================
+*/
+@media only screen and (orientation: portrait) {
+    #buttons_page {
+        height: 100%;
+    }
+}
+@media only screen and (orientation: landscape) {
+}
+
+/*
+==============================================================
+CSS for pages
+==============================================================
+*/
+.scroll {
+    overflow: auto;
+}
+.noscroll {
+    overflow: hidden;
+}
+
+ion-content {
+    height:100%;
+    width:100%;
+}
+div.page {
+    height:100%;
+    width:100%;
+}
+div.content.main {
+    display: flex;
+}
+div.content.settings {
+    display: none;
+    overflow: auto;
+}
+div.content.info {
+    display: none;
+    overflow: auto;
+    padding-left:  10px;
+    padding-right: 10px;
+}
+div.content {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: stretch;
+    flex-flow: column;
+    padding-left: 0px;
+    padding-right: 0px;
+}
+div.container {
+    display: flex;
+    align-items: stretch;
+    flex-flow: column;
+    flex-grow: 1;
+}
+div.contained {
+    flex-grow: 1;
+}
+
+div.content {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+   box-sizing:     border-box;
+   padding-left:   0.2em;
+   padding-right:  0.2em;
+   padding-top:    0px;
+   padding-bottom: 0px;
+   margin:         0em;
+   border-width:   0em;
+   overflow:       hidden;
+}
+.inset {
+    /* This is to inset the time and stopwatch text input boxes */
+    margin-left:    10px;
+    margin-right:   10px;
+    margin-top:     0em;
+    margin-bottom:  0em;
+    padding-top:    0em;
+    padding-bottom: 0em;
+    border-width:   0em;
+}
+
+.center {
+    text-align: center;
+    vertical-align: middle;
+}
+.font {
+    font-family: Helvetica;
+    font-size: 16px;
+    font-family: 'HelveticaNeue-Light', 'HelveticaNeue', Helvetica, Arial, sans-serif;
+}
+tr.data, td.data { /* tint all rows to a lighter color for legibility*/
+    background: rgba(255,255,255, 0.1);
+}
+tr.selected tr.data, tr.selected td.data { /* tint the headers and selected rows to a very light color*/
+    background: rgba(220,220,220, 0.8) !important;
+}

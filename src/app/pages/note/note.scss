@@ -1,0 +1,22 @@
+#stopwatch_controls {
+  padding-top: 5px;
+}
+ion-input, ion-textarea {
+  border: solid 1px grey;
+  border-radius: 10px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+.note {
+  font-size: 1.4em;
+}
+
+#noteTextContainer {
+  overflow: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+  height: 24em;
+}
+
+#noteDiv .mce-container, #noteDiv .mce-fullscreen {
+  z-index: 1000;
+}

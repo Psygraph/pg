@@ -1,0 +1,73 @@
+<header></header>
+<ion-content>
+    <div id="home_page" class="page">
+
+        <div id="home_main" class="main content">
+            <!--div id="home_logo"></div>
+            <div id="home_status">
+                <div id="statistics"></div>
+            </div-->
+            <div id="home_container" class="graph container">
+                <div #home_graph class="graph contained"></div>
+            </div>
+        </div>
+
+        <div id="home_settings" class="settings content">
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Properties</ion-label>
+                </ion-item>
+                <!--ion-item>
+                  <ion-label>Show categories:</ion-label>
+                  <ion-select multiple="true" placeholder="Categories:" [(ngModel)]="categories">
+                    <div *ngFor="let cat of allCategories" >
+                      <ion-select-option value={{cat.value}}>{{cat.name}}</ion-select-option>
+                    </div>
+                  </ion-select>
+                </ion-item-->
+                <ion-item lines="none">
+                    <ion-label>Show signals:</ion-label>
+                    <ion-select multiple="true" placeholder="Signals:" [(ngModel)]="signals">
+                        <div *ngFor="let sig of allSignals">
+                            <ion-select-option value={{sig.value}}>{{sig.name}}</ion-select-option>
+                        </div>
+                    </ion-select>
+                </ion-item>
+                <ion-item (click)="onIntervalClick()" lines="none">
+                    <ion-label slot="start">Length of history:</ion-label>
+                    <ion-label slot="end">{{combinedIntervalName}}</ion-label>
+                </ion-item>
+                <picker #picker></picker>
+            </section>
+            <settingsButtons></settingsButtons>
+        </div>
+
+        <div id="home_info" class="info content">
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Info</ion-label>
+                </ion-item>
+                <p>
+                    The <strong>Home</strong> page displays a summary of your data over the last several days or
+                    weeks,
+                    such as the cumulative amount of time spent time spent in a particular category.
+                </p>
+                <p>
+                    The settings let you specify which signals are tracked and the length of history to show.
+                    For each category, the following data can be displayed:
+                </p>
+                <ul>
+                    <li><strong>Home</strong>: The length of time the app was open.</li>
+                    <li><strong>Stopwatch</strong>: The length of time logged.</li>
+                    <li><strong>Counter</strong>: The total count.</li>
+                    <li><strong>Counter: correct</strong>: The ratio of correct to incorrect counts.</li>
+                    <li><strong>Timer</strong>: The length of time a timer was active.</li>
+                    <li><strong>Timer: mindful</strong>: The ratio of mindful vs. non-mindful alarms.</li>
+                    <li><strong>Note</strong>: The number of notes made.</li>
+                </ul>
+            </section>
+        </div>
+
+    </div>
+</ion-content>
+<footer></footer>

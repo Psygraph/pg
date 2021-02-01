@@ -1,0 +1,55 @@
+#list_main {
+  width: 100%;
+  padding: 0px;
+}
+div.alert-head.sc-ion-alert-md {
+  min-width: 400px !important;
+}
+div.alert-wrapper.sc-ion-alert-md {
+  width: auto;
+  min-width: 400px !important;
+}
+ion-grid {
+  flex-grow: 0;
+  border: 0px;
+  margin: 0px;
+  padding: 0px;
+}
+listContainer {
+  overflow: scroll;
+}
+.border {
+  border: 1px;
+  border-color: grey;
+  border-style: solid;
+}
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 4px;
+}
+#listDiv {
+  flex-grow: 1;
+  overflow: auto;
+  width: 100%;
+  border-width: 0px;
+  border-color: black;
+  border-style: solid;
+}
+.data {
+  vertical-align: middle;
+  border: 0px solid black;
+  padding: 4px;
+}
+td, th {
+  padding: 2px;
+  border: 1px solid black;
+}
+td.fill {
+}
+ion-row, ion-col { /* tint all rows to a lighter color for legibility*/
+  background: rgba(222,222,222, 0.1);
+}
+ion-row.selected, ion-row.selected ion-col { /* tint the headers and selected rows to a very light color*/
+  background: rgba(222,222,222, 0.6) !important;
+}

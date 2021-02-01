@@ -1,0 +1,22 @@
+#categories_main {
+  xxoverflow: auto;
+}
+
+ion-input[slot="end"] {
+  text-align: end;
+}
+
+ion-item-divider, .center {
+  justify-content: center;
+  align-content: center;
+  align-items: center;
+}
+
+#colorItem {
+  width: 100%;
+}
+
+#colorChip {
+  font-size: 1.2em;
+  overflow: visible;
+}

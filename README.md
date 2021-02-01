@@ -6,4 +6,3 @@ It makes an excellent general-purpose stopwatch and timer, but you can also cate
 
 You can use Psygraph to log your meditation sessions, your race car laps, your psychology experiments, or anything else. Please take a look at the features and screenshots pages at https://psygraph.com, and then register to start using it. This software is free,  ad-free, and the code is open source.
 
-

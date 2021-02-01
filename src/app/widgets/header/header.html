@@ -1,0 +1,34 @@
+<ion-header>
+    <ion-toolbar #header_toolbar>
+        <ion-buttons slot="start">
+            <ion-menu-button></ion-menu-button>
+        </ion-buttons>
+        <ion-row>
+            <!--ion-thumbnail><img src="assets/img/logo.png"/></ion-thumbnail-->
+            <ion-title *ngIf="hasCategories">
+                {{pgPage}}: <i (click)="onShowCategories()">{{pgCategory}}</i>
+            </ion-title>
+            <ion-title *ngIf="!hasCategories">
+                {{pgPage}}
+            </ion-title>
+        </ion-row>
+        <ion-buttons slot="end">
+            <ion-button *ngIf='hasCategories' (click)="onShowCategories()">
+                <ion-icon slot="icon-only" name="pricetags"></ion-icon>
+            </ion-button>
+            <ion-button *ngIf='hasModal' (click)="page.openModal()" >
+                <ion-icon slot="icon-only" name="information-circle"></ion-icon>
+            </ion-button>
+            <ion-button *ngIf='hasTutorial' routerLink="/tutorial" routerLinkActive="active" routerDirection="root">
+                <ion-icon slot="icon-only" name="trail-sign"></ion-icon>
+            </ion-button>
+            <ion-button *ngIf='hasSettings' (click)="onShowSettings(!this.showSettings)">
+                <ion-icon slot="icon-only" name="settings"></ion-icon>
+            </ion-button>
+            <!--ion-button *ngIf='showSettings && hasSettings' (click)="onShowSettings(false)">
+                <ion-icon name="chevron-back"></ion-icon>
+                <ion-label>Back</ion-label>
+            </ion-button-->
+        </ion-buttons>
+    </ion-toolbar>
+</ion-header>

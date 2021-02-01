@@ -1,0 +1,109 @@
+<header></header>
+<ion-content fullscreen="true">
+    <div id="counter_page" class="page">
+
+        <div id="counter_main" class="main content">
+            <div id="stopwatch_controls" class="inset">
+                <clock #counter></clock>
+                <buttons #counter_buttons></buttons>
+            </div>
+            <div *ngIf="showEnso" class="center">
+                <input type="text" id="counter_enso" class="enso clickarea" data-wrapper-class="enso"/>
+            </div>
+        </div>
+
+        <div id="counter_settings" class="settings content">
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Reset Properties</ion-label>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label position="stacked">Reset Target:</ion-label>
+                    <ion-range [(ngModel)]=target min="0" max="40" step="1" pin="true">
+                        <ion-icon slot="start" name="remove-circle"></ion-icon>
+                        <ion-icon slot="end" name="add-circle"></ion-icon>
+                    </ion-range>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Reset Behavior:</ion-label>
+                    <ion-select multiple="false" placeholder="Select Behavior..." [(ngModel)]=resetBehavior>
+                        <div *ngFor="let reset of allResetBehavior">
+                            <ion-select-option value={{reset.value}}>{{reset.name}}</ion-select-option>
+                        </div>
+                    </ion-select>
+                </ion-item>
+            </section>
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Display Properties</ion-label>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Show Enso:</ion-label>
+                    <ion-checkbox [(ngModel)]=showEnso></ion-checkbox>
+                </ion-item>
+            </section>
+            <section *ngIf="!isWebBrowser">
+                <ion-item class="header center">
+                    <ion-label>Motion Properties</ion-label>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Motion increases count:</ion-label>
+                    <ion-checkbox [(ngModel)]="countShakes"></ion-checkbox>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label position="stacked">Shake Threshold (100 ~= 1g):</ion-label>
+                    <ion-range [(ngModel)]=shakeThreshold min="1" max="400" step="1" pin="true" snaps="true" ticks="false">
+                    </ion-range>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label position="stacked">Shake Timeout (mS):</ion-label>
+                    <ion-range [(ngModel)]=shakeTimeout min="250" max="4000" step="25" pin="true" snaps="true" ticks="false">
+                    </ion-range>
+                </ion-item>
+            </section>
+            <settingsButtons></settingsButtons>
+        </div>
+
+        <div id="counter_info" class="info content">
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Info</ion-label>
+                </ion-item>
+                <p>
+                    The <strong>Counter</strong> tool measures mindfulness via breath counting.
+                    You can either:
+                </p>
+                <ol>
+                    <li>Set the count target to zero, and see how many breaths you can take without a thought
+                        occurring.
+                    </li>
+                    <li>Set the count target to a particular number and indicate when you have reached that number.
+                        If you lose count of how many breaths you have taken, then you were obviously not mindful of
+                        your breath.
+                    </li>
+                </ol>
+                <p>
+                    In either case, press the black button every time you breathe.
+                    Press the white button when a thought occurs, or after counting a certain number of breaths.
+                    During a meditation session, triple-click on the page to display full-screen buttons.
+                </p>
+                <p>
+                    The settings enable you to:
+                </p>
+                <ul>
+                    <li>Set the count target.</li>
+                    <li>Set the feedback for a correct/incorrect response.</li>
+                    <li>Change the motion (shake) sensitivity.</li>
+                    <li>Change the behvaior when a shake occurs.</li>
+                </ul>
+                <br/>
+                <!--template>
+                    <img class="helpImage left" src="https://psygraph.com/webclient/help/counter.png" alt="counter" width="300" />
+                    <img class="helpImage right" src="https://psygraph.com/webclient/help/counter_settings.png" alt="counter_settings" width="300" />
+                </template-->
+            </section>
+        </div>
+
+    </div>
+</ion-content>
+<footer></footer>

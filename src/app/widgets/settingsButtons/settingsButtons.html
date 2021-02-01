@@ -1,0 +1,24 @@
+<section>
+    <ion-item class="header center" *ngIf="hasText">
+        <ion-label>Apply Changes</ion-label>
+    </ion-item>
+    <ion-item *ngIf="hasApplyAll" lines="none">
+        <ion-label>Apply to all categories:</ion-label>
+        <ion-checkbox [(ngModel)]=applyAll></ion-checkbox>
+    </ion-item>
+    <div>
+        <ion-grid>
+            <ion-row>
+                <ion-col *ngIf="hasCancel">
+                    <ion-button expand="block" fill="solid" (click)="onCancel()">Cancel</ion-button>
+                </ion-col>
+                <ion-col *ngIf="hasApply">
+                    <ion-button expand="block" fill="solid" (click)="onApply()">Apply</ion-button>
+                </ion-col>
+                <ion-col *ngIf="hasOK">
+                    <ion-button expand="block" fill="solid" (click)="onOK()">OK</ion-button>
+                </ion-col>
+            </ion-row>
+        </ion-grid>
+    </div>
+</section>

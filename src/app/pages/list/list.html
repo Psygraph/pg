@@ -1,0 +1,129 @@
+<header></header>
+<ion-content class="noscroll">
+    <div id="list_page" class="page">
+
+        <div id="list_main" class="main content">
+            <ion-grid class="border">
+                <ion-row>
+                    <ion-col class="border">
+                        <!--ion-label>Select events:</ion-label-->
+                        <ion-select [(ngModel)]="eventSelection" multiple="false" placeholder="Select events:"
+                                    (ionChange)="selectEvents(eventSelection)">
+                            <div *ngFor="let sel of allEventSelections">
+                                <ion-select-option value={{sel.value}}>{{sel.name}}</ion-select-option>
+                            </div>
+                        </ion-select>
+                    </ion-col>
+                    <ion-col class="border">
+                        <!--ion-label>Select action:</ion-label-->
+                        <ion-select [(ngModel)]="eventAction" multiple="false" placeholder="Select action:"
+                                    (ionChange)="onEventAction(eventAction)">
+                            <div *ngFor="let act of allEventActions">
+                                <ion-select-option value={{act.value}}>{{act.name}}</ion-select-option>
+                            </div>
+                        </ion-select>
+                    </ion-col>
+                </ion-row>
+            </ion-grid>
+            <!--div id="stopwatch_container" class="graph container"> </div-->
+            <div id="listDiv">
+                <div d="list_table" class="scroll">
+                    <ion-grid class="ion-margin">
+                        <ion-row>
+                            <ion-col *ngIf="showID">ID</ion-col>
+                            <ion-col *ngIf="showDate">Date</ion-col>
+                            <ion-col *ngIf="showPage">Page</ion-col>
+                            <ion-col *ngIf="showData">Data</ion-col>
+                        </ion-row>
+                        <ion-row *ngFor="let event of tableData; index as i" id="{{event.ID}}"
+                                 class="eid" [ngClass]="{'selected': isEventSelected(event.ID)}">
+                            <ion-col *ngIf="showID" (click)="itemClick(event.ID)">{{ event.ID }}</ion-col>
+                            <ion-col *ngIf="showDate" (click)="itemClick(event.ID)">{{ event.Date }}</ion-col>
+                            <ion-col *ngIf="showPage" (click)="itemClick(event.ID)">{{ event.Page }}</ion-col>
+                            <ion-col *ngIf="showData" (click)="dataClick(event.Data.onclick)">{{ event.Data.text }}</ion-col>
+                        </ion-row>
+                    </ion-grid>
+                    <!--table mat-table [dataSource]="tableData" id="eventlist" class="data">
+                            <ng-container matColumnDef="ID">
+                                <th mat-header-cell *matHeaderCellDef>ID</th>
+                                <td mat-cell *matCellDef="let element">{{ element.ID }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="Date">
+                                <th mat-header-cell *matHeaderCellDef>Date</th>
+                                <td mat-cell *matCellDef="let element">{{ element.Date }}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="Page">
+                                <th mat-header-cell *matHeaderCellDef>Tool, Type</th>
+                                <td mat-cell *matCellDef="let element">{{element.Page}}</td>
+                            </ng-container>
+                            <ng-container matColumnDef="Data">
+                                <th mat-header-cell *matHeaderCellDef>Date</th>
+                                <td mat-cell *matCellDef="let element">{{element.Data}} </td>
+                            </ng-container>
+
+                            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                            <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index"></tr>
+                    </table-->
+                </div>
+            </div>
+        </div>
+
+        <div id="list_settings" class="settings content">
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Display Properties</ion-label>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Show events from page:</ion-label>
+                    <ion-select multiple="true" placeholder="Signals:" [(ngModel)]="pages">
+                        <div *ngFor="let page of allPages">
+                            <ion-select-option value={{page.value}}>{{page.name}}</ion-select-option>
+                        </div>
+                    </ion-select>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Show Event ID:</ion-label>
+                    <ion-checkbox [(ngModel)]=showID></ion-checkbox>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Show Event Time:</ion-label>
+                    <ion-checkbox [(ngModel)]=showDate></ion-checkbox>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Show Event Page,type:</ion-label>
+                    <ion-checkbox [(ngModel)]=showPage></ion-checkbox>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Show Event Data:</ion-label>
+                    <ion-checkbox [(ngModel)]=showData></ion-checkbox>
+                </ion-item>
+            </section>
+            <settingsButtons></settingsButtons>
+        </div>
+
+        <div id="list_info" class="info content">
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Info</ion-label>
+                </ion-item>
+                <p>
+                    The <strong>List</strong> tool shows the events for various pages in the current category.
+                    You select events by clicking on them individually or by using the <i>Select Events...</i> button
+                    (selected events are displayed on the graph page).
+                    Selected events can be deleted or changed to a different category with the <i>Select Action...</i>
+                    button.
+                </p>
+                <p>
+                    The settings allow you to filter the displayed events by the tool that created them, and choose
+                    which columns of data to display for each event.
+                </p>
+                <br/>
+                <!--template>
+                  <img class="helpImage left" src="https://psygraph.com/webclient/help/list.png" alt="list" width="300" />
+                  <img class="helpImage right" src="https://psygraph.com/webclient/help/list_settings.png" alt="list_settings" width="300" />
+                </template-->
+            </section>
+        </div>
+    </div>
+</ion-content>
+<footer></footer>

@@ -1,0 +1,19 @@
+mapContainer {
+  height: 100%;
+  width: 100%;
+  background-color: transparent;
+  opacity: 0;
+  transition: opacity 150ms ease-in;
+}
+
+img#map_mark, input.map_mark {
+  height: 2em;
+  width: 2em;
+}
+.leaflet-bar {
+  box-shadow: none;
+  border: 0em;
+}
+div#mapid {
+  background: transparent;
+}

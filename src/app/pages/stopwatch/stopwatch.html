@@ -1,0 +1,81 @@
+<header></header>
+<ion-content fullscreen="true" class="noscroll">
+    <div id="stopwatch_page" class="page">
+
+        <div id="stopwatch_main" class="main content">
+            <div id="stopwatch_controls" class="inset">
+                <clock #stopwatch_time></clock>
+                <buttons #stopwatch_buttons></buttons>
+            </div>
+            <div id="stopwatch_container" class="graph container">
+                <div #stopwatch_graph class="graph container"></div>
+            </div>
+        </div>
+
+        <div id="stopwatch_settings" class="settings content">
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Properties</ion-label>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Show signals:</ion-label>
+                    <ion-select multiple="true" placeholder="Signals:" [(ngModel)]="signals">
+                        <div *ngFor="let sig of allSignals">
+                            <ion-select-option value={{sig.value}}>{{sig.name}}</ion-select-option>
+                        </div>
+                    </ion-select>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Show graph:</ion-label>
+                    <ion-checkbox [(ngModel)]=showGraph></ion-checkbox>
+                </ion-item>
+            </section>
+            <settingsButtons></settingsButtons>
+            <!--
+            <div class="ui-field-contain no-field-separator" data-role="controlgroup">
+                <legend></legend>
+                <label for="stopwatch_hasBluetooth">Log Bluetooth device</label>
+                <input type="checkbox" id="stopwatch_hasBluetooth" />
+            </div>
+            <div class="ui-field-contain no-field-separator">
+                <input type="button" onClick="pgUI.stopwatch.deviceSettings('device'); return false;" class="btn fast" value="Device Settings" title="Device Settings" data-inline="true"/>
+                <input id="stopwatch_BTSettings" type="button" onclick="pgUI.stopwatch.deviceSettings('bluetooth'); return false;" class="btn fast" value="Bluetooth Settings" title="Bluetooth Settings" data-inline="true"/>
+            </div>
+
+            <div class="ui-field-contain no-field-separator" data-role="controlgroup">
+                <legend>Update interval (s):</legend>
+                <input type="text" class="settings" id="stopwatch_updateInterval" value=""/>
+            </div>
+            -->
+        </div>
+
+        <div id="stopwatch_info" class="info content">
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Info</ion-label>
+                </ion-item>
+                <p>
+                    The <strong>Stopwatch</strong> tool records your meditation sessions or other activities.
+                    The reset button (left) and start/stop button (right) allow you to reset, start, and stop the clock.
+                </p>
+                <p>
+                    The settings let you:
+                </p>
+                <ul>
+                    <li>Collect various device data during the event (acceleration, orientation, location, or random
+                        data).
+                    </li>
+                    <!--li>Collect Bluetooth data during the event (from heart rate meters or other devices).</li>
+                    <li>Access settings for the local device or bluetooth device.</li-->
+                    <li>Show or hide the real-time graph.</li>
+                </ul>
+                <br/>
+                <!--template>
+                    <img class="helpImage left" src="https://psygraph.com/webclient/help/stopwatch.png" alt="" width="300" />
+                    <img class="helpImage right" src="https://psygraph.com/webclient/help/stopwatch_settings.png" alt="stopwatch_settings" width="300" />
+                </template-->
+            </section>
+        </div>
+    </div>
+</ion-content>
+<footer></footer>

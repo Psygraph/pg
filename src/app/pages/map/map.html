@@ -1,0 +1,67 @@
+<header></header>
+<ion-content>
+    <div id="map_page" class="page">
+
+        <div id="map_main" class="main content">
+            <div #mapCanvas class="container">
+            </div>
+        </div>
+
+        <div id="map_settings" class="settings content">
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Data Properties</ion-label>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Data Provider:</ion-label>
+                    <ion-select multiple="false" placeholder="Signals:" [(ngModel)]="provider">
+                        <div *ngFor="let pro of allProviders">
+                            <ion-select-option value={{pro.value}}>{{pro.name}}</ion-select-option>
+                        </div>
+                    </ion-select>
+                </ion-item>
+            </section>
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Display Properties</ion-label>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Show Markers:</ion-label>
+                    <ion-checkbox [(ngModel)]=showMarkers></ion-checkbox>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Show Paths:</ion-label>
+                    <ion-checkbox [(ngModel)]=showPaths></ion-checkbox>
+                </ion-item>
+            </section>
+            <settingsButtons></settingsButtons>
+        </div>
+
+        <div id="map_info" class="info content">
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Info</ion-label>
+                </ion-item>
+                <p>
+                    The <strong>Map</strong> tool lets you view the location of your stopwatch and note events (if you
+                    have selected to save location information with those events).
+                    You drag and zoom the map by swiping and pinching, and you center the map by double clicking.
+                </p>
+                <p>
+                    The settings allow you to:
+                </p>
+                <ul>
+                    <li>Select the data provider used for map imagery.</li>
+                    <li>Display all markers (locations) and paths (continuous locations).</li>
+                </ul>
+
+                <br/>
+                <!--template>
+                  <img class="helpImage left" src="https://psygraph.com/webclient/help/map.png" alt="map" width="300" />
+                  <img class="helpImage right" src="https://psygraph.com/webclient/help/map_settings.png" alt="map_settings" width="300" />
+                </template-->
+            </section>
+        </div>
+    </div>
+</ion-content>
+<footer></footer>

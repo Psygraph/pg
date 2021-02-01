@@ -1,0 +1,22 @@
+input {
+    outline: 0 none; /* turn off button highlight */
+}
+input.button {
+    font-family: monospace;
+    text-align: center;
+    vertical-align: middle;
+    height: 8em;
+    width: 8em;
+    opacity: 0.99;
+    background-color: transparent;
+    /* images should not be selectable */
+    user-drag: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
+}
+#buttons_div {
+    width:       auto;
+    text-align:  center;
+    margin-top:  20%;
+}

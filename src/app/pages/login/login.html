@@ -1,0 +1,51 @@
+<header></header>
+<ion-content>
+  <div id="login_page" class="page">
+
+    <div id="login_main" class="main content">
+
+      <div class="login-logo">
+        <img src="assets/img/logo.png" alt="Psygraph logo">
+      </div>
+
+        <ion-list>
+          <ion-item>
+            <ion-label position="stacked">Server</ion-label>
+            <ion-select multiple="false" placeholder="Select server..." [(ngModel)]="server">
+              <div  *ngFor="let s of allServers">
+                <ion-select-option value={{s.value}}>{{s.name}}</ion-select-option>
+              </div>
+            </ion-select>
+          </ion-item>
+          <ion-item *ngIf='server!=="localhost"'>
+            <ion-label position="stacked">Username</ion-label>
+            <ion-input [(ngModel)]="username" name="username" type="text" spellcheck="false" autocapitalize="off" required>
+            </ion-input>
+          </ion-item>
+          <ion-item *ngIf='server!=="localhost"'>
+            <ion-label position="stacked">Password</ion-label>
+            <ion-input [(ngModel)]="password" name="password" type="password" required>
+            </ion-input>
+          </ion-item>
+        </ion-list>
+
+        <ion-row>
+          <ion-col>
+            <ion-button (click)="onSignup()" color="light" expand="block">Signup</ion-button>
+          </ion-col>
+          <ion-col>
+            <ion-button *ngIf="isLoggedIn" (click)="onLogout()" type="submit" expand="block">Logout</ion-button>
+            <ion-button *ngIf="!isLoggedIn" (click)="onLogin()" type="submit" expand="block">Login</ion-button>
+          </ion-col>
+        </ion-row>
+    </div>
+
+    <div id="login_settings" class="settings content">
+    </div>
+
+    <div id="login_info" class="info content">
+    </div>
+
+  </div>
+</ion-content>
+<footer></footer>

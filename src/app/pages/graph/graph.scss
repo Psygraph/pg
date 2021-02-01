@@ -1,0 +1,17 @@
+#graph_main {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-flow: column;
+}
+#graph_graph {
+  flex-grow: 1;
+}
+
+.graphStyle {
+  stroke: black;
+  fill: grey;
+}
+svg rect.scrollbar {
+//  visibility: hidden;
+}

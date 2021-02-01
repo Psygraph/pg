@@ -1,0 +1,25 @@
+<ion-header translucent="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="dismiss()">Cancel</ion-button>
+    </ion-buttons>
+    <ion-title>
+      Active Category
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="apply()" strong>Done</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list [lines]="ios ? 'inset' : 'full'">
+    <ion-radio-group value={{activeCategory}}>
+    <!--ion-list-header>Tracks</ion-list-header-->
+    <ion-item *ngFor="let cat of categories">
+      <ion-label>{{cat}}</ion-label>
+      <ion-radio slot="start" value={{cat}} (click)="selectCategory(cat);"></ion-radio>
+    </ion-item>
+    </ion-radio-group>
+  </ion-list>
+</ion-content>

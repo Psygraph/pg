@@ -1,0 +1,111 @@
+<header></header>
+<ion-content fullscreen="true">
+    <div id="timer_page" class="page">
+
+        <div id="timer_main" class="main content">
+            <div data-role="control-group" class="inset">
+                <div class="ui-field-contain no-field-separator" id="timer_div">
+                    <clock #timer_time></clock>
+                    <clock (click)="onDurClick(timerDuration)" #timer_dur></clock>
+                    <picker #picker></picker>
+                </div>
+            </div>
+            <buttons #timer_buttons></buttons>
+        </div>
+
+        <div id="timer_settings" class="settings content">
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Timer Properties</ion-label>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Timer Duration:</ion-label>
+                    <ion-input slot="end" [(ngModel)]="timerDurationString" (click)="onDurClick(timerDuration)" readonly></ion-input>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Add Randomness:</ion-label>
+                    <ion-checkbox [(ngModel)]=random></ion-checkbox>
+                </ion-item>
+                <!--ion-item (click)="onNumTimersClick()">
+                    <ion-label slot="start">Repeat:</ion-label>
+                    <ion-label slot="end">{{repeatText}}</ion-label>
+                </ion-item-->
+                <ion-item lines="none">
+                    <ion-label>Number of Repeats:</ion-label>
+                    <ion-select multiple="false" placeholder="Number of times" [(ngModel)]="repeat">
+                        <div *ngFor="let rep of allRepeat">
+                            <ion-select-option value={{rep.value}}>{{rep.name}}</ion-select-option>
+                        </div>
+                    </ion-select>
+                </ion-item>
+            </section>
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Alarm Properties</ion-label>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Alarm plays category sound:</ion-label>
+                    <ion-checkbox [(ngModel)]=alarmSound></ion-checkbox>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Alarm displays category text:</ion-label>
+                    <ion-checkbox [(ngModel)]=alarmText></ion-checkbox>
+                </ion-item>
+            </section>
+            <settingsButtons></settingsButtons>
+            <!--
+            <div class="ui-field-contain no-field-separator">
+                <label for="timer_alarm">Timer alarm:</label>
+                <select id="timer_alarm" title="Timer alarm" data-native-menu="false">
+                    <option value="none">none</option>
+                    <option value="text">text</option>
+                    <option value="sound">sound</option>
+                    <option value="both">both</option>
+                </select>
+            </div>
+            <div id="timer_numTimersDiv" class="ui-field-contain no-field-separator">
+                <label for="timer_numTimers">Number of timers:</label>
+                <select id="timer_numTimers" title="Timer alarm" data-native-menu="false">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="4">4</option>
+                    <option value="8">8</option>
+                    <option value="16">16</option>
+                    <option value="32">32</option>
+                </select>
+            </div>
+            -->
+        </div>
+
+        <div id="timer_info" class="info content">
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Info</ion-label>
+                </ion-item>
+                <p>
+                    The <strong>Timer</strong> tool is a countdown alarm: the top widget shows time remaining and the
+                    bottom widget shows total time.
+                    You start/stop the timer with the right button and reset the timer with the left button.
+                    When the timer goes off, an alarm (notification) displays a randomly selected message and plays a
+                    sound.
+                    You then have the opportunity to indicate whether you were mindful or not.
+                </p>
+                <p>
+                    The alarm sound and text are specific to each category, and are changed in the category preferences.
+                    The settings on this page let you:
+                </p>
+                <ul>
+                    <li>Specify an alarm that happens when the timer elapses.</li>
+                    <li>Run the timer a specified number of times.</li>
+                    <li>Set the countdown duration and specify a random interval that is added to that duration.</li>
+                </ul>
+                <br/>
+                <!--template>
+                    <img class="helpImage left" src="https://psygraph.com/webclient/help/timer.png" alt="timer" width="300" />
+                    <img class="helpImage right" src="https://psygraph.com/webclient/help/timer_settings.png" alt="timer_settings" width="300" />
+                </template-->
+            </section>
+        </div>
+    </div>
+</ion-content>
+<footer></footer>

@@ -1,0 +1,17 @@
+<ion-header translucent>
+    <ion-toolbar>
+        <ion-title>Settings</ion-title>
+    </ion-toolbar>
+</ion-header>
+<ion-content>
+    <ion-item>
+    <div [innerHtml]="content">
+        <!-- this area is filled dynamically -->
+    </div>
+    </ion-item>
+    <ion-item>
+        <ion-button *ngIf="this.page.hasCancel" size="small" color="primary" (click)="onCancel()">Cancel</ion-button>
+        <ion-button *ngIf="this.page.hasApply" size="small" color="secondary" (click)="onApply()">Apply</ion-button>
+        <ion-button *ngIf="this.page.hasOK" size="small" color="secondary" (click)="onOK()">OK</ion-button>
+    </ion-item>
+</ion-content>

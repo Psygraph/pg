@@ -1,0 +1,97 @@
+<ion-header no-border>
+    <ion-toolbar>
+        <ion-buttons slot="end">
+            <ion-button color='primary' routerLink="/pages/home" routerLinkActive="active" routerDirection="root"
+                        [hidden]="!showSkip">Skip
+            </ion-button>
+        </ion-buttons>
+    </ion-toolbar>
+</ion-header>
+
+<ion-content fullscreen="true">
+    <ion-slides #slides (ionSlideWillChange)="onSlideChangeStart($event)" pager="false">
+
+        <ion-slide #about_slide>
+            <img src="assets/img/logo.png" class="slide-image"/>
+            <h2 class="slide-title">Welcome to <b>Psygraph</b></h2>
+            <p> Psygraph keeps track of your meditation, breathing, and mindfulness through the use of tools such
+                as a timer, counter, periodic gong, and note-taker.
+            </p>
+        </ion-slide>
+        <ion-slide #home_slide>
+            <img src="assets/img/slide_home.png" class="slide-image"/>
+            <h2 class="slide-title">Home</h2>
+            <p>
+                The <strong>Home</strong> page displays a summary of your data over the last several days or
+                weeks, such as the cumulative amount of time spent time spent in a particular category.
+            </p>
+        </ion-slide>
+        <ion-slide #stopwatch_slide>
+            <img src="assets/img/slide_stopwatch.png" class="slide-image"/>
+            <h2 class="slide-title">Stopwatch</h2>
+            <p>
+                The <strong>Stopwatch</strong> tool records your meditation sessions or other activities.
+                The reset button (left) and start/stop button (right) allow you to reset, start, and stop the clock.
+            </p>
+        </ion-slide>
+        <ion-slide #timer_slide>
+            <img src="assets/img/slide_timer.png" class="slide-image"/>
+            <h2 class="slide-title">Timer</h2>
+            <p>
+                The <strong>Timer</strong> tool is a countdown alarm: the top widget shows time remaining and the
+                bottom widget shows total time.
+                You start/stop the timer with the right button and reset the timer with the left button.
+                When the timer goes off, an alarm (notification) displays a randomly selected message and plays a
+                sound.
+                You then have the opportunity to indicate whether you were mindful or not.
+            </p>
+        </ion-slide>
+        <ion-slide #counter_slide>
+            <img src="assets/img/slide_counter.png" class="slide-image"/>
+            <h2 class="slide-title">Counter</h2>
+            <p>
+                The <strong>Counter</strong> tool measures mindfulness via breath counting.
+                You can either:
+            </p>
+            <ol>
+                <li>Set the count target to zero, and see how many breaths you can take without a thought
+                    occurring.
+                </li>
+                <li>Set the count target to a particular number and indicate when you have reached that number.
+                    If you lose count of how many breaths you have taken, then you were obviously not mindful of
+                    your breath.
+                </li>
+            </ol>
+            <p>
+                In either case, press the black button every time you breathe.
+                Press the white button when a thought occurs, or after counting a certain number of breaths.
+                During a meditation session, triple-click on the page to display full-screen buttons.
+            </p>
+        </ion-slide>
+        <ion-slide #note_slide>
+            <img src="assets/img/slide_note.png" class="slide-image"/>
+            <h2 class="slide-title">Note</h2>
+            <p>
+                The <strong>Note</strong> tool allows you create text notes and voice memos.
+                Two text fields are displayed: one for the note title, and one for the note text.
+                The right button records audio: the button turns red while recording, which you stop by pressing the
+                button a second time. Notes are saved by pressing the left button.
+            </p>
+        </ion-slide>
+        <ion-slide>
+            <img src="assets/img/slide_preferences.png" class="slide-image"/>
+            <h2 class="slide-title">Global Settings</h2>
+            <p>
+                There are also different views of the collected data (via a <strong>List</strong> and
+                <strong>Graph</strong>), as well as pages that allow you to alter global <strong>Preferences</strong>
+                and <strong>Category</strong> settings for all events.
+            </p>
+            <p>Those pages, as well as the <strong>About</strong> page, can be accessed via the app menu.</p>
+            <ion-button fill="clear" routerLink="/pages/home" routerLinkActive="active" routerDirection="root">
+                Continue to the App
+                <ion-icon slot="end" name="arrow-forward"></ion-icon>
+            </ion-button>
+        </ion-slide>
+
+    </ion-slides>
+</ion-content>

@@ -1,0 +1,19 @@
+ion-content, div.page {
+  display: flex;
+  align-items: stretch;
+  flex-flow: column;
+}
+
+#stopwatch_main {
+  display: flex;
+  align-items: stretch;
+  flex-flow: column;
+  flex-grow: 1;
+}
+
+#stopwatch_container {
+  display: flex;
+  align-items: stretch;
+  flex-flow: column;
+  flex-grow: 1;
+}

@@ -1,0 +1,104 @@
+<header></header>
+<ion-content>
+    <div id="categories_page" class="page">
+
+        <div id="categories_main" class="main content">
+            <section>
+                <ion-item class="header center">
+                    <ion-label>All categories:</ion-label>
+                </ion-item>
+                <div>
+                    <ion-chip *ngFor="let cat of categories; index as i" #catEl>
+                        <ion-label>{{cat}}</ion-label>
+                        <ion-icon *ngIf='cat !=="Uncategorized"' (click)="onRemoveCategory(cat)"
+                                  name="close-circle"></ion-icon>
+                    </ion-chip>
+                </div>
+                <ion-item lines="none">
+                    <ion-input slot="start" [(ngModel)]="newCategory" placeholder="new category name"></ion-input>
+                    <ion-button slot="end" expand="block" size="medium" fill="solid" (click)="onAddCategory()">Add New
+                        Category
+                    </ion-button>
+                </ion-item>
+            </section>
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Properties for <b>{{currentCategory}}</b>:</ion-label>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label (click)="onSelectSound()">Category sound:</ion-label>
+                    <ion-select multiple="false" [(ngModel)]="sound" placeholder="Sound...">
+                        <div *ngFor="let snd of allSounds">
+                            <ion-select-option value={{snd.value}}>{{snd.name}}</ion-select-option>
+                        </div>
+                    </ion-select>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label (click)="onSelectText()">Category text:</ion-label>
+                    <ion-select multiple="false" [(ngModel)]="text" placeholder="Text...">
+                        <div *ngFor="let txt of allTexts">
+                            <ion-select-option value={{txt.value}}>{{txt.name}}</ion-select-option>
+                        </div>
+                    </ion-select>
+                </ion-item>
+                <ion-item lines="none">
+                    <ion-label>Category color (Red, Green, Blue):</ion-label>
+                </ion-item>
+                <ion-row>
+                    <ion-col>
+                        <ion-range [(ngModel)]="red" (ionChange)="updateColor()" min="0" max="255" step="1"></ion-range>
+                    </ion-col>
+                    <ion-col>
+                        <ion-range [(ngModel)]="green" (ionChange)="updateColor()" min="0" max="255"
+                                   step="1"></ion-range>
+                    </ion-col>
+                    <ion-col>
+                        <ion-range [(ngModel)]="blue" (ionChange)="updateColor()" min="0" max="255"
+                                   step="1"></ion-range>
+                    </ion-col>
+                </ion-row>
+                <ion-item lines="none">
+                    <ion-chip class="center" id="colorItem" [style.background]="rgbcolor">
+                        <ion-label id="colorChip">{{rgbcolor}}</ion-label>
+                    </ion-chip>
+                </ion-item>
+                <!--ion-item (click)="onSelectStyle()">
+                    <ion-label slot="start">Display style:</ion-label>
+                    <ion-label slot="end">{{style}}</ion-label>
+                </ion-item-->
+            </section>
+            <!--
+                <div class="ui-field-contain no-field-separator" id="categories_calendarDiv">
+                    <label for="categories_calendar">Category Schedule</label>
+                    <input type="checkbox" onClick="pgNotify.scheduleCalendar($(this).is(':checked')); return false;" name="calendar" id="categories_calendar"/>
+                    <input type="button" onClick="pgNotify.scheduleCalendar(true); return false;" class="btn fast" value="Calendar" title="Calendar" data-inline="true"/>
+                </div>
+            -->
+            <settingsButtons></settingsButtons>
+        </div>
+
+        <div id="categories_settings" class="settings content">
+        </div>
+
+        <div id="categories_info" class="info content">
+            <section>
+                <ion-item class="header center">
+                    <ion-label>Info</ion-label>
+                </ion-item>
+                <p>All events (such as stopwatch start/stop times) are assigned to a category. Four categories are
+                    present by default: <em>Uncategorized</em>, <em>Meditate</em>, <em>Exercise</em>, and <em>Think</em>.
+                </p>
+                <p>The <strong>categories</strong> page lets you add, remove, and configure these categories. Every
+                    category has settings that govern its behavior, such as a particular sound, background color, and
+                    set of strings that are displayed by the timer alarms. If you are uploading data to a WordPress
+                    server, that data is tagged with its associated category.</p>
+                <p>The current category can be changed on the settings tab of any page.</p>
+                <br/>
+                <!--template>
+                    <img class="helpImage center" src="https://psygraph.com/webclient/help/categories.png" alt="" width="300" />
+                </template-->
+            </section>
+        </div>
+    </div>
+</ion-content>
+<footer></footer>

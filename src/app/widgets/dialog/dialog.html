@@ -1,0 +1,20 @@
+<ion-header translucent>
+    <ion-toolbar>
+        <ion-title>{{title}}</ion-title>
+    </ion-toolbar>
+</ion-header>
+<ion-content>
+    <div [innerHtml]="content" class="center">
+        <!-- this area is filled dynamically -->
+    </div>
+    <ion-grid>
+        <ion-row>
+            <ion-col>
+                <ion-button *ngIf="hasCancel" expand="block" fill="solid" size="medium" (click)="onCancel()">Cancel</ion-button>
+            </ion-col>
+            <ion-col>
+                <ion-button *ngIf="hasOK" expand="block" fill="solid" size="medium" (click)="onOK()">OK</ion-button>
+            </ion-col>
+        </ion-row>
+    </ion-grid>
+</ion-content>
