@@ -6,69 +6,37 @@ import * as $ from 'jquery';
 export class Locometer extends Meter {
     bgGeo = false;
     running = false;
-    callback = null;
-    //timeout:  undefined by design
+    locationListener = (path: [], cat: string = '') => {};
+    locationTimer = null;
     warned = false;
+    permission = false;
     watchID = -1;
     timeout = null;
-    opts = {
-        // PG configuration
-        powerSaving: true,
-        accuracy: 0,
-        
-        // Geolocation config
-        desiredAccuracy: 5,
-        stationaryRadius: 10,
-        distanceFilter: 15,
-        maxLocations: 10000,
-        debug: false,
-        stopOnTerminate: false, //    url: 'http://192.168.81.15:3000/locations',
-        //syncUrl: 'http://192.168.81.15:3000/sync',
-        //syncThreshold: 100,
-        //httpHeaders: {
-        //    'X-FOO': 'bar'
-        //},
-        
-        // for Android only, which logs the events to a file if url=="file://*"
-        startOnBoot: false,
-        startForeground: true,
-        notificationTitle: 'Psygraph',
-        notificationText: 'Tracking location.',
-        interval: 10000,
-        locationProvider: pgUtil.geolocation ? pgUtil.geolocation.provider.ANDROID_ACTIVITY_PROVIDER : 0, // ANDROID_ACTIVITY_PROVIDER options
-        fastestInterval: 5000,
-        activitiesInterval: 10000,
-        stopOnStillActivity: true,
-        
-        // for IOS only
-        activityType: 'Other', //'AutomotiveNavigation'
-        saveBatteryOnBackground: false
-    };
-    cordovaOpts = {
+    navigatorOpts = {
         maximumAge: 2000, timeout: 5000, enableHighAccuracy: true
     };
     bgOpts:any = {};
-
+    
     constructor() {
         super('location');
         this.running = false;
-        this.callback = null;
-        //timeout:  undefined by design
         this.warned = false;
+        // @ts-ignore
+        window.skipLocalNotificationReady = true;
     }
     
     init() {
-        if (!pgUtil.isWebBrowser && pgUtil.geolocation) { //
-            //document.addEventListener('deviceready', onDeviceReady.bind(this), false);
-            onDeviceReady.call(this);
-        }
-        function onDeviceReady() {
+        this.addSignal('location');
+        this.createData(['location']);
+        if (!pgUtil.isWebBrowser && pgUtil.geolocation) {
             this.bgGeo = true;
             this.bgOpts = {
-                locationProvider: pgUtil.geolocation.ACTIVITY_PROVIDER,
-                desiredAccuracy: pgUtil.geolocation.HIGH_ACCURACY,
-                stationaryRadius: 50,
-                distanceFilter: 50,
+                powerSaving: true,
+                accuracy: 5,
+                locationProvider: pgUtil.geolocation.DISTANCE_FILTER_PROVIDER,
+                desiredAccuracy: pgUtil.geolocation.MEDIUM_ACCURACY,
+                stationaryRadius: 10,
+                distanceFilter: 15,
                 notificationTitle: 'Background tracking',
                 notificationText: 'enabled',
                 debug: false, // handy info about
@@ -77,6 +45,9 @@ export class Locometer extends Meter {
                 fastestInterval: 5000,
                 activitiesInterval: 10000,
             };
+            onDeviceReady.call(this);
+        }
+        function onDeviceReady() {
             pgUtil.geolocation.configure(this.bgOpts);
             pgUtil.geolocation.on('location', this.locationCB.bind(this, false));
             pgUtil.geolocation.on('stationary', this.locationCB.bind(this, true));
@@ -87,106 +58,127 @@ export class Locometer extends Meter {
             pgUtil.geolocation.on('stop', function() {
                 pgDebug.showLog('BackgroundGeolocation service has been stopped');
             });
-            pgUtil.geolocation.on('authorization', function(status) {
-                pgDebug.showLog('BackgroundGeolocation authorization status: ' + status);
-                if (status !== pgUtil.geolocation.AUTHORIZED) {
-                    pgUI.showDialog({title: 'Location disabled', true: 'OK', false: 'Cancel'},
-                        'Location services are turned off. Would you like to turn them on?',
-                        cb.bind(this));
-                }
-                function cb(success, data) {
-                    if (success) {
-                        pgUtil.geolocation.showAppSettings();
-                    }
-                }
-            });
+            //pgUtil.geolocation.on('authorization', this.doPermissions.bind(this));
             pgUtil.geolocation.on('background', function() {
                 pgDebug.showLog('App is in background');
                 // you can also reconfigure service (changes will be applied immediately)
-                pgUtil.geolocation.configure({ debug: true });
+                pgUtil.geolocation.configure({debug: true});
             });
             pgUtil.geolocation.on('foreground', function() {
                 pgDebug.showLog('App is in foreground');
-                pgUtil.geolocation.configure({ debug: false });
+                pgUtil.geolocation.configure({debug: false});
             });
             pgUtil.geolocation.on('http_authorization', () => {
                 pgDebug.showLog('App needs to authorize the http requests');
             });
-            pgUtil.geolocation.checkStatus(function(status) {
-                pgDebug.showLog('BackgroundGeolocation service is running: ' + status.isRunning);
-                pgDebug.showLog('BackgroundGeolocation services enabled: ' + status.locationServicesEnabled);
-                pgDebug.showLog('BackgroundGeolocation auth status: ' + status.authorization);
-            });
+        }
+    }
+    async doPermissions(callback = (success) => {}) {
+        if(this.permission) {
+            callback(true);
+            return;
+        }
+        else {
+            const opts = {
+                title: 'Access device location?', true: 'OK', false: 'Cancel'
+            };
+            const content = `<p class="inset">In order to collect device location data when you have requested it (i.e. use of GPS to map your activites),
+                please grant the device permission to monitor your location at all times (even when the app is in the background).</p>`;
+            await pgUI.showDialog(opts, content, cb.bind(this));
+        }
+        function cb(success, data) {
+            if (success) {
+                this.permission = true;
+                pgUtil.geolocation.checkStatus(authorized.bind(this));
+            } else {
+                this.permission = false;
+                callback(false);
+            }
+            function authorized(status) {
+                pgDebug.showLog('BackgroundGeolocation authorization status: ' + status.authorization);
+                callback(true);
+            }
         }
     }
     getAllSignalsNV() {
-        return [
-            {name: "Location", value:"location"},
-        ];
+        return [{name: 'Location', value: 'location'},];
     }
     update(show, data) {
         try {
             if (show) {
-                if (data.running) {
-                    this.opts = data.opts;
-                    this.cordovaOpts = data.cordovaOpts;
-                    //this.start();
-                    this.data.location = data.location;
+                if (pgUtil.isEmpty(data)) {
+                    throw new Error('empty struct');
                 }
+                this.bgOpts = data.bgOpts;
+                this.navigatorOpts = data.navigatorOpts;
+                this.permission = data.permission;
+                this.data.location = data.location;
             } else {
                 data.running = this.running;
-                data.opts = this.opts;
-                data.cordovaOpts = this.cordovaOpts;
+                data.bgOpts = this.bgOpts;
+                data.navigatorOpts = this.navigatorOpts;
+                data.permission = this.permission;
                 data.location = this.data.location;
             }
         } catch (err) {
             pgDebug.showWarn(err.toString());
-            data = {running: false, opts: this.opts, cordovaOpts: this.cordovaOpts};
+            data = {running: false, bgOpts: this.bgOpts, navigatorOpts: this.navigatorOpts,
+                permission: false, location: []
+            };
         }
         return data;
-        
-        function cb(running, pdata) {
-        }
     }
     settingsDialog(callback) {
         const opts = this.settingsDialogOpts('Location Settings', gatherData);
         const content = `
             <ion-item>
                 <ion-label>Power Saving Mode:</ion-label>
-                <ion-checkbox id="map_powerSaving" checked="` + !!this.opts.powerSaving + `"></ion-checkbox>
+                <ion-checkbox id="map_powerSaving" checked="` + !!this.bgOpts.powerSaving + `"></ion-checkbox>
             </ion-item>
             <ion-item>
                 <ion-label>Accuracy:</ion-label>
-                <ion-range id="map_accuracy" min="0" max="10" step="1" value="` + this.opts.accuracy + `"></ion-range>
+                <ion-range id="map_accuracy" min="0" max="10" step="1" pin="true" value="` + this.bgOpts.accuracy + `"></ion-range>
             </ion-item>`;
         //$("#map_powerSaving").prop("checked", data.powerSaving).checkboxradio("refresh");
         //$("#map_accuracy").val(data.accuracy).trigger("change");
-        super.settingsDialog(opts, content, setMeter.bind(this));
+        this.doSettingsDialog(opts, content, setMeter.bind(this));
         function gatherData() {
             return {
-                powerSaving: $('#map_powerSaving').attr('aria-checked') == "true",
+                powerSaving: $('#map_powerSaving').attr('aria-checked') == 'true',
                 accuracy: $('#map_accuracy').val(),
             };
         }
         function setMeter(success, data) {
             if (success) {
-                this.opts.powerSaving = data.powerSaving;
-                this.opts.accuracy = data.accuracy;
+                this.bgOpts.powerSaving = data.powerSaving;
+                this.bgOpts.accuracy = data.accuracy;
                 // Accuracy is a value from 0 ( accurate) to 10 (most accurate).
+                if(this.bgOpts.accuracy >= 9) {
+                    this.bgOpts.desiredAccuracy = pgUtil.geolocation.HIGH_ACCURACY;
+                }
+                else if(this.bgOpts.accuracy >= 6) {
+                    this.bgOpts.desiredAccuracy = pgUtil.geolocation.MEDIUM_ACCURACY;
+                }
+                else if(this.bgOpts.accuracy >= 3) {
+                    this.bgOpts.desiredAccuracy = pgUtil.geolocation.LOW_ACCURACY;
+                }
+                else {
+                    this.bgOpts.desiredAccuracy = pgUtil.geolocation.PASSIVE_ACCURACY;
+                }
                 // radius ranges from 2 to 1002 meters
-                const radius = (10 - this.opts.accuracy) * 100 + 2;
-                this.opts.desiredAccuracy = Math.round(radius / 2);
-                this.opts.stationaryRadius = Math.round(radius);
-                this.opts.distanceFilter = Math.round(radius * 2);
+                const radius = (10 - this.bgOpts.accuracy) * 100 + 2;
+                this.bgOpts.desiredAccuracy = Math.round(radius / 2);
+                this.bgOpts.stationaryRadius = Math.round(radius);
+                this.bgOpts.distanceFilter = Math.round(radius * 2);
                 // update interval ranges from 1000 to 61000 ms
-                const updateInterval = (10 - this.opts.accuracy) * 6000 + 1000;
-                this.opts.interval = updateInterval;
-                this.opts.fastestInterval = updateInterval / 2;
-                this.opts.activitiesInterval = updateInterval / 2;
-                this.opts.saveBatteryOnBackground = (this.opts.accuracy < 5);
+                const updateInterval = (10 - this.bgOpts.accuracy) * 6000 + 1000;
+                this.bgOpts.interval = updateInterval;
+                this.bgOpts.fastestInterval = updateInterval / 2;
+                this.bgOpts.activitiesInterval = updateInterval / 2;
+                this.bgOpts.saveBatteryOnBackground = (this.bgOpts.accuracy < 5);
                 // update the Cordova parameters
-                this.cordovaOpts.maximumAge = updateInterval;
-                this.cordovaOpts.timeout = updateInterval / 2;
+                this.navigatorOpts.maximumAge = updateInterval;
+                this.navigatorOpts.timeout = updateInterval / 2;
             }
             callback(success);
         }
@@ -198,51 +190,49 @@ export class Locometer extends Meter {
             return;
         }
         this.createData(['location']);
-        // single call to getLocation to get things started.
-        this.getCurrentLocation(this.locationCB.bind(this, false));
         this.running = true;
         if (!this.bgGeo) {
-            //this.compassPremissioniOS();
-            this.watchID = navigator.geolocation.watchPosition(this.locationCB.bind(this, false), this.failureCB.bind(this), this.cordovaOpts);// eslint-disable-line
+            this.getCurrentLocation();
+            this.watchID = navigator.geolocation.watchPosition(this.locationCB.bind(this, false), this.failureCB.bind(this), this.navigatorOpts);// eslint-disable-line
         } else {
-            pgUtil.geolocation.start();
+            // get permissions
+            this.doPermissions(startCB.bind(this));
+        }
+        function startCB(success) {
+            if (success) {
+                this.getCurrentLocation(start.bind(this));
+            }
+            function start(location) {
+                pgUtil.geolocation.start();
+                // Do we need to run something in the foreground?
+                this.locationTimer = setInterval(this.getLocationData.bind(this), 2000);
+            }
         }
     }
-
+    
     locationCB(stationary, location) {
-        // handle your locations here
-        if(this.bgGeo) {
-            if(! ("time" in location)) {
-                location.time = pgUtil.getCurrentTime();
-            }
-            this.addToPath(location.time, location);
-            if (this.callback) {
-                pgUtil.geolocation.startTask(
-                    ((taskKey) => {
-                    this.callback(this.data.location);
-                    pgUtil.geolocation.endTask(taskKey);
-                }).bind(this) );
-            }
-        }
-        else {
-            this.addToPath(pgUtil.getCurrentTime(), location);
-            if (this.callback) {
-                this.callback(this.data.location);
-            }
+        this.addToPath(location);
+        if (this.bgGeo) {
+            setTimeout(this.locationListener.bind(this, this.data.location), 100);
+            //pgUtil.geolocation.startTask(((taskKey) => {
+            //    this.locationListener(this.data.location);
+            //    pgUtil.geolocation.endTask(taskKey);
+            //}).bind(this));
+        } else {
+            this.locationListener(this.data.location);
         }
     }
     failureCB(error) {
-        //pgDebug.showError('GeoLocation error' + error.toString());
-        if (this.callback) {
-            this.callback('Unknown error');
-        }
+        pgDebug.showWarn('GeoLocation error' + error.toString());
     }
     async stop(): Promise<number> {
         return new Promise(finish.bind(this));
         function finish(resolve, reject) {
             if (this.bgGeo) {
                 pgUtil.geolocation.stop();
-                this.getLocationData(cb);
+                clearInterval(this.locationTimer);
+                this.locationTimer = null;
+                this.getLocationData(cb.bind(this));
             } else {
                 navigator.geolocation.clearWatch(this.watchID);
                 this.watchID = null;
@@ -250,37 +240,38 @@ export class Locometer extends Meter {
             }
             this.running = false;
             function cb(data) {
-                pgUtil.geolocation.deleteAllLocations(() => {resolve(1)}, () => {reject("unknown")});
+                pgUtil.geolocation.deleteAllLocations(
+                    () => {resolve(1);},
+                    () => {reject('unknown');}
+                );
             }
         }
     }
     setCallback(cb) {
-        this.callback = cb;
+        this.locationListener = cb;
     }
-
-    getCurrentLocation(callback= (array)=>{} ) {
+    
+    getCurrentLocation(callback = (array) => {}) {
         // if we are running, we should just return the last collected point
-        if (this.running) {
-            const len = this.data.location.length;
-            if (len) {
-                callback([this.data.location[len - 1]]);
-                return;
+        const len = this.data.location.length;
+        if (this.running && len) {
+            callback(this.data.location[len - 1]);
+        } else {
+            if (this.bgGeo) {
+                this.doPermissions(permCB.bind(this));
+            } else {
+                navigator.geolocation.getCurrentPosition(successCB.bind(this), failCB.bind(this), this.navigatorOpts);
             }
         }
-        if (!this.bgGeo) {
-            //const options = { enableHighAccuracy: true, maximumAge: 500, timeout: 6000 };
-            //const watchID = navigator.geolocation.watchPosition(successCB, failCB, options);
-            //const timeout = setTimeout( function() { navigator.geolocation.clearWatch( watchID ); }, 6000 );
-            navigator.geolocation.getCurrentPosition(successCB.bind(this), failCB.bind(this), this.cordovaOpts);// eslint-disable-line
-        } else {
-            callback([]);
+        function permCB(success) {
+            if(success) {
+                pgUtil.geolocation.getCurrentLocation(successCB.bind(this), failCB.bind(this), this.navigatorOpts);
+            }
         }
         function successCB(pos) {
-            const point = [pos.timestamp, pos.coords.latitude, pos.coords.longitude, pos.coords.altitude];
-            if (point[3] == null) {
-                point[3] = 0;
-            }
-            callback([point]);
+            this.addToPath(pos);
+            const point = this.data.location[this.data.location.length-1];
+            callback(point);
         }
         function failCB(err) {
             if (!this.warned) {
@@ -290,38 +281,57 @@ export class Locometer extends Meter {
             callback([]);
         }
     }
-    getLocationData(callback) {
+    getLocationData(callback = (location) => {}) {
         if (this.bgGeo) {
-            pgUtil.geolocation.getLocations(cb.bind(this));
+            pgUtil.geolocation.getValidLocations(cb.bind(this));
         } else {
             callback(this.data.location);
         }
         function cb(locations) {
-            for (const location in locations) {
-                const loc = locations[location];
-                this.addToPath(loc.time, loc);
+            for (const loc of locations) {
+                this.addToPath(loc);
             }
             callback(this.data.location);
         }
     }
-    addToPath(time, location) {
+    addToPath(location) {
         let lat;
         let lng;
         let alt = 0;
-        if ("coords" in location) {
-            location = location.coords;
+        let time = pgUtil.getCurrentTime();
+        if (Array.isArray(location)) {
+            time = location[0];
+            lat = location[1];
+            lng = location[2];
+            alt = location[3];
         }
-        if ("latitude" in location) {
-            lat = location.latitude;
-        }
-        if ("longitude" in location) {
-            lng = location.longitude;
-        }
-        if ("altitude" in location) {
-            alt = location.altitude;
+        else {
+            if ('time' in location) {
+                time = location.time;
+            }
+            if ('coords' in location) {
+                location = location.coords;
+            }
+            if ('latitude' in location) {
+                lat = location.latitude;
+            }
+            if ('longitude' in location) {
+                lng = location.longitude;
+            }
+            if ('altitude' in location) {
+                alt = location.altitude || 0;
+            }
         }
         if (typeof (lat) === 'undefined' || typeof (lng) === 'undefined') {
             pgDebug.showWarn('Received empty location');
+            return;
+        }
+        if (isNaN(lat) || isNaN(lng)) {
+            pgDebug.showWarn('Location was NaN');
+            return;
+        }
+        if (time === 0) {
+            pgDebug.showWarn('Time was 0');
             return;
         }
         for (let i = 0; i < this.data.location.length; i++) {
@@ -329,12 +339,16 @@ export class Locometer extends Meter {
                 this.data.location.splice(i, 0, [time, lat, lng, alt]);
                 return;
             } else if (this.data.location[i][0] === time) {
-                pgDebug.showLog('Multiple locations with the same timestamp: ' + time);
+                if (this.data.location[i][1] === lat && this.data.location[i][2] === lng) {
+                    return;
+                } else {
+                    pgDebug.showLog('Multiple locations with the same timestamp: ' + time);
+                }
             }
         }
         this.pushData([time, lat, lng, alt]);
     }
-
+    
     getDistance(path) {
         let sum = 0;
         for (let i = 1; i < path.length; i++) {
@@ -359,62 +373,3 @@ export class Locometer extends Meter {
 
 export const pgLocation = new Locometer();
 
-
-/*
-runInBG() {
-    return pgUtil.geolocation && this.opts.powerSaving;
-}
-locationChecker(run, interval = 8000) {
-    if (run) {
-        if (this.running) {
-            //showWarn("Cannot run location checker when location gathering is running.");
-            return;
-        }
-        if (typeof (this.timeout) !== 'undefined') {
-            //showWarn("Ran location checker twice");
-            clearInterval(this.timeout);
-        }
-        this.timeout = setInterval(posChecker.bind(this), interval); // eslint-disable-line
-    } else {
-        if (typeof (this.timeout) !== 'undefined') {
-            clearInterval(this.timeout);
-            delete (this.timeout);
-        }
-    }
-    function posChecker() {
-        this.getCurrentLocation(posCallback.bind(this));// eslint-disable-line
-        
-        function posCallback(pdata) {
-            if (this.callback) {
-                this.callback(pdata);
-            }
-        }
-    }
-}
-*/
-
-/*
-compassPremissioniOS() {
-    return new Promise((resolve, reject) => {
-        if (navigator.geolocation) {
-            if (typeof DeviceOrientationEvent['requestPermission'] === 'function') {
-                DeviceOrientationEvent['requestPermission']()
-                    .then(permissionState => {
-                        if (permissionState === 'granted') {
-                            window.addEventListener('deviceorientation', (event) => {
-                                this.currentCompass$.next(event['webkitCompassHeading']);
-                            });
-                            resolve('User accepted');
-                        } else {
-                            reject('User declined');
-                        }
-                    })
-                    .catch(console.error);
-            }
-        } else {
-            alert('deviceorientation is not supported by this browser.');
-            this.sendError('deviceorientation = null ("deviceorientation is not supported by this browser.")');
-        }
-    });
-}
-*/

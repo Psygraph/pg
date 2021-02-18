@@ -1,5 +1,5 @@
-#header_toolbar {
-  --background: var(--background);
+ion-header, #header_toolbar {
+  --background: var(--ion-background-color, #fff);
 }
 img.banner {
   height: 1em;
@@ -12,4 +12,3 @@ img.banner {
 ion-title #title {
   text-align: center;
 }
-

@@ -21,13 +21,13 @@
                     <ion-label>Show signals:</ion-label>
                     <ion-select multiple="true" placeholder="Signals:" [(ngModel)]="signals">
                         <div *ngFor="let sig of allSignals">
-                            <ion-select-option value={{sig.value}}>{{sig.name}}</ion-select-option>
+                            <ion-select-option value="{{sig.value}}">{{sig.name}}</ion-select-option>
                         </div>
                     </ion-select>
                 </ion-item>
                 <ion-item lines="none">
                     <ion-label>Show graph:</ion-label>
-                    <ion-checkbox [(ngModel)]=showGraph></ion-checkbox>
+                    <ion-checkbox [(ngModel)]="showGraph"></ion-checkbox>
                 </ion-item>
             </section>
             <settingsButtons></settingsButtons>

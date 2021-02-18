@@ -2,11 +2,6 @@ import {Page} from './page';
 import {pg} from '../pg';
 import {pgUtil, pgDebug} from '../util';
 import {pgUI} from '../ui';
-import * as $ from 'jquery';
-import {pgRandom} from '../signal/random';
-import {pgAcceleration} from '../signal/accel';
-import {pgOrientation} from '../signal/orient';
-import {pgLocation} from '../signal/location';
 
 export class Preferences extends Page {
     pgDevices;
@@ -17,6 +12,7 @@ export class Preferences extends Page {
     }
     init(opts) {
         super.init(opts);
+        this.pgDevices.pgBluetooth.connectCB = opts.connectCB;
     }
     getPageData() {
         var data = super.getPageData();
@@ -40,15 +36,17 @@ export class Preferences extends Page {
     getAllDevicesNV() {
         return this.pgDevices.getAllDevicesNV();
     }
+    getAllBTDevicesNV() {
+        return this.pgDevices.getAllBTDevicesNV();
+    }
+    getConnectedBTDevicesNV() {
+        return this.pgDevices.getConnectedBTDevicesNV();
+    }
     updateView(show) {
         super.updateView(show);
         if (show) {
-            if(pgDebug.debug) {
-                pgLocation.getCurrentLocation();
-                this.pgDevices.pgBluetooth.startScan();
-            }
         } else {
-            if(pgDebug.debug) {
+            if(this.pgDevices.hasBluetooth()) {
                 this.pgDevices.pgBluetooth.stopScan();
             }
             pgDebug.debug = this.pageData.debug;
@@ -60,8 +58,22 @@ export class Preferences extends Page {
             pg.setPageData(pmtime, this.pageData, 'preferences');
         }
     }
-    deviceSettings(signal, callback) {
+    async bluetoothConnect(name) {
+        await this.pgDevices.pgBluetooth.bluetoothConnect(name);
+    }
+    async bluetoothDisconnect() {
+        await this.pgDevices.pgBluetooth.bluetoothDisconnect();
+    }
+    async deviceSettings(signal, callback = (success) => {}) {
         this.pgDevices.deviceSettingsDialog(signal, callback);
     }
+    async doPermissions(callback = (success)=>{}) {
+        await this.pgDevices.pgBluetooth.doPermissions(cb.bind(this));
+        function cb(success) {
+            if(success) {
+                this.pgDevices.pgBluetooth.startScan();
+            }
+            callback(success);
+        }
+    }
 }
-

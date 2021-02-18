@@ -24,7 +24,15 @@ export class Meter {
         this.allSignals = [];
         pgUI.addStateObserver(this);
     }
-
+    
+    addSignal(type) {
+        if (this.allSignals.indexOf(type) === -1) {
+            this.allSignals.push(type);
+        }
+        if (this.signals.indexOf(type) === -1) {
+            this.signals.push(type);
+        }
+    }
     createData(types) {
         this.data = {};
         for (const i in types) {
@@ -46,6 +54,13 @@ export class Meter {
     }
     getAllSignals() {
         return this.allSignals;
+    }
+    getAllSignalsNV() {
+        let nv = [];
+        for(let sig of this.allSignals) {
+            nv.push({name: sig, value: sig});
+        }
+        return nv;
     }
     getData() {
         return this.data;
@@ -86,7 +101,7 @@ export class Meter {
     settingsDialogOpts(title=this.name, gather= ()=>{}) {
         return {title: title, true: 'OK', false: 'Cancel', gather: gather};
     }
-    settingsDialog(opts={title:'', true: 'OK', false: 'Cancel', gather: ()=>{}},
+    doSettingsDialog(opts={title:'', true: 'OK', false: 'Cancel', gather: ()=>{}},
                    content="", callback=(success, data)=>{}) {
         function setMeter(success, data) {
             if (success) {

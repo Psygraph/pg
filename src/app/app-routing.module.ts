@@ -12,7 +12,7 @@ import { PreferencesPage }  from './pages/preferences/preferences';
 import { CategoriesPage }   from './pages/categories/categories';
 import { TutorialPage }     from './pages/tutorial/tutorial';
 
-import { HomeModule, HomePage} from './pages/home/home';
+import { HomePage} from './pages/home/home';
 import { StopwatchPage }    from './pages/stopwatch/stopwatch';
 import { TimerPage }        from './pages/timer/timer';
 import { CounterPage }      from './pages/counter/counter';
@@ -88,16 +88,13 @@ const routes: Routes = [
         component: AboutPage,
         //data:{ reuse:true },
     },
-    {
-        path: '',
-        redirectTo: '/pages/home',
-        pathMatch: 'full'
-    },
+    /*
     {
         path: '**',
-        redirectTo: '/pages/home', // this should really be a 404
+        redirectTo: 'pages/home', // this should really be a 404
         pathMatch: 'full'
     },
+     */
 ];
 
 @NgModule({

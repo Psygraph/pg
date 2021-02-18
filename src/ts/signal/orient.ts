@@ -6,8 +6,8 @@ import * as $ from 'jquery';
 
 class Orientometer extends Meter {
     watchID = null;
-    period = 250;
     allPeriods = [5, 10, 50, 100, 500, 1000, 5000];
+    period = 100;
     category = '';
     startTime = 0;
     running = false;
@@ -15,12 +15,14 @@ class Orientometer extends Meter {
     constructor() {
         super('orient');
         this.watchID = null;
-        this.period = 250;
+        this.period = 100;
         this.category = '';
         this.startTime = 0;
         this.running = false;
     }
-    init(){}
+    init() {
+        this.addSignal('orientation');
+    }
     getAllSignalsNV() {
         return [
             {name: "Orientation", value:"orientation"},
@@ -29,6 +31,9 @@ class Orientometer extends Meter {
     update(show, data) {
         try {
             if (show) {
+                if(pgUtil.isEmpty(data)) {
+                    throw new Error("empty struct");
+                }
                 this.period = data.period;
                 if (data.running) {
                     this.start();
@@ -47,8 +52,8 @@ class Orientometer extends Meter {
     }
     settingsDialog(callback) {
         const opts = this.settingsDialogOpts('Orientation Settings', gatherData);
-        const content = pgUI.printSelect('meter_period', 'Period (mS):', this.allPeriods, this.period, false);
-        super.settingsDialog(opts, content, setMeter.bind(this));
+        const content = pgUI.printSelect('meter_period', 'Period (mS):', this.allPeriods, this.period.toString(), false);
+        this.doSettingsDialog(opts, content, setMeter.bind(this));
         function gatherData() {
             return {period: parseInt($('#meter_period').val()) };
         }

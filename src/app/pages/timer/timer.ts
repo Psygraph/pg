@@ -8,7 +8,7 @@ import {Page} from '../page/page';
 import {pgUI} from '../../../ts/ui';
 import {pgUtil} from '../../../ts/util';
 import {RouterOutlet} from '@angular/router';
-import {CustomRouterOutlet} from '../../CustomRouterOutlet';
+//import {CustomRouterOutlet} from '../../CustomRouterOutlet';
 
 @Component({
     selector: 'page-timer', templateUrl: 'timer.html', styleUrls: ['./timer.scss'],
@@ -52,7 +52,7 @@ export class TimerPage extends Page {
             this.alarmSound = this.pgPage.pageData[cat].alarmSound;
             this.alarmText = this.pgPage.pageData[cat].alarmText;
             this.random = this.pgPage.pageData[cat].random;
-            this.repeat = this.pgPage.pageData[cat].repeat;
+            this.repeat = this.pgPage.pageData[cat].repeat.toString();
             this.allRepeat = this.pgPage.getAllRepeatNV();
             this.timerDuration = this.pgPage.pageData[cat].timerDuration;
             this.timerDurationString = pgUtil.getStringFromMS(this.pgPage.pageData[cat].timerDuration);
@@ -61,8 +61,9 @@ export class TimerPage extends Page {
             this.pgPage.pageData[cat].alarmSound = this.alarmSound;
             this.pgPage.pageData[cat].alarmText = this.alarmText;
             this.pgPage.pageData[cat].random = this.random;
-            this.pgPage.pageData[cat].repeat = this.repeat;
+            this.pgPage.pageData[cat].repeat = parseInt(this.repeat);
             this.pgPage.pageData[cat].timerDuration = this.timerDuration;
+            this.pgPage.computeNewCountdowns(cat);
             //this.data.calendar        = !! $("#timer_calendar")[0].checked;
         }
     }
@@ -85,7 +86,7 @@ export class TimerPage extends Page {
             this.pgPage.pageData[cat].timerDuration = newDuration;
             this.timerDuration = newDuration;
             this.timerDurationString = pgUtil.getStringFromMS(newDuration);
-            this.pgPage.pageData[cat].countdownTimes = this.pgPage.computeNewCountdowns();
+            this.pgPage.computeNewCountdowns(cat);
             this.pgPage.updateView(true);
         }
     }

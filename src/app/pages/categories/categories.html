@@ -27,45 +27,45 @@
                 </ion-item>
                 <ion-item lines="none">
                     <ion-label (click)="onSelectSound()">Category sound:</ion-label>
-                    <ion-select multiple="false" [(ngModel)]="sound" placeholder="Sound...">
+                    <ion-select multiple="false" [(ngModel)]="sound">
                         <div *ngFor="let snd of allSounds">
-                            <ion-select-option value={{snd.value}}>{{snd.name}}</ion-select-option>
+                            <ion-select-option value="{{snd.value}}">{{snd.name}}</ion-select-option>
                         </div>
                     </ion-select>
                 </ion-item>
                 <ion-item lines="none">
                     <ion-label (click)="onSelectText()">Category text:</ion-label>
-                    <ion-select multiple="false" [(ngModel)]="text" placeholder="Text...">
+                    <ion-select multiple="false" [(ngModel)]="text">
                         <div *ngFor="let txt of allTexts">
-                            <ion-select-option value={{txt.value}}>{{txt.name}}</ion-select-option>
+                            <ion-select-option value="{{txt.value}}">{{txt.name}}</ion-select-option>
                         </div>
                     </ion-select>
                 </ion-item>
                 <ion-item lines="none">
-                    <ion-label>Category color (Red, Green, Blue):</ion-label>
+                    <ion-label>Category color:</ion-label>
+                    <ion-input slot="end" value="{{rgbcolor}}"></ion-input>
                 </ion-item>
-                <ion-row>
-                    <ion-col>
-                        <ion-range [(ngModel)]="red" (ionChange)="updateColor()" min="0" max="255" step="1"></ion-range>
-                    </ion-col>
-                    <ion-col>
-                        <ion-range [(ngModel)]="green" (ionChange)="updateColor()" min="0" max="255"
+                <ion-item lines="none">
+                    <ion-chip class="center" id="colorItem" [style.background]="rgbcolor">
+                        <ion-label id="colorChip"></ion-label>
+                    </ion-chip>
+                </ion-item>
+                <ion-row class="color">
+                        <ion-range class="color" [(ngModel)]="red" (ionChange)="updateColor()" min="0" max="255"
                                    step="1"></ion-range>
-                    </ion-col>
-                    <ion-col>
-                        <ion-range [(ngModel)]="blue" (ionChange)="updateColor()" min="0" max="255"
+                </ion-row>
+                <ion-row class="color">
+                    <ion-col class="color">
+                        <ion-range class="color" [(ngModel)]="green" (ionChange)="updateColor()" min="0" max="255"
                                    step="1"></ion-range>
                     </ion-col>
                 </ion-row>
-                <ion-item lines="none">
-                    <ion-chip class="center" id="colorItem" [style.background]="rgbcolor">
-                        <ion-label id="colorChip">{{rgbcolor}}</ion-label>
-                    </ion-chip>
-                </ion-item>
-                <!--ion-item (click)="onSelectStyle()">
-                    <ion-label slot="start">Display style:</ion-label>
-                    <ion-label slot="end">{{style}}</ion-label>
-                </ion-item-->
+                <ion-row class="color">
+                    <ion-col class="color">
+                        <ion-range class="color" [(ngModel)]="blue" (ionChange)="updateColor()" min="0" max="255"
+                                   step="1"></ion-range>
+                    </ion-col>
+                </ion-row>
             </section>
             <!--
                 <div class="ui-field-contain no-field-separator" id="categories_calendarDiv">

@@ -6,7 +6,7 @@ import {pgUI} from '../../../ts/ui';
 import {Home} from '../../../ts/pages/home';
 import {PickerWidget} from '../../widgets/picker/picker';
 import {RouterOutlet} from '@angular/router';
-import {CustomRouterOutlet} from '../../CustomRouterOutlet';
+//import {CustomRouterOutlet} from '../../CustomRouterOutlet';
 
 @Component({
     selector: 'page-home', templateUrl: 'home.html', styleUrls: ['./home.scss'],
@@ -102,7 +102,7 @@ export class HomePage extends Page {
     }
     
 }
-
+/*
 import { CommonModule } from '@angular/common';
 import { FormsModule }  from '@angular/forms';
 import { IonicModule }  from '@ionic/angular';
@@ -128,4 +128,4 @@ export class HomeModule {
         };
     }
 }
-
+*/

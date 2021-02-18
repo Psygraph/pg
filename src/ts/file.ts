@@ -30,66 +30,55 @@ export class PGFile {
                 pgUtil.mediaURL = window.location.origin + '/assets/media/';
                 resolve(true);
             } else {
-                // these two do not seem necessary
-                //window.requestFileSystem(LocalFileSystem.TEMPORARY,  0, fsSuccess, fsFail);
-                //window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, fsSuccess, fsFail);
-                // @ts-ignore
-                resolveLocalFileSystemURL(pgUtil.cordova.file.cacheDirectory, onFSTemp.bind(this), fsFail.bind(this));
-                if (pgUtil.platform === 'iOS') // use the documents directory for iTunes sync
-                {
-                    pgUtil.resolveLocalFileSystemURL(pgUtil.cordova.file.documentsDirectory, onFSPersist.bind(this), persistFail.bind(this));
+                if (pgUtil.platform === 'iOS') {
+                    pgUtil.resolveLocalFileSystemURL(pgUtil.cordova.file.documentsDirectory, onFSPersist.bind(this), fsFail.bind(this));
                 } else {
-                    pgUtil.resolveLocalFileSystemURL(pgUtil.cordova.file.dataDirectory, onFSPersist.bind(this), persistFail.bind(this));
+                    pgUtil.resolveLocalFileSystemURL(pgUtil.cordova.file.dataDirectory, onFSPersist.bind(this), fsFail.bind(this));
                 }
-                // this call will invoke the callback.
-                pgUtil.resolveLocalFileSystemURL(pgUtil.cordova.file.applicationDirectory, onFSApp.bind(this, resolve, reject), fsFail.bind(this, resolve, reject));
             }
-        }
-        function onFSApp(resolve, reject, fileSystem) {
-            function success(fileSystem) {
-                //pgFile.mediaEntry = fileSystem;
-                //pgUtil.mediaURL = fileSystem.toURL().replace(/\/$/, '');
-                pgUtil.mediaURL = "ionic://localhost/assets/media/"
+            function fsFail(err) {
+                let msg = 'Failed fileSystem: ' + err.toString();
+                pgDebug.showLog(msg);
+                if (--this.numFS == 0) {
+                    reject(msg);
+                }
+            }
+            function onFSPersist(fileSystem) {
+                this.persistEntry = fileSystem;
+                pgUtil.persistURL = fileSystem.toURL().replace(/\/$/, '');
+                pgDebug.showLog('Got persistent FS');
+                //const soundDir;
+                if (pgUtil.device.platform === 'iOS') {
+                    //soundDir = cordova.file.dataDirectory.replace("/NoCloud","");
+                    //window.resolveLocalFileSystemURL(soundDir, onFSSound, soundFail);
+                    this.soundEntry = pgFile.persistEntry;
+                    pgUtil.soundURL = pgUtil.persistURL;
+                } else {
+                    //soundDir = cordova.file.dataDirectory;
+                    //window.resolveLocalFileSystemURL(soundDir, onFSSound, soundFail);
+                    this.soundEntry = pgFile.persistEntry;
+                    pgUtil.soundURL = pgUtil.persistURL;
+                }
+                pgUtil.resolveLocalFileSystemURL(pgUtil.cordova.file.applicationDirectory, onFSApp.bind(this), fsFail.bind(this, resolve, reject));
+            }
+            function onFSApp(fileSystem) {
+                this.appEntry = fileSystem;
+                pgUtil.appURL = fileSystem.toURL().replace(/\/$/, '');
+                pgUtil.resolveLocalFileSystemURL(pgUtil.appURL + '/www/assets/media', success.bind(this), fail.bind(this));
+                function success(fileSystem) {
+                    //pgFile.mediaEntry = fileSystem;
+                    //pgUtil.mediaURL = fileSystem.toURL().replace(/\/$/, '');
+                    pgUtil.mediaURL = 'ionic://localhost/assets/media/';
+                    pgUtil.resolveLocalFileSystemURL(pgUtil.cordova.file.cacheDirectory, onFSTemp.bind(this), fsFail.bind(this));
+                }
+                function fail(err) {
+                    reject('Could not open media file system' + pgUtil.appURL + '/www/assets/media');
+                }
+            }
+            function onFSTemp(fileSystem) {
+                this.tempEntry = fileSystem;
                 resolve(true);
             }
-            function fail(err) {
-                reject('Could not open media file system' + pgUtil.appURL + '/www/assets/media');
-            }
-            pgFile.appEntry = fileSystem;
-            pgUtil.appURL = fileSystem.toURL().replace(/\/$/, '');
-            pgUtil.resolveLocalFileSystemURL(pgUtil.appURL + '/www/assets/media', success, fail);
-        }
-        function onFSTemp(fileSystem) {
-            pgFile.tempEntry = fileSystem;
-            pgUtil.tempURL = fileSystem.toURL().replace(/\/$/, '');
-        }
-        function fsSuccess(fileSystem) {
-            pgDebug.showLog('Got fileSystem: ' + fileSystem.toString());
-        }
-        function fsFail(err) {
-            pgDebug.showLog('Failed fileSystem: ' + err.toString());
-        }
-        function onFSPersist(fileSystem) {
-            pgFile.persistEntry = fileSystem;
-            pgUtil.persistURL = fileSystem.toURL().replace(/\/$/, '');
-            pgDebug.showLog('Got persistent FS');
-            
-            //const soundDir;
-            if (pgUtil.device.platform === 'iOS') {
-                //soundDir = cordova.file.dataDirectory.replace("/NoCloud","");
-                //window.resolveLocalFileSystemURL(soundDir, onFSSound, soundFail);
-                pgFile.soundEntry = pgFile.persistEntry;
-                pgUtil.soundURL = pgUtil.persistURL;
-            } else {
-                //soundDir = cordova.file.dataDirectory;
-                //window.resolveLocalFileSystemURL(soundDir, onFSSound, soundFail);
-                pgFile.soundEntry = pgFile.persistEntry;
-                pgUtil.soundURL = pgUtil.persistURL;
-            }
-        }
-        function persistFail(err) {
-            pgDebug.showLog('Could not get persistent fileSystem');
-            
         }
     }
     
@@ -120,8 +109,7 @@ export class PGFile {
         return pgUtil.persistURL + '/' + filename;
     }
     
-    existFile(filename, callback = function(success) {
-    }, dir = 'persist') {
+    existFile(filename, callback = (success) => {}, dir = 'persist') {
         function success(entry) {
             callback(true);
         }
@@ -181,8 +169,27 @@ export class PGFile {
             this.forAllFiles('persist', localDelete);
         }
     }
-    readFile(filename, callback = function(success, rslt) {/**/
-    }, parse = true, ent = pgFile.persistEntry) {
+    readFile(filename, callback = (success, rslt) => {}, parse = true, ent = pgFile.persistEntry) {
+        if (this.useWebFS) {
+            const data = localStorage.getItem(filename);
+            if (data && data.length) {
+                pgDebug.showLog('Reading file: ' + filename + ' size: ' + data.length);
+                let s = '';
+                try {
+                    s = JSON.parse(data);
+                } catch (err) {/**/
+                }
+                if (s === '') {
+                    callback(false, s);
+                } else {
+                    callback(true, s);
+                }
+            } else {
+                fail([]);
+            }
+        } else {
+            ent.getFile(filename, {create: false, exclusive: false}, success, fail);
+        }
         function fail(evt) {
             pgDebug.showLog('Could not read file: ' + filename);
             callback(false, null);
@@ -213,26 +220,6 @@ export class PGFile {
                 reader.readAsText(file);
             }
             ent.file(win, fail);
-        }
-        if (this.useWebFS) {
-            const data = localStorage.getItem(filename);
-            if (data && data.length) {
-                pgDebug.showLog('Reading file: ' + filename + ' size: ' + data.length);
-                let s = '';
-                try {
-                    s = JSON.parse(data);
-                } catch (err) {/**/
-                }
-                if (s === '') {
-                    callback(false, s);
-                } else {
-                    callback(true, s);
-                }
-            } else {
-                fail([]);
-            }
-        } else {
-            ent.getFile(filename, {create: false, exclusive: false}, success, fail);
         }
     }
     writeFile(filename, struct, callback = function(success, msg) {
@@ -376,7 +363,8 @@ export class PGFile {
         }
     }
     
-    forAllFiles(dir, callback, doneCB = () => {}) {
+    forAllFiles(dir, callback, doneCB = () => {
+    }) {
         let entry;
         if (dir === 'persist') {
             entry = this.persistEntry;
@@ -952,7 +940,7 @@ class Base64 {
             uarray = new Uint8Array(bytes);
         }
         
-        input = input.replace(/[^A-Za-z0-9+/=]/g, "");
+        input = input.replace(/[^A-Za-z0-9+/=]/g, '');
         
         for (i = 0; i < bytes; i += 3) {
             //get the 3 octects in 4 ascii chars

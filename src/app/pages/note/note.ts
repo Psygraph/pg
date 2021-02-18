@@ -5,7 +5,7 @@ import {Page} from '../page/page';
 
 import {pgUI} from '../../../ts/ui';
 import {RouterOutlet} from '@angular/router';
-import {CustomRouterOutlet} from '../../CustomRouterOutlet';
+//import {CustomRouterOutlet} from '../../CustomRouterOutlet';
 
 @Component({
     selector: 'page-note', templateUrl: 'note.html', styleUrls: ['./note.scss'],

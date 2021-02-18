@@ -1,6 +1,5 @@
-.speaker-card {
-  display: flex;
-  flex-direction: column;
+#timer_main {
+  overflow: auto;
 }
 
 /* Due to the fact the cards are inside of columns the margins don't overlap

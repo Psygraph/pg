@@ -13,7 +13,8 @@ import {SettingsPage} from '../../widgets/settings/settings';
 
 import * as $ from 'jquery';
 import {RouterOutlet} from '@angular/router';
-import {CustomRouterOutlet} from '../../CustomRouterOutlet';
+import {ButtonsPage} from '../../widgets/buttonsPage/buttonsPage';
+//import {CustomRouterOutlet} from '../../CustomRouterOutlet';
 
 export class Page {
     static showFooter = true;
@@ -32,6 +33,7 @@ export class Page {
     mainSection = true;
     settingsSection = false;
     infoSection = false;
+    clickCount = 0;
     
     constructor(public modalCtrl: ModalController,
                 public routerOutlet: IonRouterOutlet,
@@ -79,9 +81,9 @@ export class Page {
     ngAfterContentInit() {
     }
     ionViewWillEnter() {
+        this.onShow();
     }
     ionViewDidEnter() {
-        this.onShow();
     }
     ionViewWillLeave() {
         this.onHide();
@@ -149,18 +151,13 @@ export class Page {
             dialogInfo.callback(false, {});
         }
     }
-    /*
-    async onShowSettings() {
-        const categories = pg.categories;
-        const activeCategory = pgUI.category();
-        
+    async onShowButtons() {
         const modal = await this.modalCtrl.create({
-            component: SettingsPage,
-            swipeToClose: true,
-            presentingElement: this.routerOutlet.nativeEl,
+            component: ButtonsPage,
+            cssClass: 'fullscreen',
+            //presentingElement: this.routerOutlet.nativeEl,
             componentProps: {
-                page: this,
-                content: $("#" + this.pgPage.name + "_settingsContainer").html()
+                page: this
             }
         });
         await modal.present();
@@ -169,5 +166,18 @@ export class Page {
         if (data) {
         }
     }
-    */
+    onClick() {
+        this.clickCount++;
+        if(this.clickCount==2) {
+            this.onDoubleClick();
+        }
+        else if(this.clickCount==3) {
+            this.onTripleClick();
+        }
+        setTimeout((()=>{this.clickCount--;}).bind(this), 1000);
+    }
+    onDoubleClick() {
+    }
+    onTripleClick() {
+    }
 }

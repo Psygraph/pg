@@ -7,7 +7,7 @@ import {Page} from '../page/page';
 import {pgUI} from '../../../ts/ui';
 import {Stopwatch} from '../../../ts/pages/stopwatch';
 import {RouterOutlet} from '@angular/router';
-import {CustomRouterOutlet} from '../../CustomRouterOutlet';
+//import {CustomRouterOutlet} from '../../CustomRouterOutlet';
 
 @Component({
     selector: 'page-stopwatch', templateUrl: 'stopwatch.html', styleUrls: ['./stopwatch.scss'],
@@ -46,30 +46,9 @@ export class StopwatchPage extends Page {
             this.allSignals = this.pgPage.getAllSignalsNV();
             this.signals = this.pgPage.pageData[cat].signals;
             this.showGraph = this.pgPage.pageData[cat].showGraph;
-            
-            //if(pgUtil.isWebBrowser) {
-            //$("#stopwatch_signals .nonBrowser").hide();
-            //$("#stopwatch_hasBluetooth").parent().hide();
-            //}
-            //else {
-            //pgOrientation.hasCompass(showOrientation.bind(this));
-            //}
-            //if(pgBluetooth.isConnected())
-            //  $("#stopwatch_BTSettings").parent().show();
-            //else
-            //  $("#stopwatch_BTSettings").parent().hide();
-            //$("#stopwatch_updateInterval").val( pgUtil.getStringFromMS(data.updateInterval) );
-            //$("#stopwatch_hasBluetooth").prop("checked", this.pgPage.pageData[cat].hasBluetooth).checkboxradio('refresh');
         } else {
             this.pgPage.pageData[cat].signals = this.signals;
             this.pgPage.pageData[cat].showGraph = this.showGraph;
-        }
-        
-        function showOrientation(success) {
-            //if(success)
-            //  $("#stopwatch_orientation").show();
-            //else
-            //  $("#stopwatch_orientation").hide();
         }
     }
 }

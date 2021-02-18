@@ -7,8 +7,8 @@
                 <clock #counter></clock>
                 <buttons #counter_buttons></buttons>
             </div>
-            <div *ngIf="showEnso" class="center">
-                <input type="text" id="counter_enso" class="enso clickarea" data-wrapper-class="enso"/>
+            <div *ngIf="showEnso" class="center" (click)="onClick();">
+                <input type="text" id="counter_enso" class="enso" data-wrapper-class="enso"/>
             </div>
         </div>
 
@@ -26,7 +26,7 @@
                 </ion-item>
                 <ion-item lines="none">
                     <ion-label>Reset Behavior:</ion-label>
-                    <ion-select multiple="false" placeholder="Select Behavior..." [(ngModel)]=resetBehavior>
+                    <ion-select multiple="false" placeholder="Select Behavior..." value="{{resetBehavior}}">
                         <div *ngFor="let reset of allResetBehavior">
                             <ion-select-option value={{reset.value}}>{{reset.name}}</ion-select-option>
                         </div>
@@ -71,21 +71,10 @@
                 </ion-item>
                 <p>
                     The <strong>Counter</strong> tool measures mindfulness via breath counting.
-                    You can either:
-                </p>
-                <ol>
-                    <li>Set the count target to zero, and see how many breaths you can take without a thought
-                        occurring.
-                    </li>
-                    <li>Set the count target to a particular number and indicate when you have reached that number.
-                        If you lose count of how many breaths you have taken, then you were obviously not mindful of
-                        your breath.
-                    </li>
-                </ol>
-                <p>
-                    In either case, press the black button every time you breathe.
-                    Press the white button when a thought occurs, or after counting a certain number of breaths.
-                    During a meditation session, triple-click on the page to display full-screen buttons.
+                    You might use it to count how many breaths you can take without a thought
+                    occurring, or to count your breaths until you reach a particular target.
+                    In either case, press the black (start) button every time you breathe,
+                    and press the white (reset) button when a thought occurs (or after counting a certain number of breaths).
                 </p>
                 <p>
                     The settings enable you to:

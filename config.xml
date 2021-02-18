@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget android-versionCode="9020" id="com.psygraph.pg" ios-CFBundleVersion="9020" version="0.9.2" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget android-versionCode="9034" id="com.psygraph.pg" ios-CFBundleVersion="9034" version="0.9.3" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>Psygraph</name>
     <description>Graph your mind.</description>
     <author email="info@psygraph.com" href="http://psygraph.com/">Psygraph Team</author>
@@ -30,6 +30,12 @@
         <icon density="xhdpi" src="resources/android/icon/drawable-xhdpi-icon.png" />
         <icon density="xxhdpi" src="resources/android/icon/drawable-xxhdpi-icon.png" />
         <icon density="xxxhdpi" src="resources/android/icon/drawable-xxxhdpi-icon.png" />
+        <splash density="ldpi" src="resources/android/splash/drawable-port-ldpi-screen.png" />
+        <splash density="mdpi" src="resources/android/splash/drawable-port-mdpi-screen.png" />
+        <splash density="hdpi" src="resources/android/splash/drawable-port-hdpi-screen.png" />
+        <splash density="xhdpi" src="resources/android/splash/drawable-port-xhdpi-screen.png" />
+        <splash density="xxhdpi" src="resources/android/splash/drawable-port-xxhdpi-screen.png" />
+        <splash density="xxxhdpi" src="resources/android/splash/drawable-port-xxxhdpi-screen.png" />
         <splash density="land-ldpi" src="resources/android/splash/drawable-land-ldpi-screen.png" />
         <splash density="land-mdpi" src="resources/android/splash/drawable-land-mdpi-screen.png" />
         <splash density="land-hdpi" src="resources/android/splash/drawable-land-hdpi-screen.png" />
@@ -46,8 +52,8 @@
         <feature name="Geolocation">
             <param name="android-package" value="org.apache.cordova.geolocation.GeoBroker" />
         </feature>
-        <preference name="android-minSdkVersion" value="21" />
-        <preference name="android-targetSdkVersion" value="26" />
+        <preference name="android-minSdkVersion" value="22" />
+        <preference name="android-targetSdkVersion" value="29" />
         <allow-intent href="market:*" />
     </platform>
     <platform name="ios">
@@ -68,10 +74,25 @@
         <icon height="76" src="resources/ios/icon/icon-76.png" width="76" />
         <icon height="152" src="resources/ios/icon/icon-76@2x.png" width="152" />
         <icon height="167" src="resources/ios/icon/icon-83.5@2x.png" width="167" />
-        <icon height="29" src="resources/ios/icon/icon-small.png" width="29" />
-        <icon height="58" src="resources/ios/icon/icon-small@2x.png" width="58" />
-        <icon height="87" src="resources/ios/icon/icon-small@3x.png" width="87" />
         <icon height="1024" src="resources/ios/icon/icon-1024.png" width="1024" />
+        <icon height="20" src="resources/ios/icon/icon-20.png" width="20" />
+        <icon height="40" src="resources/ios/icon/icon-20@2x.png" width="40" />
+        <icon height="60" src="resources/ios/icon/icon-20@3x.png" width="60" />
+        <icon height="29" src="resources/ios/icon/icon-29.png" width="29" />
+        <icon height="58" src="resources/ios/icon/icon-29@2x.png" width="58" />
+        <icon height="87" src="resources/ios/icon/icon-29@3x.png" width="87" />
+        <icon height="48" src="resources/ios/icon/icon-24@2x.png" width="48" />
+        <icon height="55" src="resources/ios/icon/icon-27.5@2x.png" width="55" />
+        <icon height="88" src="resources/ios/icon/icon-44@2x.png" width="88" />
+        <icon height="172" src="resources/ios/icon/icon-86@2x.png" width="172" />
+        <icon height="196" src="resources/ios/icon/icon-98@2x.png" width="196" />
+        <icon height="216" src="resources/ios/icon/icon-108@2x.png" width="216" />
+        <splash height="2688" src="resources/ios/splash/Default-2688h~iphone.png" width="1242" />
+        <splash height="1242" src="resources/ios/splash/Default-Landscape-2688h~iphone.png" width="2688" />
+        <splash height="1792" src="resources/ios/splash/Default-1792h~iphone.png" width="828" />
+        <splash height="828" src="resources/ios/splash/Default-Landscape-1792h~iphone.png" width="1792" />
+        <splash height="2436" src="resources/ios/splash/Default-2436h.png" width="1125" />
+        <splash height="1125" src="resources/ios/splash/Default-Landscape-2436h.png" width="2436" />
         <splash height="1136" src="resources/ios/splash/Default-568h@2x~iphone.png" width="640" />
         <splash height="1334" src="resources/ios/splash/Default-667h.png" width="750" />
         <splash height="2208" src="resources/ios/splash/Default-736h.png" width="1242" />
@@ -107,7 +128,10 @@
             <string>This app may require background geolocation monitoring.</string>
         </config-file>
         <config-file parent="NSBluetoothPeripheralUsageDescription" target="*-Info.plist">
-            <string>This app collects sensor data from Bluetooth devices.</string>
+            <string>This app allows you to collect sensor data from Bluetooth devices.</string>
+        </config-file>
+        <config-file parent="NSBluetoothAlwaysUsageDescription" target="*-Info.plist">
+            <string>This app allows you to collect sensor data from Bluetooth devices at all times.</string>
         </config-file>
         <config-file parent="NSMicrophoneUsageDescription" target="*-Info.plist">
             <string>This app needs microphone access to record audio notes.</string>
@@ -115,36 +139,13 @@
         <config-file parent="NSCalendarsUsageDescription" target="*-Info.plist">
             <string>This app needs calendar access to schedule reminders.</string>
         </config-file>
-        <icon height="20" src="resources/ios/icon/icon-20.png" width="20" />
-        <icon height="40" src="resources/ios/icon/icon-20@2x.png" width="40" />
-        <icon height="60" src="resources/ios/icon/icon-20@3x.png" width="60" />
-        <icon height="29" src="resources/ios/icon/icon-29.png" width="29" />
-        <icon height="58" src="resources/ios/icon/icon-29@2x.png" width="58" />
-        <icon height="87" src="resources/ios/icon/icon-29@3x.png" width="87" />
-        <icon height="48" src="resources/ios/icon/icon-24@2x.png" width="48" />
-        <icon height="55" src="resources/ios/icon/icon-27.5@2x.png" width="55" />
-        <icon height="88" src="resources/ios/icon/icon-44@2x.png" width="88" />
-        <icon height="172" src="resources/ios/icon/icon-86@2x.png" width="172" />
-        <icon height="196" src="resources/ios/icon/icon-98@2x.png" width="196" />
-        <icon height="216" src="resources/ios/icon/icon-108@2x.png" width="216" />
-        <splash height="2688" src="resources/ios/splash/Default-2688h~iphone.png" width="1242" />
-        <splash height="1242" src="resources/ios/splash/Default-Landscape-2688h~iphone.png" width="2688" />
-        <splash height="1792" src="resources/ios/splash/Default-1792h~iphone.png" width="828" />
-        <splash height="828" src="resources/ios/splash/Default-Landscape-1792h~iphone.png" width="1792" />
-        <splash height="2436" src="resources/ios/splash/Default-2436h.png" width="1125" />
-        <splash height="1125" src="resources/ios/splash/Default-Landscape-2436h.png" width="2436" />
     </platform>
     <platform name="browser">
         <preference name="SplashScreen" value="screen" />
         <preference name="SplashScreen" value="img/logo.png" />
     </platform>
     <plugin name="cordova-plugin-device" spec="^2.0.2" />
-    <plugin name="cordova-plugin-inappbrowser" spec="^3.0.0" />
     <plugin name="cordova-plugin-splashscreen" spec="^5.0.2" />
     <plugin name="cordova-plugin-whitelist" spec="^1.3.2" />
-    <plugin name="cordova-plugin-ionic-webview" spec="2.0.0-beta.1" />
     <plugin name="cordova-plugin-statusbar" spec="^2.4.2" />
-    <plugin name="cordova-plugin-ionic-keyboard" spec="^2.1.2" />
-    <engine name="ios" spec="^4.5.5" />
-    <engine name="android" spec="7.0.0" />
 </widget>

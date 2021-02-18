@@ -32,10 +32,8 @@
                 </ion-item-->
                 <ion-item lines="none">
                     <ion-label>Number of Repeats:</ion-label>
-                    <ion-select multiple="false" placeholder="Number of times" [(ngModel)]="repeat">
-                        <div *ngFor="let rep of allRepeat">
-                            <ion-select-option value={{rep.value}}>{{rep.name}}</ion-select-option>
-                        </div>
+                    <ion-select multiple="false" [(ngModel)]="repeat">
+                        <ion-select-option *ngFor="let rep of allRepeat" value="{{rep.value}}">{{rep.name}}</ion-select-option>
                     </ion-select>
                 </ion-item>
             </section>

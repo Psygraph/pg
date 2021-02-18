@@ -36,7 +36,7 @@ export class Note extends ButtonPage {
         var data = super.getPageData();
         for(let cat of pg.categories) {
             if (!('addText' in data[cat])) {
-                data[cat].addText = false;
+                data[cat].addText = true;
             }
             if (!('addLocation' in data[cat])) {
                 data[cat].addLocation = false;

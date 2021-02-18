@@ -1,0 +1,21 @@
+<ion-content>
+    <ion-grid>
+        <ion-row class="button ion-align-self-center" (click)="onLeft()" >
+            <ion-col class="ion-align-self-center">
+                <input #leftLever type="image" class="button reset" title="Left"
+                       src="../../../assets/img/white.png" alt="left"/>
+            </ion-col>
+        </ion-row>
+        <ion-row class="ion-align-self-center">
+            <ion-col class="ion-align-self-center">
+                <ion-button (click)="onDone()">Done</ion-button>
+            </ion-col>
+        </ion-row>
+        <ion-row class="button ion-align-self-center" (click)="onRight()" >
+            <ion-col class="ion-align-self-center">
+                <input #rightLever type="image" class="button start" title="Right"
+                       src="../../../assets/img/black.png" alt="right"/>
+            </ion-col>
+        </ion-row>
+    </ion-grid>
+</ion-content>

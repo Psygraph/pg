@@ -9,7 +9,8 @@ import {pgUI} from '../../../ts/ui';
 import {pg} from '../../../ts/pg';
 import {pgNet} from '../../../ts/net';
 import {RouterOutlet} from '@angular/router';
-import {CustomRouterOutlet} from '../../CustomRouterOutlet';
+
+//import {CustomRouterOutlet} from '../../CustomRouterOutlet';
 
 @Component({
     selector: 'page-categories', templateUrl: 'categories.html', styleUrls: ['./categories.scss'],
@@ -18,27 +19,21 @@ export class CategoriesPage extends Page {
     static initialized = false;
     categories;
     currentCategory;
-    newCategory;
-    sound;
+    newCategory = '';
     allSounds;
-    style;
-    allStyles;
-    text;
+    sound = '';
     allTexts;
+    text = '';
     rgbcolor;
     red = 255;
     green = 255;
     blue = 255;
     
-    constructor(public modalCtrl: ModalController,
-                public routerOutlet: IonRouterOutlet,
-                public config: Config,
-                public alertCtrl: AlertController,
-                public navCtrl: NavController,
-                readonly ngZone: NgZone,) {
+    constructor(public modalCtrl: ModalController, public routerOutlet: IonRouterOutlet, public config: Config, public alertCtrl: AlertController, public navCtrl: NavController, readonly ngZone: NgZone,) {
         super(modalCtrl, routerOutlet, config, alertCtrl, ngZone);
-        if(CategoriesPage.initialized)
+        if (CategoriesPage.initialized) {
             this.pgPage = pgUI.categories;
+        }
     }
     init() {
         //CategoriesPage.initialized = true;
@@ -56,12 +51,14 @@ export class CategoriesPage extends Page {
         if (load) {
             this.categories = this.pgPage.pageData.categories;
             this.currentCategory = pgUI.category();
-            this.sound = this.pgPage.pageData[cat].sound;
             this.allSounds = this.pgPage.getAllSoundsNV();
-            this.style = this.pgPage.pageData[cat].style;
-            this.allStyles = this.pgPage.getAllStylesNV();
-            this.text = this.pgPage.pageData[cat].text;
+            if(this.allSounds.length) {
+                this.sound = this.pgPage.pageData[cat].sound;
+            }
             this.allTexts = this.pgPage.getAllTextsNV();
+            if(this.allTexts.length) {
+                this.text = this.pgPage.pageData[cat].text;
+            }
             this.red = this.pgPage.pageData[cat].color[0];
             this.green = this.pgPage.pageData[cat].color[1];
             this.blue = this.pgPage.pageData[cat].color[2];
@@ -69,8 +66,7 @@ export class CategoriesPage extends Page {
         } else {
             this.pgPage.pageData.categories = this.categories;
             this.pgPage.pageData[cat].sound = this.sound;
-            this.pgPage.pageData[cat].style = this.style;
-            this.pgPage.pageData[cat].text = this.text;
+            this.pgPage.pageData[cat].text  = this.text;
             this.pgPage.pageData[cat].color = [this.red, this.green, this.blue];
         }
     }
@@ -90,33 +86,30 @@ export class CategoriesPage extends Page {
         this.pgPage.setCategories(this.categories);
         // ensure we are in a valid category
         this.changeCategory(pgUI.category());
-        // rgular apply process
-        //this.updateData(false);
+        // regular apply process
         this.pgPage.updateData(false);
-        //this.updateData(true);
+        // change category again to capture any color changes.
+        this.changeCategory(pgUI.category());
         pgNet.syncSoon();
     }
     updateColor() {
-        this.rgbcolor = "rgb("+this.red+","+this.green+","+this.blue+")";
+        this.rgbcolor = 'rgb(' + this.red + ',' + this.green + ',' + this.blue + ')';
     }
     
     onSelectSound() {
         this.pgPage.getFileURL('soundEdit');
     }
-    onSelectStyle() {
-        this.pgPage.getFileURL('styleEdit');
-    }
     onSelectText() {
         this.pgPage.getFileURL('textEdit');
     }
     onAddCategory() {
-        if (this.newCategory !== '') {
+        if (this.newCategory) {
             this.categories.push(this.newCategory);
             this.newCategory = '';
         }
     }
     onRemoveCategory(category: string) {
-        let ndx = this.categories.findIndex(a => a == category);
+        let ndx = this.categories.findIndex(a => a === category);
         this.categories.splice(ndx, 1);
     }
 }

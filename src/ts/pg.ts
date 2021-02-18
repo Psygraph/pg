@@ -240,20 +240,38 @@ export class PG {
     getCategoryData() {
         const data = this.getPageData('categories');
         for (let cat in data) {
-            if (!('description' in data[cat])) {
-                data[cat].description = '';
-            }
             if (!('sound' in data[cat])) {
-                data[cat].sound = 'default.mp3';
-            }
-            if (!('style' in data[cat])) {
-                data[cat].style = 'default.css';
+                if(cat=="Meditate") {
+                    data[cat].sound = 'singingBowl.mp3';
+                } else if (cat=="Exercise") {
+                    data[cat].sound = 'bike.mp3';
+                } else if (cat=="Study") {
+                    data[cat].sound = 'bell.mp3';
+                } else {
+                    data[cat].sound = 'default.mp3';
+                }
             }
             if (!('color' in data[cat])) {
-                data[cat].color = [255,255,255];
+                if(cat=="Meditate") {
+                    data[cat].color = [255,238,192];
+                } else if (cat=="Exercise") {
+                    data[cat].color = [253,255,220];
+                } else if (cat=="Study") {
+                    data[cat].color = [231,250,255];
+                } else {
+                    data[cat].color = [255,255,255];
+                }
             }
             if (!('text' in data[cat])) {
-                data[cat].text = 'default.xml';
+                if(cat=="Meditate") {
+                    data[cat].text = 'lojong.xml';
+                } else if (cat=="Exercise") {
+                    data[cat].text = 'twain.xml';
+                } else if (cat=="Study") {
+                    data[cat].text = 'einstein.xml';
+                } else {
+                    data[cat].text = 'default.xml';
+                }
             }
             if (!('calendar' in data[cat])) {
                 data[cat].calendar = false;
@@ -456,7 +474,6 @@ export class PG {
         }
         this.setDirty(true);
     }
-    
     isIDUnique(id) {
         for (var i = 0; i < this.events.length; i++) {
             if (id === this.events[i][E_ID]) {
@@ -542,6 +559,28 @@ export class PG {
         }
         this.addEvents(e, selected);
     }
+    addNonduplicateEvents(e, selected) {
+        if (!Array.isArray(e)) {
+            e = [e];
+        }
+        for (var i = e.length-1; i >= 0; i--) {
+            let existE = this.getEventsAtTime(e[i].start, e[i].category);
+            for (var j = 0; j < existE.length; j++) {
+                if(e[i].type === existE[j].type) {
+                    let removed = e.splice(i,1);
+                    pgDebug.showWarn('Removed event: ' + JSON.stringify(removed));
+                    // add any new data fields (e.g. mindful survey response)
+                    for(let field in removed.data) {
+                        if(!(field in existE[j].data)) {
+                            existE[j].data[field] = removed.data[field];
+                        }
+                    }
+                    this.changeEventAtID(existE[j].id, existE[j], false);
+                }
+            }
+        }
+        this.addNewEvents(e, selected);
+    }
     /*
     this.getEventIDsInRange(startTime, endTime) {
         var list = [];
@@ -562,7 +601,6 @@ export class PG {
                 break;
             }
         }
-        return e;
         return e;
     }
     getEventsAtTime(time, cat) {
@@ -668,7 +706,8 @@ export class PG {
             var i;
             // insert the event at the right time
             for (i = 0; i < this.events.length; i++) {
-                if (this.events[i][E_START] < event[E_START]) {
+                if (this.events[i][E_START] < event[E_START] ||
+                    (this.events[i][E_START] === event[E_START] && this.events[i][E_DUR] < event[E_DUR]) ) {
                     //showLog("Adding event: " +event[E_ID]+","+event[E_TYPE]);
                     this.events.splice(i, 0, event);
                     break;
@@ -676,7 +715,7 @@ export class PG {
             }
             if (i === this.events.length) {
                 //showLog("Adding event: " +event[E_ID] + ", " + event[E_TYPE]);
-                this.events[i] = event;
+                this.events.push(event);
             }
             if (selected) {
                 this.selectEvent(event[E_ID]);

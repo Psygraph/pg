@@ -16,12 +16,14 @@ class Accelerometer extends Meter {
         super('accel');
         this.watchID = null;
         this.allPeriods = [5, 10, 50, 100, 500, 1000, 5000];
-        this.period = 250;
+        this.period = 100;
         this.category = '';
         this.startTime = 0;
         this.running = false;
     }
-    init(){}
+    init(){
+        this.addSignal('acceleration');
+    }
     getAllSignalsNV() {
         return [
             {name: "Acceleration", value: "acceleration"},
@@ -30,6 +32,9 @@ class Accelerometer extends Meter {
     update(show, data) {
         try {
             if (show) {
+                if(pgUtil.isEmpty(data)) {
+                    throw new Error("empty struct");
+                }
                 this.period = data.period;
                 if (data.running) {
                     this.start();
@@ -49,9 +54,9 @@ class Accelerometer extends Meter {
     
     settingsDialog(callback) {
         const opts = this.settingsDialogOpts('Accelerometer Settings', gatherData);
-        const optionText = pgUI.printSelect('meter_period', 'Period (mS):', this.allPeriods, this.period);
-        
-        super.settingsDialog(opts, optionText, setMeter.bind(this));
+        const optionText = pgUI.printSelect('meter_period', 'Period (mS):', this.allPeriods, this.period.toString());
+    
+        this.doSettingsDialog(opts, optionText, setMeter.bind(this));
         function gatherData() {
             return {period: parseInt($('#meter_period').val())};
         }

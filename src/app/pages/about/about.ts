@@ -12,7 +12,7 @@ import {Page} from '../page/page';
 import {ButtonsWidget} from '../../widgets/buttons/buttons';
 import {pgUI} from '../../../ts/ui';
 import {RouterOutlet} from '@angular/router';
-import {CustomRouterOutlet} from '../../CustomRouterOutlet';
+//import {CustomRouterOutlet} from '../../CustomRouterOutlet';
 
 @Component({
     selector: 'page-about', templateUrl: 'about.html', styleUrls: ['./about.scss'],
@@ -20,7 +20,7 @@ import {CustomRouterOutlet} from '../../CustomRouterOutlet';
 export class AboutPage extends Page {
     static initialized = false;
     @ViewChild('about_buttons', {static: true}) buttons: ButtonsWidget;
-    intro;
+    intro = true;
     
     constructor(public modalCtrl: ModalController,
                 public routerOutlet: IonRouterOutlet,
@@ -50,7 +50,6 @@ export class AboutPage extends Page {
         super.init();
     }
     updateData(load) {
-        const cat = pgUI.category();
         super.updateData(load);
         if (load) {
             this.intro = this.pgPage.pageData.intro;
@@ -61,24 +60,19 @@ export class AboutPage extends Page {
     show() {
         super.show();
         if (this.intro) {
+            this.intro = false;
+            super.onOK();
             this.openTutorial();
         }
     }
     
     async openModal(event: Event) {
-        const popover = await this.popoverCtrl.create({
-            component: PopoverPage, event
-        });
+        const popover = await this.popoverCtrl.create(
+            {component: PopoverPage, event, cssClass: 'popover'});
         await popover.present();
-        
-        //$ionicModal.fromTemplateUrl('modal.html', {
-        //    scope: $scope, animation: 'slide-in-up'
-        //}).then(function(modal) {
-        //    $scope.modal = modal;
-        //});
     }
     openTutorial() {
-        window.dispatchEvent(new CustomEvent('user:tutorial'));
+        this.navCtrl.navigateRoot('/tutorial');
     }
     onOK() {
         super.onOK();

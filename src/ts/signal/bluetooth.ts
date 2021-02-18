@@ -2,16 +2,16 @@ import {pgUtil, pgDebug} from '../util';
 import {pgUI} from '../ui';
 import {Meter} from './meter';
 import {PGMeter, GenericMeter} from './btmeter';
-import * as $ from 'jquery';
-
-//import {PGMooshimeter} from './btmeter';
 
 
 class BluetoothDevice extends Meter {
-    foundDevices = [];
-    meter = null;
-    scanning = false;
+    foundDevices   = [];
+    meter          = null;
+    scanning       = false;
+    permission     = false;
     lastConnectedDevice = '';
+    deviceName     = '';
+    connectCB      = (connect) => {};
     
     constructor() {
         super('bluetooth');
@@ -20,131 +20,103 @@ class BluetoothDevice extends Meter {
         this.scanning = false;
         this.lastConnectedDevice = '';
     }
-    init(){}
-    getAllSignalsNV() {
-        return [
-            {name: "Bluetooth", value:"bluetooth"},
-        ];
-    }
-    deviceName() {
-        let name = 'none';
-        if (this.meter) {
-            name = this.meter.deviceName();
+    getConnectedDevicesNV() {
+        if(this.deviceName === '') {
+            return [];
         }
-        return name;
+        else {
+            return [{name: this.deviceName, value: this.deviceName}];
+        }
     }
-    //init() {
-    //    super.init();
-    //}
+    getAllDevicesNV() {
+        let devs = [];
+        for(let dev of this.foundDevices) {
+            if (typeof (dev.name) !== 'undefined') {
+                devs.push({name: dev.name, value: dev.name});
+            }
+        }
+        return devs;
+    }
+    getAllSignalsNV() {
+        if (this.meter) {
+            return this.meter.getAllSignalsNV();
+        }
+        else {
+            return [];
+            //return [{name: "Bluetooth", value:"bluetooth"}];
+        }
+    }
+    init() {
+        if (this.meter) {
+            // this.meter.init();
+        }
+    }
     update(show, data) {
         try {
             if (show) {
+                if(pgUtil.isEmpty(data)) {
+                    throw new Error("empty struct");
+                }
                 this.lastConnectedDevice = data.lastConnectedDevice;
+                this.permission = data.permission;
             } else {
                 data.lastConnectedDevice = this.lastConnectedDevice;
+                data.permission = this.permission;
             }
         } catch (err) {
             pgDebug.showWarn(err.toString());
-            data = {};
+            data = {lastConnectedDevice: '', permission: false};
         }
         return data;
     }
-    settingsDialog(callback) {
-        if (this.meter) {
-            this.meter.settingsDialog();
+    async checkPermission() {
+        return new Promise(foo);
+        function foo(resolve, reject) {
+            pgUtil.ble.isEnabled(yes, no);
+            function yes() {
+                resolve.bind(this, 1);
+            }
+            function no() {
+                reject.bind(this, 'not enabled');
+            }
+        }
+    }
+    async doPermissions(callback = (success) => {} ) {
+        if(this.permission) {
+            // library initialization
+            //await this.checkPermission();
+            callback(true);
         }
         else {
-            let foundDeviceNames = this.foundDevices.map(a => a.name);
-            for (let i=foundDeviceNames.length; i>=0; i--) {
-                if (foundDeviceNames[i] === undefined) {
-                    foundDeviceNames.splice(i,1);
-                }
-            }
-            const opts = this.settingsDialogOpts('Bluetooth Settings', gatherData);
-            const optionText = pgUI.printSelect('bluetooth_devices', 'Devices:', foundDeviceNames, this.lastConnectedDevice);
-            //optionText += connect button
-            super.settingsDialog(opts, optionText, setMeter.bind(this));
+            const opts = {
+                title: 'Access Bluetooth devices?', true: 'OK', false: 'Cancel'
+            };
+            const content = `<p class="inset">In order to collect data when you have requested it,
+                    please grant the app permission to use data from bluetooth accessories.</p>`;
+            pgUI.showDialog(opts, content, cb.bind(this));
         }
-        function gatherData() {
-            return {period: parseInt($('#bluetooth_devices').val())};
-        }
-        function setMeter(success, data) {
+        async function cb(success, data) {
             if (success) {
-                this.period = data.period;
+                this.permission = true;
+                //await this.checkPermission();
             }
-            callback(success);
+            callback(this.permission);
         }
     }
-    btConnect() {
-        var name = this.deviceName();
-        var btDev = $('#BTDevices').val();
-        if (name !== 'none') {
-            pgDebug.showLog('Bluetooth disconnecting from device: ' + btDev);
-            btDev = 'none';
-        } else {
-            pgDebug.showLog('Bluetooth connecting to device: ' + btDev);
+    settingsDialog(callback = (success) => {}) {
+        if (this.meter) {
+            this.meter.settingsDialog(callback);
         }
-        this.stopScan(cb);
-        
-        function cb() {
-            if (btDev === 'none') {
-                this.disconnect(finish);
-            } else {
-                this.connect(btDev);
-            }
-        }
-        function finish(yn) {
-            pgUI.preferences.btSetCurrentDevice();
+        else {
+            //this.openDeviceDialog(callback);
         }
     }
-    btCallback() {
-        //showLog("Bluetooth scan found a device");
-        var btDevs = this.devices();
-        var devs = $('#BTDevices');
-        var v = devs.val();
-        var len = 0;
-        addDev('none');
-        for (var i = 0; i < btDevs.length; i++) {
-            var dev = btDevs[i];
-            var name = dev.name;
-            if (name) {
-                len = len + 1;
-                addDev(name);
-            }
-        }
-        devs.val(v);
-        devs.trigger('change');
-        
-        function addDev(nm) {
-            var exists = false;
-            $('#BTDevices option').each(function() {
-                if (this.value === nm) {
-                    exists = true;
-                    return false;
-                }
-            });
-            if (!exists) {
-                devs.append(new Option(nm, nm));
-            }
-        }
+    async bluetoothConnect(name, callback = (success)=>{}) {
+        this.deviceName = name;
+        this.connect(callback);
     }
-    btSetCurrentDevice() {
-        var name = this.deviceName();
-        pgDebug.showLog('Bluetooth connected to device: ' + name);
-        var label = 'Connect to: ';
-        var devs = $('#BTDevices');
-        var settings = $('#BTSettings');
-        if (name !== 'none') {
-            label = 'Disconnect: \'' + name + '\'';
-            devs.selectmenu('disable');
-            //devs.parent().hide();
-            //settings.parent().show();
-        } else {
-            devs.selectmenu('enable');
-            //devs.parent().show();
-            //settings.parent().hide();
-        }
-        $('#BTConnect').val(label).button("refresh");
+    async bluetoothDisconnect(callback = (success)=>{}) {
+        this.disconnect(callback);
     }
     getSignals() {
         if (this.meter) {
@@ -178,24 +150,31 @@ class BluetoothDevice extends Meter {
         return services.indexOf('1BC5FFA0-0200-62AB-E411-F254E005DBD4') >= 0;
     }
     startScan(callback = (success)=>{}) {
-        if (pgUtil.isWebBrowser || this.scanning) {
-            callback(this.scanning);
+        if (pgUtil.isWebBrowser) {
+            callback(false);
+            return;
+        }
+        if(this.scanning) {
+            // in case the last scan was not successful, stop and start scanning
+            this.stopScan(this.startScan.bind(this, callback));
             return;
         }
         this.scanning = true;
         pgDebug.showLog('Starting bluetooth scan...');
-        pgUtil.ble.startScan([], startScanSuccess.bind(this), callback);
+        pgUtil.ble.startScan([], startScanSuccess.bind(this), startScanFailure.bind(this));
         
         function startScanSuccess(result) {
-            if (!this.foundDevices.some(function(device) {
-                return device.id === result.id;
-            })) {
+            if (!this.foundDevices.some( (device) => {return device.id === result.id;} ) ) {
                 if (typeof (result.name) !== 'undefined') {
                     pgDebug.showLog('FOUND DEVICE:' + result.name);
                 }
                 this.foundDevices.push(result);
                 callback(true);
+                this.connectCB(true);
             }
+        }
+        function startScanFailure(result) {
+            this.scanning = false;
         }
     }
     stopScan(callback = (success)=>{}) {
@@ -204,8 +183,8 @@ class BluetoothDevice extends Meter {
             return;
         }
         if (this.scanning) {
-            pgUtil.ble.stopScan(resolve.bind(this), reject.bind(this));
             this.scanning = false;
+            pgUtil.ble.stopScan(resolve.bind(this), reject.bind(this));
         } else {
             callback(true);
         }
@@ -229,8 +208,9 @@ class BluetoothDevice extends Meter {
     }
     reconnect(callback) {
         if (!this.isConnected() && this.lastConnectedDevice !== '') {
-            this.namedConnect(this.lastConnectedDevice, cb.bind(this));
-        }// eslint-disable-line
+            this.deviceName = this.lastConnectedDevice;
+            this.connect(cb.bind(this));
+        }
         else {
             callback(true);
         }
@@ -238,30 +218,31 @@ class BluetoothDevice extends Meter {
         function cb(tf) {
             if (!tf) {
                 pgUI.showAlert("warning",'Could not connect to \'' + this.lastConnectedDevice + '\', reconnect in the preferences.');
-                this.lastConnectedDevice = '';
             }
             callback(tf);
         }
     }
-    namedConnect(callback, name) {
-        if (name === 'none' || pgUtil.isWebBrowser) {
+    connect(callback = (success) => {}) {
+        if (this.deviceName === '' || pgUtil.isWebBrowser) {
             callback(false);
             return;
         }
+        this.stopScan();
         const btDevs = this.foundDevices;
         let address = 'none';
         for (let i = 0; i < btDevs.length; i++) {
-            if (btDevs[i].name === name) {
+            if (btDevs[i].name === this.deviceName) {
                 address = btDevs[i].id;
             }
         }
         pgDebug.showLog('Connecting to device: ' + address + '...');
         pgUI.showBusy(true);
-        pgUtil.ble.connect(address, connectSuccess.bind(this), handleError.bind(this));// eslint-disable-line
+        pgUtil.ble.connect(address, connectSuccess.bind(this), handleError.bind(this));
         
         function connectSuccess(result) {
             pgUI.showBusy(false);
             pgDebug.showLog('Connect success');
+            pgUI.showAlert('Device Connected', 'Connected to device: ' + this.deviceName);
             const services = result.services;
             
             if (this.isPGMeter(services)) {
@@ -275,16 +256,17 @@ class BluetoothDevice extends Meter {
                 this.disconnect(callback.bind(false));
                 return;
             }
-            this.meter.connect(handleSuccess.bind(this));// eslint-disable-line
+            this.meter.connect(handleSuccess.bind(this));
         }
         
         function handleSuccess() {
-            this.lastConnectedDevice = this.activeDevice ? this.activeDevice.name : '';
-            callback();
+            this.lastConnectedDevice = this.deviceName;
+            callback(true);
+            this.connectCB(true);
         }
         
         function handleError(error) {
-            this.lastConnectedDevice = '';
+            this.deviceName = '';
             let msg = '';
             pgUI.showBusy(false);
             if (typeof (error) === 'object') {
@@ -305,21 +287,19 @@ class BluetoothDevice extends Meter {
             pgDebug.showError(msg);
         }
     }
-    disconnect(callback) {
-        callback = (typeof (callback) !== 'undefined') ? callback : function() {/**/
-        };
+    disconnect(callback = (success)=>{}) {
         if (this.meter) {
             this.meter.disconnect(cb.bind(this));
         } else {
             cb.call(this);
         }
-        
         function cb() {
-            // cache signals and data in case the disconnection was accidental
-            this.signals = this.meter.getSignals();
-            this.data = this.meter.getData();
-            this.meter = null;
-            callback();
+            this.deviceName    = '';
+            this.signals = [];
+            this.data    = {};
+            this.meter   = null;
+            callback(true);
+            this.connectCB(false);
         }
     }
     start(restart) {

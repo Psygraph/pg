@@ -37,8 +37,8 @@ p {
     xxvertical-align: middle;
 }
 h3 {
-    //letter-spacing: 0.1em;
-    //margin-bottom: 0;
+    xxletter-spacing: 0.1em;
+    xxmargin-bottom: 0;
 }
 a:link {
     font-weight: bold;

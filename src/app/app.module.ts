@@ -12,9 +12,9 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
-import { RouteStrategy } from './RouteStrategy';
-import { RouteReuseStrategy } from '@angular/router';
-import { CustomRouterOutlet } from './CustomRouterOutlet';
+//import { RouteStrategy } from './RouteStrategy';
+//import { RouteReuseStrategy } from '@angular/router';
+//import { CustomRouterOutlet } from './CustomRouterOutlet';
 
 @NgModule({
   imports: [

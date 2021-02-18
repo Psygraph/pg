@@ -7,6 +7,7 @@ input.button {
     vertical-align: middle;
     height: 8em;
     width: 8em;
+    margin: 8px;
     opacity: 0.99;
     background-color: transparent;
     /* images should not be selectable */
@@ -20,7 +21,9 @@ input.button {
     text-align:  center;
     margin-top:  20%;
 }
-
+input.buttonSeparator {
+    width: 10px;
+}
 div.lever_container {
     height: 50%;
     width: 100%;

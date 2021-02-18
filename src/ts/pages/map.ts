@@ -1,6 +1,6 @@
 import {Page} from './page';
 import {pg, E_DATA, E_PAGE} from '../pg';
-import {pgUtil} from '../util';
+import {pgDebug, pgUtil} from '../util';
 import {pgUI} from '../ui';
 //import {pgLocation} from '../signal/location';
 
@@ -8,13 +8,15 @@ import * as L from '../3p/leaflet.js';
 import * as $ from 'jquery';
 
 export class Map extends Page {
-    map       = null;
-    popup     = null;
-    tiles     = null;
-    marker    = [];
-    line      = [];
-    dblClick  = {'ll': null, 'time': 0};
-    lastPoint = {lat: 0, lng: 0, alt: 0};
+    static LAST_POINT = {'lat': 42.0751096996, 'lng': -122.716790466};
+    
+    map = null;
+    popup = null;
+    tiles = null;
+    marker = [];
+    line = [];
+    dblClick = {'ll': null, 'time': 0};
+    firstUpdate = true;
     pgLocation;
     elementID = null;
     
@@ -29,7 +31,7 @@ export class Map extends Page {
         this.pgLocation = opts.pgLocation;
     }
     init(opts) {
-        if(!this.initialized){
+        if (!this.initialized) {
             this.pgLocation.setCallback(this.updateLocation.bind(this));
         }
         super.init(opts);
@@ -38,7 +40,7 @@ export class Map extends Page {
     }
     getPageData() {
         var data = super.getPageData();
-        for(let cat of pg.categories) {
+        for (let cat of pg.categories) {
             if (!('showMarkers' in data[cat])) {
                 data[cat].showMarkers = true;
             }
@@ -52,7 +54,7 @@ export class Map extends Page {
                 data[cat].startTime = 0;
             }
             if (!('lastPoint' in data[cat])) {
-                data[cat].lastPoint = {'lat': 42.0751096996, 'lng': -122.716790466};
+                data[cat].lastPoint = Map.LAST_POINT;
             }
         }
         return data;
@@ -64,60 +66,53 @@ export class Map extends Page {
     updateView(show) {
         super.updateView(show);
         if (show) {
-            this.pgLocation.start();
-            this.pgLocation.getCurrentLocation(this.updateLocation.bind(this));
+            this.periodicLocation();
             this.addLines();
             this.addMarkers();
-            this.center(false);
-        } else {
-            this.pgLocation.stop();
+        }
+        else {
+            this.firstUpdate = true;
         }
     }
-    /*
-    resize(size = {height: 0, width: 0}) {
-        if (super.needsResize(size)) {
-            var height = size.height;
-            var width = size.width;
-            var mapid = document.getElementById('mapid');
-            if (mapid) {
-                $('#mapcontainer').height(height);
-                $('#mapid').height(height);
-                $('#mapid').width(width);
+    periodicLocation() {
+        this.pgLocation.getCurrentLocation(locCB.bind(this));
+        function locCB(loc) {
+            if(loc.length) {
+                this.updateLocation([loc]);
             }
-            if (this.map) {
-                this.map.invalidateSize();
+            if(pgUI.page()===this.name) {
+                setTimeout(this.periodicLocation.bind(this), 2000);
             }
         }
-        $('.leaflet-bar').css('box-shadow', 'none').css('border', '0px');
     }
-    */
-    updateLocation(path) {
-        if (typeof (path) === 'string') {
-            pgUI.showDialog({title: 'Location Error', true: 'OK', false: 'Cancel'}, '<p>Error message: ' + path + '</p>');
-            return;
-        } else if (path.length === 0) {
+    updateLocation(path = [], cat = pgUI.category()) {
+        pgDebug.assert(Array.isArray(path));
+        if(path.length == 0) {
             return;
         }
-        var lat = 0;
-        var lng = 0;
-        var alt = 0;
-        
-        lat = path[path.length - 1][1];
-        lng = path[path.length - 1][2];
-        alt = path[path.length - 1][3];
-        this.lastPoint = {lat: lat, lng: lng, alt: alt};
+        const time = path[path.length - 1][0];
+        const lat = path[path.length - 1][1];
+        const lng = path[path.length - 1][2];
+        const alt = path[path.length - 1][3];
+        this.pageData[cat].lastPoint = {lat: lat, lng: lng, alt: alt};
         
         if (this.map) {
-            // Move the marker to the current location
-            this.marker[0].setLatLng(this.lastPoint);
-            // Add a line to the map
-            var p = [];
-            for (var i = 0; i < path.length; i++) {
-                p[i] = {
-                    lat: path[i][1], lng: path[i][2]
-                };
+            if (this.firstUpdate) {
+                this.center(false);
+                this.firstUpdate = false;
             }
-            this.line[0].setLatLngs(p);
+            // Move the marker to the current location
+            this.marker[0].setLatLng(this.pageData[cat].lastPoint);
+            // Add a line to the map
+            if(path.length > 1) {
+                var p = [];
+                for (var i = 0; i < path.length; i++) {
+                    p[i] = {
+                        lat: path[i][1], lng: path[i][2]
+                    };
+                }
+                this.line[0].setLatLngs(p);
+            }
         }
         // print lat-lng in lower left-hand corner.
         var html = lat.toFixed(3) + ', ' + lng.toFixed(3);
@@ -138,7 +133,7 @@ export class Map extends Page {
     onMapDblClick(e) {
         this.center(false);
     }
-    markPoint(point) {
+    markPoint(point = this.pageData[pgUI.category()].lastPoint) {
         if (!point.alt) {
             point.alt = 0;
         }
@@ -155,39 +150,27 @@ export class Map extends Page {
         this.addMarkers();
         pgUI.map.closePopups();
     }
-    center(doPopup) {
+    center(doPopup, cat=pgUI.category()) {
         // pan the map to the current location
-        this.pgLocation.getCurrentLocation(locationCB.bind(this, doPopup));
-        return false;
+        this.marker[0].setLatLng(this.pageData[cat].lastPoint);
+        this.map.panTo(this.pageData[cat].lastPoint);
         
-        function locationCB(doPopup, path) {
-            if (typeof (path) === 'string' || path.length === 0) {
-                //showLog("Could not determine current location");
-                return;
-            }
-            var lat = path[path.length - 1][1];
-            var lng = path[path.length - 1][2];
-            var alt = path[path.length - 1][3];
-            this.lastPoint = {lat: lat, lng: lng, alt: alt};
-            this.marker[0].setLatLng(this.lastPoint);
-            this.map.panTo(this.lastPoint);
-            
-            if (doPopup) {
-                // create a new marker event at the current location.
-                this.dblClick = {'ll': this.lastPoint, 'time': pgUtil.getCurrentTime()};
-                var txt = '<div onclick="pgUI.map.markPoint(pgUI.map.dblClick.ll)">Create new marker</div>';
-                this.popup
-                    .setLatLng(this.lastPoint)
-                    .setContent(txt)
-                    .openOn(this.map);
-            }
+        if (doPopup) {
+            // create a new marker event at the current location.
+            this.dblClick = {'ll': this.pageData[cat].lastPoint, 'time': pgUtil.getCurrentTime()};
+            var txt = '<div onclick="pgUI.map.markPoint(pgUI.map.dblClick.ll)">Create new marker</div>';
+            this.popup
+                .setLatLng(this.pageData[cat].lastPoint)
+                .setContent(txt)
+                .openOn(this.map);
         }
     }
     
-    createMap(cat=pgUI.category()) {
-        var latlng = {lat: this.pageData[cat].lastPoint.lat, lng: this.pageData[cat].lastPoint.lng};
+    createMap(cat = pgUI.category()) {
+        this.marker = [];
+        this.line = [];
         var opts = {
-            zoomControl: false, center: latlng, zoom: 12, doubleClickZoom: false, keyboard: false, closePopupOnClick: false
+            zoomControl: false, center: this.pageData[cat].lastPoint, zoom: 12, doubleClickZoom: false, keyboard: false, closePopupOnClick: false
         };
         this.map = L.map(this.elementID, opts);
         this.popup = L.popup();
@@ -199,7 +182,7 @@ export class Map extends Page {
         this.addLines();
         //this.createButtons();
     }
-    addTileLayer(cat=pgUI.category()) {
+    addTileLayer(cat = pgUI.category()) {
         var url, attrib;
         if (this.pageData[cat].provider === 'MapBox') {
             //url = 'https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png';
@@ -232,11 +215,11 @@ export class Map extends Page {
     closePopups() {
         pgUI.map.map.closePopup();
     }
-    setMarkerName(id, cat=pgUI.category()) {
+    setMarkerName(id, cat = pgUI.category()) {
         this.closePopups();
-        // display a textinput popup to gather the marker name.
+        // display a text input popup to gather the marker name.
         var event = pg.getEventFromID(id);
-        var title = event[E_DATA].title || (event[E_PAGE] + " event");
+        var title = event[E_DATA].title || (event[E_PAGE] + ' event');
         var origName = event[E_DATA].title;
         var pos = event[E_DATA].location[0];
         var latLng = pos[1] + ', ' + pos[2];
@@ -261,7 +244,7 @@ export class Map extends Page {
             return {
                 'pos': $('#markerPos').val().split(','),
                 'name': $('#markerName').val(),
-                'delete': $('#deleteMarker').attr('aria-checked') == "true",
+                'delete': $('#deleteMarker').attr('aria-checked') == 'true',
             };
         }
         function dataCB(success, data) {
@@ -290,11 +273,10 @@ export class Map extends Page {
             pgUI.resetPage();
         }
     }
-    addMarkers(cat=pgUI.category()) {
+    addMarkers(cat = pgUI.category()) {
         var markerIndex = this.marker.length;
         if (markerIndex === 0) {
-            var latlng = {lat: this.pageData[cat].lastPoint.lat, lng: this.pageData[cat].lastPoint.lng};
-            addMarker.call(this, markerIndex++, latlng);
+            addMarker.call(this, markerIndex++, this.pageData[cat].lastPoint);
         }
         // remove old markers
         while (markerIndex > 1) {
@@ -316,7 +298,7 @@ export class Map extends Page {
         
         function addMarker(index, e) {
             // in case we are being displayed from WP, get the base URL
-            var path = "";
+            var path = '';
             if (pgUtil.isWebBrowser) {
                 path += pgUtil.appURL + '/';
             }
@@ -328,11 +310,11 @@ export class Map extends Page {
                 latlng = e;
                 //popText = "lat: "+latlng.lat.toFixed(4)+", lng: "+latlng.lng.toFixed(4);
                 //this.dblClick = {'ll': e, 'time': pgUtil.getCurrentTime()};
-                popText = '<button onclick="pgUI.map.markPoint(pgUI.map.lastPoint)">Create new marker</button>';
+                popText = '<button onclick="pgUI.map.markPoint()">Create new marker</button>';
             } else {
                 img = path + 'assets/img/mark.png';
                 latlng = {'lat': e.data.location[0][1], 'lng': e.data.location[0][2]};
-                popText = '<button onclick="pgUI.map.setMarkerName(' + e.id + ')">' +e.data.title+ '</button>';
+                popText = '<button onclick="pgUI.map.setMarkerName(' + e.id + ')">' + e.data.title + '</button>';
             }
             var image = L.icon({
                 iconUrl: img, iconRetinaUrl: img, iconSize: [20, 20], iconAnchor: [10, 20], popupAnchor: [20, 20]
@@ -345,19 +327,20 @@ export class Map extends Page {
                 this.marker[index].addTo(this.map);
             }
             // set the marker popup info
-            var popOptions = {className: 'mapPopup', offset: L.point(0, 0)};
-            this.marker[index].bindPopup(popText, popOptions);
-            this.marker[index].on('mouseover', function(e) {
-                pgUI.map.closePopups();
-                this.openPopup();
-            });
+            if (index !== 0) { // Currently, no popup for the location cursor.
+                var popOptions = {className: 'mapPopup', offset: L.point(0, 0)};
+                this.marker[index].bindPopup(popText, popOptions);
+                this.marker[index].on('mouseover', function(e) {
+                    pgUI.map.closePopups();
+                    this.openPopup();
+                });
+            }
         }
     }
-    addLines(cat=pgUI.category()) {
+    addLines(cat = pgUI.category()) {
         var lineIndex = this.line.length;
         if (lineIndex === 0) {
-            var latlng = {lat: this.pageData[cat].lastPoint.lat, lng: this.pageData[cat].lastPoint.lng};
-            addLine.call(this, lineIndex++, [latlng]);
+            addLine.call(this, lineIndex++, [this.pageData[cat].lastPoint]);
         }
         // remove old lines
         while (lineIndex > 1) {

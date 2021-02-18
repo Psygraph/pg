@@ -18,6 +18,7 @@ export class Graph extends Page {
         super.init(opts);
         this.graph = new GraphComponent(opts.elementID, 'lines');
         this.graph.create(this.pageData[cat].signals);
+        this.graph.setMinInterval(this.pageData[cat].interval);
     }
     getPageData() {
         var data = super.getPageData();
@@ -40,9 +41,11 @@ export class Graph extends Page {
         return allSignals;
     }
     getAllIntervalsNV() {
-        const allIntervals = [{name: 'none', value: 1}, {name: '25 milliseconds', value: 25},
+        const allIntervals = [{name: 'none', value: 1},
+            {name: '25 milliseconds', value: 25},
             {name: '100 milliseconds',value: 100},
-            {name: '1 second', value: 1000}, {name: '1 minute', value: 60000},];
+            {name: '1 second', value: 1000},
+            {name: '1 minute', value: 60000},];
         return allIntervals;
     }
     

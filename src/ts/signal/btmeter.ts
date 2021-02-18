@@ -22,23 +22,21 @@ export class Bluetoothometer extends Meter {
         }
         return name;
     }
-    init() {//
+    init() {
     }
-    
     connect(callback) {
-    };
+    }
     disconnect(callback) {
         if (!this.device) {
             callback();
             return;
         }
-        pgUtil.ble.disconnect(this.device.id, cb.bind(this), cb.bind(this));// eslint-disable-line
+        pgUtil.ble.disconnect(this.device.id, cb.bind(this), cb.bind(this));
         function cb() {
             this.device = null;
             callback();
         }
     }
-    
     startNotification(service, characteristic, readCB) {
         pgUtil.ble.startNotification(this.device.id, service, characteristic, readCB, () => {
         });
@@ -72,8 +70,8 @@ export class GenericMeter extends Bluetoothometer {
     device = null;
     deviceHandle = 0;
     deviceService = '';
-    deviceCharIn = '';
-    deviceCharOut = '';
+    deviceCharIn:any = {};
+    deviceCharOut:any = {};
     notify = false;
     
     constructor(device) {
@@ -82,8 +80,8 @@ export class GenericMeter extends Bluetoothometer {
         this.device = device;
         this.deviceHandle = 0;
         this.deviceService = '';
-        this.deviceCharIn = '';
-        this.deviceCharOut = '';
+        this.deviceCharIn = {};
+        this.deviceCharOut = {};
         this.notify = false;
     }
     update(show, data) {
@@ -101,24 +99,27 @@ export class GenericMeter extends Bluetoothometer {
         }
         return data;
     }
-    settingsDialog(callback) {
-        const title = 'Generic Device Settings';
+    settingsDialog(callback = (success)=>{}) {
+        const opts = this.settingsDialogOpts('Generic Device Settings', gatherData);
         let optionText = '';
         optionText += '<p>Service: ' + this.deviceService + '</p>';
-        optionText += '<p>Characteristic: ' + this.deviceCharOut + '</p>';
+        optionText += '<p>Characteristic: ' + this.deviceCharIn.characteristic + '</p>';
         //optionText += pgUI.printSelect("meter_period", "Period (mS):", this.allPeriods, this.period);
         //super.settingsDialog(title, optionText, setMeter.bind(this));
-        setMeter.call(this, true);// eslint-disable-line
+        this.doSettingsDialog(opts, optionText, setMeter.bind(this));
         
-        function setMeter(clickedOK) {
-            if (clickedOK) {
+        function gatherData() {
+            return {name: $('#bluetooth_devices').val()};
+        }
+        function setMeter(success, data) {
+            if (success) {
                 //this.period = parseInt($("#meter_period").val());
-                this.pickServiceCharacteristic(cb.bind(this)); // eslint-disable-line
+                this.pickServiceCharacteristic(cb.bind(this));
             }
             function cb(service, characteristic) {
                 this.deviceService = service;
                 this.deviceCharIn = characteristic;
-                this.deviceCharOut = '';
+                this.deviceCharOut = {};
                 if (this.deviceService.toLowerCase() === '180d') {
                     this.allSignals = ['heartRate'];
                 } else if (this.deviceService === '') {
@@ -126,7 +127,7 @@ export class GenericMeter extends Bluetoothometer {
                 } else {
                     this.allSignals = ['generic'];
                 }
-                callback(clickedOK);
+                callback(success);
             }
         }
     }
@@ -168,8 +169,8 @@ export class GenericMeter extends Bluetoothometer {
         }
         return false;
     }
-    pickServiceCharacteristic(callback) {
-        this.servicePicker(this.device.services, bleServiceCallback.bind(this));// eslint-disable-line
+    pickServiceCharacteristic(callback = (service, characteristic) => {}) {
+        this.servicePicker(this.device.services, bleServiceCallback.bind(this));
         function bleServiceCallback(sID) {
             if (sID === -1) {
                 callback('', '');
@@ -189,7 +190,7 @@ export class GenericMeter extends Bluetoothometer {
                     }
                 }
             }
-            this.characteristicPicker(cIDs, addServiceCB.bind(this));// eslint-disable-line
+            this.characteristicPicker(cIDs, addServiceCB.bind(this));
             function addServiceCB(cID) {
                 if (cID === -1) {
                     callback('', '');
@@ -271,30 +272,33 @@ export class GenericMeter extends Bluetoothometer {
             callback(0);
             return;
         }
-        let dialogContent = '' + '<div><label for="btServices">Bluetooth Service:</label>' + '<select id="btServices" title="Bluetooth Device" data-native-menu="false">';
+        const opts = this.settingsDialogOpts(this.deviceName(), gatherData);
+        let dialogContent = '<div><ion-label>Bluetooth Service:</ion-label>' +
+            '<ion-select id="btServices" placeholder="Service">';
         for (let i = 0; i < services.length; i++) {
-            dialogContent += '<option value="' + i + '">' + this.serviceName(services[i]) + '</option>';
+            dialogContent += '<ion-select-option value="' + i + '">' + this.serviceName(services[i]) + '</ion-select-option>';
         }
-        dialogContent += '</select></div>';
-        
-        pgUI.showDialog({'title': this.deviceName(), true: 'OK', false: 'Cancel'}, dialogContent, dialogCb.bind(this));// eslint-disable-line
-        function dialogCb(tf) {
-            if (!tf) {
+        dialogContent += '</ion-select></div>';
+        pgUI.showDialog(opts, dialogContent, dialogCB.bind(this));
+    
+        function gatherData() {
+            return {val: $('#btServices').val()};
+        }
+        function dialogCB(success, data) {
+            if (!success) {
                 this.disconnect(callback.bind(-1));
                 return;
             }
-            const val = $('#btServices').val();
-            callback(val);
+            callback(data.val);
         }
     }
     
     serviceName(serviceID) {
         let name = serviceID;
         const sid = serviceID.toLowerCase();
-        if (sid in bluetoothUUIDs) // eslint-disable-line
-        {
+        if (sid in bluetoothUUIDs) {
             name = bluetoothUUIDs[sid];
-        }// eslint-disable-line
+        }
         return name;
     }
     
@@ -303,20 +307,24 @@ export class GenericMeter extends Bluetoothometer {
             callback(0);
             return;
         }
-        let dialogContent = '' + '<div><label for="btCharacteristics">BT Service characteristic:</label>' + '<select id="btCharacteristics" title="Bluetooth Characteristic" data-native-menu="false">';
+        const opts = this.settingsDialogOpts(this.deviceName(), gatherData);
+        let dialogContent = '' + '<div><ion-label for="btCharacteristics">BT Service characteristic:</ion-label>' +
+            '<ion-select id="btCharacteristics" placeholder="Characteristic">';
         for (let i = 0; i < characteristics.length; i++) {
-            dialogContent += '<option value="' + i + '">' + characteristics[i] + '</option>';
+            dialogContent += '<ion-select-option value="' + i + '">' + characteristics[i] + '</ion-select-option>';
         }
-        dialogContent += '</select></div>';
-        pgUI.showDialog({'title': this.deviceName(), true: 'OK', false: 'Cancel'}, dialogContent, dialogCb.bind(this));// eslint-disable-line
-        
-        function dialogCb(tf) {
-            if (!tf) {
+        dialogContent += '</ion-select></div>';
+        pgUI.showDialog(opts, dialogContent, dialogCb.bind(this));
+    
+        function gatherData() {
+            return {val: $('#btCharacteristics').val()};
+        }
+        function dialogCb(success, data) {
+            if (!success) {
                 this.disconnect(callback.bind(-1));
                 return;
             }
-            const val = $('#btCharacteristics').val();
-            callback(val);
+            callback(data.val);
         }
     }
 }
@@ -393,7 +401,7 @@ export class PGMeter extends Bluetoothometer {
         optionText += pgUI.printSelect('meter_type', 'Measurement type:', this.allSignals, this.signals, true);
         optionText += pgUI.printSelect('meter_period', 'Period (mS):', this.allPeriods, this.period);
         optionText += pgUI.printSelect('meter_alarm', 'Alarm:', this.allAlarms, this.alarms, true);
-        super.settingsDialog(opts, optionText, setMeter.bind(this));
+        this.doSettingsDialog(opts, optionText, setMeter.bind(this));
         function gatherData() {
             return {
                 signals: ()=>{$('#meter_type').val() || []},

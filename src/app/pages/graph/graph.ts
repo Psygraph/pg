@@ -3,7 +3,7 @@ import {AlertController, Config, IonContent, IonRouterOutlet, ModalController} f
 import {Page} from '../page/page';
 import {pgUI} from '../../../ts/ui';
 import {RouterOutlet} from '@angular/router';
-import {CustomRouterOutlet} from '../../CustomRouterOutlet';
+//import {CustomRouterOutlet} from '../../CustomRouterOutlet';
 
 @Component({
     selector: 'page-graph', templateUrl: 'graph.html', styleUrls: ['./graph.scss']
@@ -13,9 +13,9 @@ export class GraphPage extends Page {
     @ViewChild(IonContent, {static: true}) content: IonContent;
     @ViewChild('graph_graph', {static: true}) graph: ElementRef;
     allSignals;
-    signals;
-    allIntervals;
-    interval;
+    signals = [];
+    allIntervals = [];
+    interval = "";
     
     constructor(public modalCtrl: ModalController,
                 public routerOutlet: IonRouterOutlet,
@@ -40,12 +40,11 @@ export class GraphPage extends Page {
             this.allSignals = this.pgPage.getAllSignalsNV();
             this.signals = this.pgPage.pageData[cat].signals;
             this.allIntervals = this.pgPage.getAllIntervalsNV();
-            this.interval = this.pgPage.pageData[cat].interval;
+            this.interval = this.pgPage.pageData[cat].interval.toString();
         } else {
-            this.pgPage.pageData[cat].interval = this.interval;
+            this.pgPage.pageData[cat].interval = parseInt(this.interval);
             this.pgPage.pageData[cat].signals = this.signals;
-            this.pgPage.graph.create(this.signals);
-            this.pgPage.graph.setMinInterval(this.interval);
+            this.pgPage.graph.create(this.signals, this.interval);
         }
     }
 }

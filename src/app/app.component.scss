@@ -106,3 +106,7 @@ ion-label.label-stacked {
 ion-label[slot="end"], ion-input[slot="end"] {
   text-align: end;
 }
+
+ion-popover.popover div.popover-content {
+  width: unset;
+}

@@ -7,6 +7,7 @@ import * as $ from 'jquery';
 
 class PGDevices extends Meter {
     meters = [];
+
     pgRandom;
     pgAcceleration;
     pgOrientation;
@@ -18,36 +19,48 @@ class PGDevices extends Meter {
     }
     
     init(pgRandom, pgAcceleration, pgOrientation, pgLocation, pgBluetooth) {
-        this.pgRandom = pgRandom;
         this.pgAcceleration = pgAcceleration;
         this.pgOrientation = pgOrientation;
         this.pgLocation = pgLocation;
         this.pgBluetooth = pgBluetooth;
+        this.pgRandom = pgRandom;
     }
     getAllDevicesNV() {
         let allDevices = [
-            {name: "Acceleration", value: "acceleration"},
-            {name: "Orientation", value:"orientation"},
             {name: "Location", value:"location"},
         ];
+        if(!pgUtil.isWebBrowser) {
+            allDevices.push({name: "Acceleration", value: "acceleration"});
+            allDevices.push({name: "Orientation", value:"orientation"});
+        }
+        const btDevs = this.pgBluetooth.getConnectedDevicesNV();
+        for(let i=0; i<btDevs.length; i++) {
+            allDevices.push(btDevs[i]);
+        }
         if (pgDebug.debug) {
             allDevices.push({name: "Random", value: "random"});
-            allDevices.push({name: "Bluetooth", value:"bluetooth"});
         }
         return allDevices;
+    }
+    getAllBTDevicesNV() {
+        return this.pgBluetooth.getAllDevicesNV();
+    }
+    getConnectedBTDevicesNV() {
+        return this.pgBluetooth.getConnectedDevicesNV();
     }
     getAllDeviceNames() {
         let allNames = this.getAllDevicesNV();
         return allNames.map(a => a.name);
     }
     getAllSignalsNV() {
-        let allSignals = [];
-        allSignals = allSignals.concat(this.pgAcceleration.getAllSignalsNV());
-        allSignals = allSignals.concat(this.pgOrientation.getAllSignalsNV());
-        allSignals = allSignals.concat(this.pgLocation.getAllSignalsNV());
+        let allSignals = this.pgLocation.getAllSignalsNV();
+        if (!pgUtil.isWebBrowser) {
+            allSignals = allSignals.concat(this.pgAcceleration.getAllSignalsNV());
+            allSignals = allSignals.concat(this.pgOrientation.getAllSignalsNV());
+            allSignals = allSignals.concat(this.pgBluetooth.getAllSignalsNV());
+        }
         if (pgDebug.debug) {
             allSignals = allSignals.concat(this.pgRandom.getAllSignalsNV());
-            allSignals = allSignals.concat(this.pgBluetooth.getAllSignalsNV());
         }
         return allSignals;
     }
@@ -70,11 +83,24 @@ class PGDevices extends Meter {
             this.pgOrientation.settingsDialog(callback);
         } else if (signal == 'location') {
             this.pgLocation.settingsDialog(callback);
-        } else if (signal == 'bluetooth') {
+        } else {
             this.pgBluetooth.settingsDialog(callback);
         }
     }
-    
+    hasBluetooth() {
+        if(pgUtil.isWebBrowser)
+            return false;
+        return this.pgBluetooth.permission;
+    }
+    async openDeviceDialog() {
+        return new Promise(openDev.bind(this));
+        function openDev(resolve, reject) {
+            this.pgBluetooth.openDeviceDialog(callback);
+            function callback(success) {
+                resolve(success);
+            }
+        }
+    }
     getSignals() {
         const signals = [];
         for (let i = 0; i < this.meters.length; i++) {
@@ -95,26 +121,31 @@ class PGDevices extends Meter {
         }
         return data;
     }
-    hasSignal(signal) {
-        return this.signals.indexOf(signal) >= 0;
+    addMeterForSignal(signal) {
+        if (this.pgRandom.getAllSignals().indexOf(signal) >= 0) {
+            this.meters.push(this.pgRandom);
+        }
+        else if (this.pgAcceleration.getAllSignals().indexOf(signal) >= 0) {
+            this.meters.push(this.pgAcceleration);
+        }
+        else if (this.pgOrientation.getAllSignals().indexOf(signal) >= 0) {
+            this.meters.push(this.pgOrientation);
+        }
+        else if (this.pgLocation.getAllSignals().indexOf(signal) >= 0) {
+            this.meters.push(this.pgLocation);
+        }
+        else if (this.pgBluetooth.getAllSignals().indexOf(signal) >= 0) {
+            this.meters.push(this.pgBluetooth);
+        }
+        else {
+            pgDebug.showWarn("Unknown signal: " + signal);
+        }
     }
     start(restart, signals) {
         this.signals = signals;
         this.meters = [];
-        if (this.hasSignal('random')) {
-            this.meters.push(this.pgRandom);
-        }
-        if (this.hasSignal('acceleration')) {
-            this.meters.push(this.pgAcceleration);
-        }
-        if (this.hasSignal('orientation')) {
-            this.meters.push(this.pgOrientation);
-        }
-        if (this.hasSignal('location')) {
-            this.meters.push(this.pgLocation);
-        }
-        if (this.hasSignal('bluetooth')) {
-            this.meters.push(this.pgBluetooth);
+        for (let sig of this.signals) {
+            this.addMeterForSignal(sig);
         }
         for (let i = 0; i < this.meters.length; i++) {
             this.meters[i].start(restart);

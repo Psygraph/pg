@@ -11,10 +11,10 @@ import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { CategoryFilterPage } from './category-filter/category-filter';
-import {DialogPage} from './dialog/dialog';
+import { ButtonsPage } from './buttonsPage/buttonsPage';
 import { ColorPickerModule } from 'ngx-color-picker';
-import {RouterModule} from '@angular/router';
-import {SettingsPage} from './settings/settings';
+import { RouterModule } from '@angular/router';
+import { SettingsPage } from './settings/settings';
 
 @NgModule({
     imports: [
@@ -32,11 +32,13 @@ import {SettingsPage} from './settings/settings';
         HeaderWidget,
         FooterWidget,
         CategoryFilterPage,
+        ButtonsPage,
         PopoverPage,
         SettingsPage,
     ],
     entryComponents: [
         CategoryFilterPage,
+        ButtonsPage,
         PopoverPage,
         SettingsPage,
     ],
@@ -48,7 +50,8 @@ import {SettingsPage} from './settings/settings';
         HeaderWidget,
         FooterWidget,
         ColorPickerModule,
-        CategoryFilterPage
+        CategoryFilterPage,
+        ButtonsPage,
     ]
 })
 export class WidgetsComponent { }

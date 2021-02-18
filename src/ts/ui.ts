@@ -61,6 +61,7 @@ class PGUI {
         return pg.categories[this.window.categoryIndex];
     }
     setCurrentPage(name: string) {
+        pgDebug.showLog("setting page: "+name);
         const index = pg.pages.indexOf(name);
         let num = 0;
         if (index !== -1) {
@@ -81,16 +82,18 @@ class PGUI {
         pgUI[page].updateView(show);
     }
     savePage(page = this.page()) {
-        pgUI[page].savePageData();
+        if(pgUI[page]) {
+            pgUI[page].savePageData();
+        }
     }
-    resetPage() {
+    resetPage(saveFirst = true) {
         // This is basically a same-page transition.
         // It is only necessary for pages that cache event IDs
         const page = pgUI.page();
-        if (page === 'list') {
+        if (saveFirst) {
             this.showPage(false);
-            this.showPage(true);
         }
+        this.showPage(true);
     }
     updateAllPageData() {
         for (var p in pg.pages) {
@@ -106,6 +109,13 @@ class PGUI {
                 }
             }
             pg.pageData[page] = pd;
+        }
+    }
+    updateAllPages() {
+        for (let page of pg.pages) {
+            if (pgUI[page]) {
+                pgUI[page].setPageData(pgUI[page].getPageData());
+            }
         }
     }
     /*

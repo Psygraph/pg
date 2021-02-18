@@ -17,7 +17,9 @@ class RandomMeter extends Meter {
         this.ping = 0;
         this.lastTime = 0;
     }
-    init() {}
+    init() {
+        this.addSignal('random');
+    }
     getAllSignalsNV() {
         return [
             {name: "Random", value: "random"},
@@ -25,6 +27,9 @@ class RandomMeter extends Meter {
     }
     update(show, data) {
         try {
+            if(pgUtil.isEmpty(data)) {
+                throw new Error("empty struct");
+            }
             if (show) {
                 this.period = data.period;
                 this.data = data.data;
@@ -41,7 +46,7 @@ class RandomMeter extends Meter {
     settingsDialog(callback) {
         const opts = this.settingsDialogOpts('Random Settings', gatherData);
         const content = pgUI.printSelect('meter_period', 'Period (mS):', this.allPeriods, this.period, false);
-        super.settingsDialog(opts, content, this.setMeter.bind(this, callback));
+        this.doSettingsDialog(opts, content, this.setMeter.bind(this, callback));
         function gatherData() {
             return {period: parseInt($('#meter_period').val())};
         }

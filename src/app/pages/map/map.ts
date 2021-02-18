@@ -4,7 +4,7 @@ import {Page} from '../page/page';
 import {pgUI} from '../../../ts/ui';
 import {pgUtil} from '../../../ts/util';
 import {RouterOutlet} from '@angular/router';
-import {CustomRouterOutlet} from '../../CustomRouterOutlet';
+//import {CustomRouterOutlet} from '../../CustomRouterOutlet';
 
 @Component({
     selector: 'page-map', templateUrl: 'map.html', styleUrls: ['./map.scss']

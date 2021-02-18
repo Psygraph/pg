@@ -8,7 +8,7 @@
                     <ion-col class="border">
                         <!--ion-label>Select events:</ion-label-->
                         <ion-select [(ngModel)]="eventSelection" multiple="false" placeholder="Select events:"
-                                    (ionChange)="selectEvents(eventSelection)">
+                                    (ionChange)="selectEvents()">
                             <div *ngFor="let sel of allEventSelections">
                                 <ion-select-option value={{sel.value}}>{{sel.name}}</ion-select-option>
                             </div>
@@ -17,7 +17,7 @@
                     <ion-col class="border">
                         <!--ion-label>Select action:</ion-label-->
                         <ion-select [(ngModel)]="eventAction" multiple="false" placeholder="Select action:"
-                                    (ionChange)="onEventAction(eventAction)">
+                                    (ionChange)="onEventAction()">
                             <div *ngFor="let act of allEventActions">
                                 <ion-select-option value={{act.value}}>{{act.name}}</ion-select-option>
                             </div>

@@ -22,20 +22,20 @@ export class Stopwatch extends ButtonPage {
         this.pgDevices = opts.pgDevices;
     }
     init(opts) {
-        if(!this.initialized) {
+        super.init(opts);
+        if (!this.clock) {
             this.clock = new Ticker(this.watchCallback.bind(this), this.pageData.updateInterval);
         }
-        super.init(opts);
         this.graph = new GraphComponent(opts.elementID, 'lines');
         this.setTimeCB = opts.setTimeCB;
     }
     // settings / data
     getPageData() {
         var data = super.getPageData();
-        //if (!('updateInterval' in data)) {
+        if (!('updateInterval' in data)) {
             data.updateInterval = 91;
-        //}
-        for(let cat of pg.categories) {
+        }
+        for (let cat of pg.categories) {
             if (!('signals' in data[cat])) {
                 data[cat].signals = [];
             }
@@ -54,11 +54,13 @@ export class Stopwatch extends ButtonPage {
     getAllSignalsNV() {
         return this.pgDevices.getAllSignalsNV();
     }
-    getAllSignals(cat=pgUI.category()) {
+    /*
+    getAllSignals(cat = pgUI.category()) {
         var signals = this.pageData[cat].signals.slice(0);
         if (pgUtil.isWebBrowser) {
             signals = removeElem(signals, 'acceleration');
             signals = removeElem(signals, 'orientation');
+            signals = removeElem(signals, 'bluetooth');
         }
         return signals;
         function removeElem(array, elem) {
@@ -69,9 +71,10 @@ export class Stopwatch extends ButtonPage {
             return array;
         }
     }
+     */
     // primary actions
     updateView(show) {
-        let cat=pgUI.category();
+        let cat = pgUI.category();
         super.updateView(show);
         if (show) { // no running in the background.
             this.createGraph(this.pageData[cat].showGraph);
@@ -84,7 +87,7 @@ export class Stopwatch extends ButtonPage {
             this.clock.stop();
         }
     }
-    start(restart = false, time = pgUtil.getCurrentTime(), cat=pgUI.category()) {
+    start(restart = false, time = pgUtil.getCurrentTime(), cat = pgUI.category()) {
         super.start(restart, time);
         if (!restart) {
             this.pageData[cat].startTime = time;
@@ -95,7 +98,7 @@ export class Stopwatch extends ButtonPage {
         this.pgDevices.start(restart, this.pageData[cat].signals);
         this.startGraph(restart);
     }
-    async stop(time = pgUtil.getCurrentTime(), cat=pgUI.category()) {
+    async stop(time = pgUtil.getCurrentTime(), cat = pgUI.category()) {
         super.stop(time);
         this.clock.stop();
         this.stopGraph();
@@ -142,20 +145,15 @@ export class Stopwatch extends ButtonPage {
     }
     
     // Misc utilities
-    hasDevice() {
-        var tf = this.hasSignal('random');
-        tf = tf || this.hasSignal('acceleration');
-        tf = tf || this.hasSignal('orientation');
-        tf = tf || this.hasSignal('location');
-        tf = tf || this.hasSignal('bluetooth');
-        return tf;
+    hasDevice(cat = pgUI.category()) {
+        return this.pageData[cat].signals.length > 0;
     }
     
     // GUI methods
     watchCallback(ms) {
         this.setTimeCB(pgUtil.getStringFromMS(ms, true));
     }
-    getElapsedStopwatch(cat=pgUI.category()) {
+    getElapsedStopwatch(cat = pgUI.category()) {
         var e = pg.getEventsInPage('stopwatch', cat);
         var startTime = this.pageData[cat].startTime;
         var duration = 0.0;
@@ -205,10 +203,10 @@ export class Stopwatch extends ButtonPage {
     }
     
     // Graph methods
-    createGraph(show) {
+    createGraph(show, cat = pgUI.category()) {
         var signals = [];
         if (show) {
-            signals = this.getAllSignals();
+            signals = this.pageData[cat].signals.slice(0);
         }
         this.graph.create(signals);
         if (show) {
@@ -218,12 +216,12 @@ export class Stopwatch extends ButtonPage {
             for (var i = 0; i < e.eventIDs.length; i++) {
                 var id = e.eventIDs[i];
                 //if (pg.isEventSelected(id)) {
-                    var event = pg.getEventFromID(id);
-                    var d = event[E_DATA];
-                    this.addPoints(d);
-                    if(event[E_TYPE]=="reset") {
-                        break;
-                    }
+                var event = pg.getEventFromID(id);
+                var d = event[E_DATA];
+                this.addPoints(d);
+                if (event[E_TYPE] == 'reset') {
+                    break;
+                }
                 //}
             }
             this.graph.endAddPoints(60 * 1000);
@@ -261,7 +259,7 @@ export class Stopwatch extends ButtonPage {
         }
         this.graph.endAddPoints(60 * 1000); // display a maximum of one minute of data
     }
-    addPoints(d, cat=pgUI.category()) {
+    addPoints(d, cat = pgUI.category()) {
         for (var field in d) {
             if (this.pageData[cat].signals.indexOf(field) >= 0 && d[field].length) {
                 var data = d[field];
@@ -269,17 +267,19 @@ export class Stopwatch extends ButtonPage {
                 var lastTime = this.graph.lastGroupTime(field);
                 lastTime = lastTime ? lastTime.getTime() : 0;
                 var index = 0;
-                if(data.length) {
+                if (data.length) {
                     for (index = data.length - 1; index >= 0; index--) {
-                        if (data[index][0] <= lastTime || index==0) {
+                        if (data[index][0] <= lastTime || index == 0) {
                             break;
                         }
                     }
                 }
-                for (index; index>=0 && index < data.length; index++) {
+                for (index; index >= 0 && index < data.length; index++) {
                     pts.x.push(new Date(data[index][0]));
-                    if (field === "acceleration") {
+                    if (field === 'acceleration') {
                         pts.y.push(pgUtil.norm(data[index].slice(1)));
+                    } else if (field === 'location') {
+                        pts.y.push(data[index][3]); // altitude
                     } else {
                         pts.y.push(data[index][1]);
                     }

@@ -10,6 +10,7 @@ import {Psygraph} from '../ts/psygraph';
 import {pg} from '../ts/pg';
 import {pgUI} from '../ts/ui';
 import {pgNet} from '../ts/net';
+import {pgDebug} from '../ts/util';
 
 @Component({
     selector: 'app-root', templateUrl: './app.component.html', styleUrls: ['./app.component.scss'], encapsulation: ViewEncapsulation.None
@@ -34,7 +35,7 @@ export class AppComponent implements OnInit {
     ];
     prevComponentReference = null;
     loggedIn = false;
-    dark = false;
+    darkMode = false;
     
     constructor(private menu: MenuController, private platform: Platform, private router: Router, private splashScreen: SplashScreen, private statusBar: StatusBar, private storage: Storage, private swUpdate: SwUpdate, private toastCtrl: ToastController,) {
         this.initializeApp();
@@ -63,22 +64,15 @@ export class AppComponent implements OnInit {
     }
     listenForLoginEvents() {
         const events = [{
-            msg: 'user:tutorial', f: (() => {
-                this.gotoPage('/tutorial');
-            }).bind(this)
-        }, {
             msg: 'pref:dark', f: (() => {
-                this.dark = true;
+                this.darkMode = true;
             }).bind(this)
         }, {
             msg: 'pref:light', f: (() => {
-                this.dark = false;
+                this.darkMode = false;
             }).bind(this)
-        }, {
-            msg: 'deviceready', f: console.log.bind("Got deviceready")
-        },
-        ];
-        for (let i = 1; i < events.length; i++) {
+        }];
+        for (let i = 0; i < events.length; i++) {
             window.addEventListener(events[i].msg, events[i].f);
         }
     }
@@ -90,13 +84,17 @@ export class AppComponent implements OnInit {
         this.platform.resume.subscribe((result)=>{
             pgNet.onResume();
         });
-        this.dark = pg.getPageDataValue('preferences','darkMode', false);
-        this.gotoPage(pgUI.page(), pgUI.category());
+        this.darkMode = pg.getPageDataValue('preferences','darkMode', false);
+        this.gotoPage(pgUI.page());
     }
     gotoPage(page = pgUI.page(), category = pgUI.category()) {
-        if (["home","stopwatch","timer","counter","note"].find( (a) => a==page)) {
+        if (["home","stopwatch","timer","counter","note","list","graph","map"].find( (a) => a==page)) {
             page = "/pages/"+page;
         }
+        else {
+            page = "/" + page;
+        }
+        pgDebug.showLog("Navigating to page: '"+page+"'");
         this.router.navigate([page]);
     }
     onActivate(componentReference) {

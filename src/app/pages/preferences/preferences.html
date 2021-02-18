@@ -28,6 +28,15 @@
                 <ion-item class="header center">
                     <ion-label>Signal Preferences</ion-label>
                 </ion-item>
+                <ion-item lines="none" *ngIf="!isWebBrowser">
+                    <ion-button  *ngIf="!hasBluetooth" size="medium" expand="block" fill="solid" (click)="onBTPermissions()">Bluetooth Devices</ion-button>
+                    <ion-label *ngIf="hasBluetooth" >Bluetooth Devices:</ion-label>
+                    <ion-select *ngIf="hasBluetooth" (click)="onBTPermissions()" (ionChange)="onOpenDevice()" multiple="false" placeholder="devices:" [(ngModel)]="connectedBTDeviceName">
+                        <div *ngFor="let dev of allBTDevices">
+                            <ion-select-option value="{{dev.value}}">{{dev.name}}</ion-select-option>
+                        </div>
+                    </ion-select>
+                </ion-item>
                 <ion-row lines="none">
                     <ion-col *ngFor="let dev of allDevices">
                         <ion-button size="medium" expand="block" fill="solid"

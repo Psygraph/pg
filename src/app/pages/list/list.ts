@@ -4,7 +4,7 @@ import {Page} from '../page/page';
 import {pgUI} from '../../../ts/ui';
 import {pgNet} from '../../../ts/net';
 import {RouterOutlet} from '@angular/router';
-import {CustomRouterOutlet} from '../../CustomRouterOutlet';
+//import {CustomRouterOutlet} from '../../CustomRouterOutlet';
 
 @Component({
     selector: 'page-list', templateUrl: 'list.html', styleUrls: ['./list.scss']

@@ -4,8 +4,6 @@ import {pgUI} from '../ui';
 import {Page} from './page';
 import {GraphComponent} from '../graphComponent';
 
-import * as $ from 'jquery';
-
 export class Home extends Page {
     graph;
     
@@ -20,8 +18,8 @@ export class Home extends Page {
     getPageData() {
         var data = super.getPageData();
         for (let cat of pg.categories) {
-            if (!('signals' in data[cat]) || !('signals' in this.getAllSignalNV().map(a => a.value))) {
-                data[cat].signals = ['home'];
+            if (!('signals' in data[cat]) ) {
+                data[cat].signals = ['home','stopwatch','timer'];
             }
             if (!('interval' in data[cat]) || !('interval' in this.getAllIntervalsNV().map(a => a.value))) {
                 data[cat].interval = pgUtil.ONE_DAY;
@@ -32,12 +30,6 @@ export class Home extends Page {
         }
         return data;
     }
-    /*
-    setPageData(newPageData) {
-        super.setPageData(newPageData);
-        this.graph.create(this.pageData[cat].signals, this.pageData[cat].interval);
-    }
-     */
     getAllCategoriesNV() {
         let catNV = [];
         for (let i = 0; i < pg.categories.length; i++) {
@@ -67,9 +59,11 @@ export class Home extends Page {
         return numIntervals;
     }
     getAllIntervalsNV() {
-        const intervals = [{value: pgUtil.ONE_HOUR, name: 'Hours'}, {value: pgUtil.ONE_DAY, name: 'Days'}, {
-            value: pgUtil.ONE_WEEK, name: 'Weeks'
-        }, {value: pgUtil.ONE_MONTH, name: 'Months'}, {value: pgUtil.ONE_YEAR, name: 'Years'},];
+        const intervals = [{value: pgUtil.ONE_HOUR, name: 'Hours'},
+            {value: pgUtil.ONE_DAY, name: 'Days'},
+            {value: pgUtil.ONE_WEEK, name: 'Weeks'},
+            {value: pgUtil.ONE_MONTH, name: 'Months'},
+            {value: pgUtil.ONE_YEAR, name: 'Years'},];
         return intervals;
     }
     updateView(show, cat = pgUI.category()) {
@@ -79,22 +73,9 @@ export class Home extends Page {
             this.graph.create(this.pageData[cat].signals, this.pageData[cat].interval);
             this.updateGraph();
             this.graph.redraw();
-        } else {
         }
-    }
-    /*
-    resize(size={height:0,width:0}) {
-        if(super.needsResize(size)) {
-            var status    = $("#home_status").outerHeight(true);
-            var logo      = $("#home_logo").outerHeight(true);
-            $("#home_graphContainer").height(size.height - (status+logo));
-            $("#home_graphContainer").width(size.width);
-            if (this.graph)
-                this.graph.redraw();
+        else {
         }
-    }
-     */
-    lever(arg) {
     }
     
     getOptions(cat = pgUI.category()) {
@@ -164,8 +145,8 @@ export class Home extends Page {
                 //    break;
                 if (e.type === 'reset') {
                     let val = e.data.count;
-                    if (e.data.countTarget) {
-                        val = (e.data.count === e.data.countTarget) ? 1 : 0;
+                    if (e.data.target) {
+                        val = (e.data.count === e.data.target) ? 1 : 0;
                     }
                     ptsCorrect.x.push(new Date(e.start));
                     ptsCorrect.y.push(val);
@@ -187,7 +168,7 @@ export class Home extends Page {
                 var e = pg.parseEvent(events[i]);
                 //if(e.start < cutoff)
                 //    break;
-                if (e.type === 'response' && typeof (e.data['mindful']) !== 'undefined') {
+                if (e.type === 'reset' && typeof (e.data['mindful']) !== 'undefined') {
                     var val = e.data.mindful ? 1 : 0;
                     ptsMindful.x.push(new Date(e.start));
                     ptsMindful.y.push(val);
@@ -251,16 +232,15 @@ export class Home extends Page {
         //computeStats.call(this);
     }
     computeIntervals(points, now = pgUtil.getCurrentTime(), interval = 0, nIntervals = 4, intervalMethod = 'sum') {
-        var plotZeros = true;
-        var zeroValue = NaN;
-        
-        var len = points.x.length;
-        var pts = {x: [], y: []};
-        var nextTime = 0;
-        var start = new Date();
+        let plotZeros = true;
+        let zeroValue = NaN;
+    
+        let len = points.x.length;
+        let pts = {x: [], y: []};
+        let start = new Date();
         start.setHours(0, 0, 0, 0); // beginning of today
-        nextTime = start.getTime();
-        var mult = Math.floor((now - nextTime) / interval);
+        let nextTime = start.getTime();
+        let mult = Math.floor((now - nextTime) / interval);
         nextTime += mult * interval;
         var i;
         for (i = 0; i < len;) {

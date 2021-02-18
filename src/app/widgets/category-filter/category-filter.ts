@@ -27,7 +27,7 @@ export class CategoryFilterPage {
         // Pass back the new category
         this.dismiss(this.activeCategory);
     }
-    dismiss(data: string) {
+    dismiss(data= "") {
         // using the injected ModalController this page
         // can "dismiss" itself and pass back data
         this.modalCtrl.dismiss(data);

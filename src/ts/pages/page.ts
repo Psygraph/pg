@@ -74,17 +74,9 @@ export class Page {
     }
     updateView(show) {
         if (show) {
-            //this.resize();
             pgUI.setCurrentPage(this.name);
-            
             this.pgAudio.stopAlarm(-1);
             pgNet.logEvent('updateView');
-            
-            //const cd = pg.getCategoryData(pgUI.category());
-            //const style = 'media/' + cd.style;
-            //$('#user_style').attr('href', style);
-            //$('html').css('backgroundColor', cd.color);
-        } else {
         }
     }
     hasSignal(signal, cat = pgUI.category()) {
@@ -225,19 +217,18 @@ export class Page {
                     if (typeof (e.data['resetTime']) !== 'undefined') {
                         text += ' ' + getTimeString(e.data.resetTime);
                     }
-                } else if (e.type === 'response') {
                     if (typeof (e.data['mindful']) !== 'undefined') {
                         if (e.data.mindful) {
-                            text += ' Mindful';
+                            text += ', Mindful';
                         } else {
-                            text += ' Not mindful';
+                            text += ', Not mindful';
                         }
                     }
                 }
             } else if (e.page === 'counter') {
                 text += e.data.count;
-                if (e.type === 'reset' && e.data.countTarget !== 0) {
-                    if (e.data.count === e.data.countTarget) {
+                if (e.type === 'reset' && e.data.target !== 0) {
+                    if (e.data.count === e.data.target) {
                         text += ', correct';
                     } else {
                         text += ', incorrect';
@@ -260,7 +251,7 @@ export class Page {
         }
         return {text: text, onclick: onclick};
         function getTimeString(dur) {
-            let t = pgUtil.getStringFromMS(dur, false);
+            let t = pgUtil.getStringFromMS(dur, true);
             t = t + ' sec';
             return t;
         }

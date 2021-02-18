@@ -38,9 +38,6 @@ export let WP_CERT = '';
 export let WP_HIST = '';
 export let WP_EXTRA = () => {};
 
-// @ts-ignore
-window.skipLocalNotificationReady = true;
-
 export class Psygraph {
     constructor() {
     }
@@ -97,8 +94,6 @@ export class Psygraph {
     static readPsygraph(resolve, reject) {
         // If we find one of these files sitting around, we encountered a login error.
         // So we ask the user if they wish to reset the local files.
-        pgUI.setCurrentPage("home");
-        pgUI.setCurrentCategory("Uncategorized");
         pgNet.readPsygraph(handleFile);
         function handleFile(success, data) {
             if (success) {
@@ -110,8 +105,8 @@ export class Psygraph {
                     }, '<p>There was an uncaught error during the previous login: ' + event.data.text + '</p>'
                         + '<p>Do you wish to delete the local data and settings?</p>', deleteCB.bind(event));
                 } else {
-                    pgUI.setCurrentCategory(data.category);
                     pgUI.setCurrentPage(data.page);
+                    pgUI.setCurrentCategory(data.category);
                     if (data.server !== "localhost" && data.loggedIn) {
                         pgNet.serverLogin(data.server, data.username, '', data.cert, loginCB);
                     } else {
@@ -120,8 +115,9 @@ export class Psygraph {
                 }
             }
             else {
-                let useLocalFileSystem = true;
-                if(useLocalFileSystem)
+                pgUI.setCurrentPage("about");
+                pgUI.setCurrentCategory("Uncategorized");
+                if(true)
                     pgNet.localLogin("", loginCB);
                 else
                     loginCB(true);

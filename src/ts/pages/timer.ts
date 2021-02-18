@@ -70,35 +70,60 @@ export class Timer extends ButtonPage {
                 data[cat].timerDuration = 4 * 1000;
             }
             if (!('random' in data[cat])) {
-                data[cat].random = true;
+                data[cat].random = false;
             }
             if (!('repeat' in data[cat])) {
                 data[cat].repeat = 0;
             }
             if (!('countdownTimes' in data[cat])) {
-                data[cat].countdownTimes = this.computeNewCountdowns(data, cat);
+                data[cat].countdownTimes = [];
             }
         }
         return data;
     }
     getAllRepeatNV() {
-        const repeats = [{value: 0, name: 'None'}, {value: 1, name: '1 Time'}, {value: 2, name: '2 Times'}, {
-            value: 3, name: '3 Times'
-        }, {value: 4, name: '4 Times'}, {value: 5, name: '5 Times'}, {value: 6, name: '6 Times'}, {value: 7, name: '7 Times'}, {
-            value: 8, name: '8 Times'
-        }, {value: 9, name: '9 Times'}, {value: 10, name: '10 Times'},];
+        const repeats = [{value: 0, name: 'None'},
+            {value: 1, name: '1 Time'},
+            {value: 2, name: '2 Times'},
+            {value: 3, name: '3 Times'},
+            {value: 4, name: '4 Times'},
+            {value: 5, name: '5 Times'},
+            {value: 6, name: '6 Times'},
+            {value: 7, name: '7 Times'},
+            {value: 8, name: '8 Times'},
+            {value: 9, name: '9 Times'},
+            {value: 10, name: '10 Times'},];
         return repeats;
     }
     isVisible() {
         return this.visible && (pgUI.page() === 'timer');
     }
     refreshTimer(cat=pgUI.category()) {
-        let ctime = 0;
-        if (this.pageData[cat].countdownTimes.length) {
-            ctime = this.pageData[cat].countdownTimes[0];
+        let cstr = '';
+        let ctime = [];
+        if (this.pageData[cat].countdownTimes.length === 0) {
+            ctime = [0];
+            cstr += pgUtil.getStringFromMS(ctime[0], false);
         }
-        this.setDurCB(pgUtil.getStringFromMS(ctime, false));
-        this.clock.setCountdown(ctime);
+        else {
+            for (let i = 0; i < this.pageData[cat].countdownTimes.length; i++) {
+                ctime[i] = this.pageData[cat].countdownTimes[i];
+                if(i === 0) {
+                    cstr += pgUtil.getStringFromMS(ctime[i], false);
+                }
+                if(i === 1) { // indicate the number of scheduled repeats
+                    cstr += '  ('+(this.pageData[cat].countdownTimes.length-1)+')';
+                }
+                //else if(i < 3) {
+                //    cstr += ', ' + pgUtil.getStringFromMS(ctime[i], false);
+                //}
+                //else if (i==3) {
+                //    cstr += ' ...';
+                //}
+            }
+        }
+        this.setDurCB(cstr);
+        this.clock.setCountdown(ctime[0]);
         const e = this.getElapsedTimer();
         if (this.isRunning()) {
             this.clock.start(e.startTime, e.duration);
@@ -107,7 +132,7 @@ export class Timer extends ButtonPage {
         }
     }
     
-    setNotification(atTime, cat = pgUI.category()) {
+    setNotifications(atTime, cat = pgUI.category()) {
         if (atTime < pgUtil.getCurrentTime()) {
             const missed = pgUtil.getCurrentTime() - atTime;
             atTime = pgUtil.getCurrentTime() + 200;
@@ -117,66 +142,81 @@ export class Timer extends ButtonPage {
         for (let i = 1; i < this.pageData[cat].countdownTimes.length; i++) {
             times[times.length] = times[times.length - 1] + this.pageData[cat].countdownTimes[i];
         }
-        //this.unsetNotification();
-        this.pgNotify.setNotification(cat, times, this.pageData[cat].countdownTimes, this.pageData[cat].alarmText, this.pageData[cat].alarmSound);
+        //this.unsetNotifications();
+        this.pgNotify.setNotifications(cat, times, this.pageData[cat].countdownTimes, this.pageData[cat].alarmText, this.pageData[cat].alarmSound);
     }
-    unsetNotification(cat = pgUI.category()) {
-        this.pgNotify.removeCategory(cat);
+    unsetNotifications(cat = pgUI.category()) {
+        this.pgNotify.cancelCategory(cat);
         pgDebug.showLog('Unset ' + cat + ' notification.');
     }
     // The following method has posed a problem for the infrastructure because it is a notification
     // which may pertain to a non-current category (i.e. not the one returned by pgUI.category() ).
     // We used to pass around a category parameter, which is error prone.
     // We now just pay the overhead of switching the global (pg) category
-    notificationCallback(type, notifyData, running = false) {
-        pgDebug.showLog('Received ' + type + ', ' + notifyData.category + ' notification callback at: ' + pgUtil.getCurrentTime() + ' with time : ' + notifyData.time);
-        
-        if (type === 'survey') {
+    notificationCallback(type, notifyData) {
+        pgDebug.assert(notifyData.time !== 0);
+        const time = notifyData.time;
+        const cat = notifyData.category;
+        pgDebug.showLog('Received ' + type + ', ' + cat + ' notification at: ' + pgUtil.getCurrentTime() + ' with time : ' + time);
+        if (type === 'survey' || type === 'elapsed') {
             // unfortunately, the ID might have changed (it was negative).
             // so, we look up events at that exact millisecond.
             //var e = pg.getEventsAtTime(notifyData.time, );
             //if(e.length===1) {
             //    pg.addEventDataField(e[0].id, 'mindful', notifyData.survey);
             //}
-            //else {
-            // There were no events: create one.
-            const edata = {
-                mindful: notifyData.survey
-            };
-            pg.addNewEvents({'page': 'timer', 'category': notifyData.category, 'type': 'response', 'start': notifyData.time, 'data': edata}, true);
-            //}
-        } else if (type === 'elapsed') {
-            // There was no notification, but perhaps there should have been.
-            //this.reset(notifyData.time, {});
-        } else if (type === 'trigger') {
-            //this.refreshTimer();
-            const scheduledEnd = notifyData.time;
-            const id = notifyData.id;
-            const resetTime = notifyData.resetTime;
-            if (scheduledEnd !== 0) {
-                this.notify(scheduledEnd, id, resetTime, notifyData.category);
+            const e:any = [{
+                'page': 'timer',
+                'category': notifyData.category,
+                'type': 'interval',
+                'start': notifyData.start,
+                'duration': notifyData.dur,
+                'data': {}
+            }, {
+                'page': 'timer',
+                'category': notifyData.category,
+                'type': 'reset',
+                'start': time,
+                'data': {}
+            }];
+            if(type === 'survey') {
+                e[1].data = {
+                    elapsed: true,
+                    resetTime: notifyData.resetTime,
+                    mindful: notifyData.survey
+                };
             }
-        //} else if (type === 'updateView') {
-        //    this.updateView(true);
+            else {
+                e[1].data = {
+                    elapsed: true,
+                    resetTime: notifyData.resetTime,
+                };
+            }
+            pg.addNonduplicateEvents(e, true);
+        }
+        else if (type === 'trigger') {
+            // this event is really a composite of stop, reset, and start
+            if (!this.isRunning(cat)) {
+                pgDebug.showError('Timer alarm when no timer running.');
+                return;
+            }
+            // stop()
+            this.stop(time, cat);
+            // addResetEvent
+            pg.addNonduplicateEvents({
+                page: 'timer', category: cat, type: 'reset', start: time,
+                data: {
+                    resetTime: this.pageData[cat].countdownTimes[0],
+                    elapsed: true
+                }
+            }, true);
+            // update timers
+            this.pageData[cat].countdownTimes.shift();
+            if (this.pageData[cat].countdownTimes.length) {
+                this.start(false, time, cat);
+            }
         } else {
             pgDebug.showError('Unknown notify callback type');
-        }
-    }
-    // this event is really a composite of stop, reset, and start
-    notify(scheduledTime, id, resetTime, cat) {
-        const time = pgUtil.getCurrentTime();
-        
-        if (!this.isRunning(cat)) {
-            pgDebug.showError('Timer alarm when no timer running.');
-            return;
-        }
-        // stop()
-        this.stop(scheduledTime - 1, cat);
-        // update timers
-        this.pageData[cat].countdownTimes.shift();
-        if (this.pageData[cat].countdownTimes.length) {
-            this.addResetEvent(scheduledTime, true, cat);
-            this.start(false, scheduledTime + 1, cat);
         }
     }
     timerCallback(ms) {
@@ -184,14 +224,14 @@ export class Timer extends ButtonPage {
     }
     
     // In Start, we call reset (if the timer is zero),
-    // set the startTime to zero, home several interrupts,
+    // set the startTime to zero, handle several interrupts,
     // and begin the clock.
     restart(resetNotifications, cat=pgUI.category()) {
+        this.pgNotify.callElapsed(cat);
         if (resetNotifications) {
-            this.pgNotify.removeCategory(cat);
+            this.unsetNotifications(cat);
         }
-        const restart = this.isRunning(cat);
-        if (restart) {
+        if (this.isRunning(cat)) {
             pgDebug.showLog('Calling restart for ' + cat);
             const time = pgUtil.getCurrentTime();
             let ctime = this.pageData[cat].startTime;
@@ -204,10 +244,10 @@ export class Timer extends ButtonPage {
                 }
                 j++;
             }
-            while (j--) // at least some of the alarms have elapsed
-            {
-                this.pageData[cat].countdownTimes.shift();
+            while (j--) {// at least some of the alarms have elapsed
+                let time = this.pageData[cat].countdownTimes.shift();
             }
+            pgDebug.showLog('Alarms left: ' + this.pageData[cat].countdownTimes.length);
             if (this.pageData[cat].countdownTimes.length) { // there are still some alarms left
                 super.start(true, pgUtil.getCurrentTime(), cat);
                 // Since there might have been some completed time on the clock, subtract that from ctime.
@@ -215,19 +255,17 @@ export class Timer extends ButtonPage {
                     const e = this.getElapsedTimer(cat);
                     ctime -= e.duration;
                     if (ctime <= 0) {
-                        ctime = 100;
+                        pgDebug.showWarn('CTime was less than zero');
+                        ctime = 0;
                     }
                 }
                 if (resetNotifications) {
-                    this.setNotification(ctime, cat);
+                    this.setNotifications(ctime, cat);
                 }
             } else {
-                // we are actually stopped.
+                pgDebug.showLog('An unlikely scenario occurred.');
                 super.stop(pgUtil.getCurrentTime(), cat);
                 this.pageData[cat].startTime = 0;
-                if (resetNotifications) {
-                    this.unsetNotification(cat);
-                }
             }
         }
     }
@@ -238,15 +276,15 @@ export class Timer extends ButtonPage {
             super.start(restart);
             this.pageData[cat].startTime = time;
             // Set notifications
-            this.setNotification(time + remaining);
+            this.setNotifications(time + remaining);
             this.refreshTimer();
         }
     }
     stop(time = pgUtil.getCurrentTime(), cat=pgUI.category()) {
         super.stop(time);
-        this.unsetNotification();
+        this.unsetNotifications();
         //this.clock.stop();
-        pg.addNewEvents({
+        pg.addNonduplicateEvents({
             'page': 'timer',
             'category': cat,
             'type': 'interval',
@@ -261,41 +299,38 @@ export class Timer extends ButtonPage {
         const running = this.isRunning();
         
         if (running) {
-            this.stop(time - 1);
+            this.stop(time);
         }
+        // the following line makes reset only refresh the most recent countdown.
+        //if (this.pageData[cat].countdownTimes.length === 0) {
+        this.computeNewCountdowns(cat);
+        //}
         // add the new event
-        this.addResetEvent(time, false);
-        if (this.pageData[cat].countdownTimes.length === 0) {
-            this.pageData[cat].countdownTimes = this.computeNewCountdowns();
-        }
+        pg.addNonduplicateEvents({
+            page: 'timer', category: cat, type: 'reset', start: time,
+            data: {
+                resetTime: this.pageData[cat].countdownTimes[0],
+                elapsed: false
+            }
+        }, true);
         // If we are called from the pgNotify callback, reschedule
         if (running) {
-            this.start(false, time + 1);
+            this.start(false, time);
         }
         // update the clock
         this.refreshTimer();
     }
     
-    addResetEvent(time, isNotification, cat=pgUI.category()) {
-        const edata = {resetTime: 0, elapsed: 0};
-        edata.resetTime = this.pageData[cat].countdownTimes[0];
-        edata.elapsed = isNotification;
-        // add the new event
-        pg.addNewEvents({
-            page: 'timer', category: cat, type: 'reset', start: time, data: edata
-        }, true);
-    }
-    
-    computeNewCountdowns(data = this.pageData, cat=pgUI.category()) {
+    computeNewCountdowns(cat=pgUI.category()) {
         const countdowns = [];
-        for (let i = 0; i <= data[cat].repeat; i++) {
+        for (let i = 0; i <= this.pageData[cat].repeat; i++) {
             let randomAmt = 0;
-            if (data[cat].random) {
-                randomAmt += data[cat].timerDuration * Math.random();
+            if (this.pageData[cat].random) {
+                randomAmt += this.pageData[cat].timerDuration * Math.random();
             }
-            countdowns.push(Math.floor(data[cat].timerDuration + randomAmt));
+            countdowns.push(Math.floor(this.pageData[cat].timerDuration + randomAmt));
         }
-        return countdowns;
+        this.pageData[cat].countdownTimes = countdowns;
     }
     getElapsedTimer(cat=pgUI.category()) {
         const e = pg.getEventsInPage('timer', cat);

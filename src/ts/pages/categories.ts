@@ -7,7 +7,6 @@ import {pgFile} from '../file';
 import * as $ from 'jquery';
 
 export class Categories extends Page {
-    allStyles = [];
     allSounds = [];
     allTexts = [];
     charLimit = 64;
@@ -17,10 +16,10 @@ export class Categories extends Page {
         super('categories', opts);
     }
     init(opts) {
-        if(!this.initialized) {
+        super.init(opts);
+        this.initSettingsCB = opts.initSettingsCB;
+        if(this.allSounds.length==0) {
             if (pgUtil.isWebBrowser) {
-                this.allStyles.push({name: 'default', value: 'default.css'});
-                this.allStyles.push({name: 'allGrey', value: 'allGrey.css'});
                 this.allSounds.push({name: 'default', value: 'default.mp3'});
                 this.allSounds.push({name: 'alarm', value: 'alarm.mp3'});
                 this.allSounds.push({name: 'bell', value: 'bell.mp3'});
@@ -32,19 +31,16 @@ export class Categories extends Page {
                 this.allSounds.push({name: 'singingBowl', value: 'singingBowl.mp3'});
                 this.allSounds.push({name: 'taiko', value: 'taiko.mp3'});
                 this.allTexts.push({name: 'default', value: 'default.xml'});
-                this.allTexts.push({name: 'christian', value: 'christian.xml'});
+                this.allTexts.push({name: 'biblical', value: 'biblical.xml'});
                 this.allTexts.push({name: 'einstein', value: 'einstein.xml'});
                 this.allTexts.push({name: 'lojong', value: 'lojong.xml'});
                 this.allTexts.push({name: 'twain', value: 'twain.xml'});
                 this.allTexts.push({name: 'xkcd', value: 'xkcd.xml'});
             } else {
-                pgFile.listDir(pgUtil.mediaURL, 'css', this.addFilenames.bind(this, this.allStyles));
                 pgFile.listDir(pgUtil.mediaURL, 'mp3', this.addFilenames.bind(this, this.allSounds));
                 pgFile.listDir(pgUtil.mediaURL, 'xml', this.addFilenames.bind(this, this.allTexts));
             }
         }
-        super.init(opts);
-        this.initSettingsCB = opts.initSettingsCB;
     }
     getCategories() {
         return pg.categories;
@@ -71,9 +67,6 @@ export class Categories extends Page {
             if (!('text' in data[cat])) {
                 data[cat].text = 'default.xml';
             }
-            if (!('style' in data[cat])) {
-                data[cat].style = 'style.css';
-            }
             if (!('color' in data[cat]) || !Array.isArray(data[cat].color)) {
                 data[cat].color = [255, 255, 255];
             }
@@ -90,9 +83,6 @@ export class Categories extends Page {
         }
         return catNV;
     }
-    getAllStylesNV() {
-        return this.allStyles;
-    }
     getAllSoundsNV() {
         return this.allSounds;
     }
@@ -107,6 +97,7 @@ export class Categories extends Page {
                 });
             }
         }
+        this.initSettingsCB(true);
     }
     updateView(show) {
         super.updateView(show);

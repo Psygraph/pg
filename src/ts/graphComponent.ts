@@ -8,29 +8,33 @@ export class GraphComponent {
     //elementID = null;
     element   = null;
     style     = null;
-    options   = null;
+    options   = {
+        displayModeBar: false,
+        scrollZoom: true
+    };
+    barmode = 'group'; // group, stack, overlay;
     padding   = 0;
     interval  = 24*60*60*1000;
     minMS = 50; // minimum number of milliseconds between samples.
     maxdisplayed = 10000;
     groupID = [
-    'none',
-    'home',
-    'stopwatch',
-    'timer',
-    'timerMindful',
-    'counter',
-    'counterCorrect',
-    'note',
-    'acceleration',
-    'orientation',
-    'heartRate',
-    'temperature',
-    'analog1',
-    'analog2',
-    'random',
-    'resistance',
-    'voltage'];
+        'none',
+        'home',
+        'stopwatch',
+        'timer',
+        'timerMindful',
+        'counter',
+        'counterCorrect',
+        'note',
+        'acceleration',
+        'orientation',
+        'heartRate',
+        'temperature',
+        'analog1',
+        'analog2',
+        'random',
+        'resistance',
+        'voltage'];
     numGroups = 0;
     groupNames = []; // the names of the groups
     groups  = []; // the initial groups, with no data
@@ -38,40 +42,63 @@ export class GraphComponent {
     startTimes = [];
     endTimes = [];
     layout = null;
+    barLayout = {
+        //title: 'Your numbers:',
+        barmode: this.barmode,
+        //bargap: 0,
+        showlegend: true,
+        legend: {
+            x: 0.6,
+            y: 1.1,
+            bgcolor:     'rgba(255,255,255,0.4)',
+            bordercolor: '#FFFFFF',
+            borderwidth: 0
+        },
+        width: Math.ceil(this.interval / this.numGroups),
+        margin: {pad:2, t:4, b:80, l:60, r:4, autoexpand:true},
+        font:  {family:'Arial',
+            size:  16,
+            color: '#000000'},
+        paper_bgcolor:'rgba(0,0,0,0)',
+        plot_bgcolor:'rgba(0,0,0,0)',
+        xaxis: {
+            showgrid: true,
+        },
+        yaxis: {
+            tickformat: '2.3f',
+            exponentformat: 'e'
+        }
+    };
+    graphLayout = {
+        //title: 'Your numbers:',
+        xaxis: {
+            //title: 'Time',
+            showgrid: false,
+            zeroline: false
+        },
+        yaxis: {
+            tickformat: '.3f',
+            exponentformat: 'e',
+            showline: false
+        },
+        showlegend: true,
+        legend: {
+            x: 0.6,
+            y: 1.1
+        },
+        //autosize: false,
+        margin: {pad:2, t:4, b:80, l:60, r:4, autoexpand:true},
+        font:  { family:'Arial',
+            size:  16,
+            color: '#000000'},
+        paper_bgcolor:'rgba(0,0,0,0)',
+        plot_bgcolor:'rgba(0,0,0,0)'
+    };
 
     constructor(element, style) {
         //this.elementID = elementID;
         this.element   = element;
         this.style     = style;
-        this.options   = this.getOptions();
-        this.padding   = 0;
-        this.interval  = 24*60*60*1000;
-        this.minMS = 50; // minimum number of milliseconds between samples.
-        this.maxdisplayed = 10000;
-        this.groupID = [
-            'none',
-            'home',
-            'stopwatch',
-            'timer',
-            'timerMindful',
-            'counter',
-            'counterCorrect',
-            'note',
-            'acceleration',
-            'orientation',
-            'heartRate',
-            'temperature',
-            'analog1',
-            'analog2',
-            'random',
-            'resistance',
-            'voltage'];
-        this.numGroups = 0;
-        this.groupNames = []; // the names of the groups
-        this.groups  = []; // the initial groups, with no data
-        this.dirty = [];
-        this.startTimes = [];
-        this.endTimes = [];
     }
 
     palatte(groupName) {
@@ -99,6 +126,7 @@ export class GraphComponent {
         return p1[index];
     }
     create(groupNames, interval = this.interval) {
+        this.interval = interval;
         this.groupNames = groupNames;
         this.numGroups  = this.groupNames.length;
         Plotly.purge(this.element);
@@ -108,7 +136,12 @@ export class GraphComponent {
                 this.groups[i] = this.addGroupOpts(this.groupNames[i]);
                 this.dirty[i] = false;
             }
-            this.layout = this.getLayout();
+            if(this.style==="bar") {
+                this.layout = this.barLayout;
+            }
+            else {
+                this.layout = this.graphLayout;
+            }
             Plotly.newPlot(this.element, this.groups, this.layout, this.options);
         }
     }
@@ -142,68 +175,6 @@ export class GraphComponent {
         trace.name = groupName;
         return trace;
     }
-    getOptions() {
-        return {
-            displayModeBar: false,
-            scrollZoom: true
-        };
-    }
-    getLayout() {
-        var layout = {};
-        if(this.style==="bar") {
-            layout = {
-                //title: 'Your numbers:',
-                barmode: 'group', // group, stack, overlay
-                bargap: 0,
-                showlegend: true,
-                legend: {
-                    x: 0.6,
-                    y: 1.1,
-                    bgcolor:     'rgba(255,255,255,0.4)',
-                    bordercolor: '#FFFFFF',
-                    borderwidth: 0
-                },
-                width: Math.ceil(this.interval / this.numGroups),
-                margin: {pad:2, t:4, b:80, l:60, r:4, autoexpand:true},
-                font:  {family:'Arial',
-                    size:  16,
-                    color: '#000000'},
-                paper_bgcolor:'rgba(0,0,0,0)',
-                plot_bgcolor:'rgba(0,0,0,0)'
-            };
-        }
-        else {
-            layout = {
-                //title: 'Your numbers:',
-                xaxis: {
-                    //title: 'Time',
-                    showgrid: false,
-                    zeroline: false
-                },
-                yaxis: {
-                    //title: 'Percent',
-                    showline: false
-                },
-                showlegend: true,
-                legend: {
-                    x: 0.6,
-                    y: 1.1
-                },
-                //autosize: false,
-                margin: {pad:2, t:4, b:80, l:60, r:4, autoexpand:true},
-                font:  { family:'Arial',
-                         size:  16,
-                         color: '#000000'},
-                paper_bgcolor:'rgba(0,0,0,0)',
-                plot_bgcolor:'rgba(0,0,0,0)'
-            };
-        }
-        //layout.autosize = false;
-        //layout.xaxis = {fixedrange : false};
-        //layout.yaxis = {fixedrange : false};
-        return layout;
-    }
-
     getData() {
         var data = this.element.data;
         if(typeof(data)==="undefined")

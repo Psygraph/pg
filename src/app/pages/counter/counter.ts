@@ -11,7 +11,7 @@ import {pgUtil} from '../../../ts/util';
 import * as $ from 'jquery';
 import '../../../ts/3p/jquery.knob.js';
 import {RouterOutlet} from '@angular/router';
-import {CustomRouterOutlet} from '../../CustomRouterOutlet';
+//import {CustomRouterOutlet} from '../../CustomRouterOutlet';
 
 @Component({
     selector: 'page-counter', templateUrl: 'counter.html', styleUrls: ['./counter.scss'],
@@ -73,7 +73,7 @@ export class CounterPage extends Page {
             this.resetBehavior = this.pgPage.pageData[cat].resetBehavior;
             this.allResetBehavior = this.pgPage.getAllResetBehaviorNV();
             this.countShakes = this.pgPage.pageData[cat].countShakes;
-            this.shakeThreshold = 200*Math.log2(this.pgPage.pageData[cat].shakeThreshold+1);
+            this.shakeThreshold = 100*Math.log2(this.pgPage.pageData[cat].shakeThreshold+1);
             this.shakeTimeout = this.pgPage.pageData[cat].shakeTimeout;
             this.showEnso = this.pgPage.pageData[cat].showEnso;
         } else {
@@ -81,7 +81,7 @@ export class CounterPage extends Page {
             this.pgPage.pageData[cat].resetBehavior = this.resetBehavior;
             this.pgPage.pageData[cat].countShakes = this.countShakes;
             // map into exponential, range [0..4]
-            this.pgPage.pageData[cat].shakeThreshold = Math.pow(2, this.shakeThreshold/200)-1;
+            this.pgPage.pageData[cat].shakeThreshold = Math.pow(2, this.shakeThreshold/100)-1;
             this.pgPage.pageData[cat].shakeTimeout = this.shakeTimeout;
             this.pgPage.pageData[cat].showEnso = this.showEnso;
         }
@@ -107,5 +107,8 @@ export class CounterPage extends Page {
         }
         this.enso.val(opts.count / opts.target).trigger('change');
         this.enso.trigger('configure', knobOpts);
+    }
+    onTripleClick() {
+        this.onShowButtons();
     }
 }

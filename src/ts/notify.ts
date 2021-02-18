@@ -8,7 +8,7 @@ export class PGNotify {
     nextID = 1;
     alertIndices = {};
     usePlugin = undefined;
-    callback = null;
+    notificationCB = null;
     clicked = [];
     pgAudio;
     pgXML;
@@ -16,7 +16,7 @@ export class PGNotify {
     constructor() {
         this.nextID = 1;
         this.alertIndices = {};
-        this.callback = null;
+        this.notificationCB = null;
         this.clicked = [];
     }
     init(opts) {
@@ -28,9 +28,7 @@ export class PGNotify {
             pgUtil.notification.on('click', this.onClick.bind(this));
             pgUtil.notification.on('trigger', this.onTrigger.bind(this));
             //pgUtil.notification.addActions('mindful', [
-            pgUtil.notification.addActionGroup('mindful', [
-                {id: 'yes', title: 'Mindful'},
-                {id: 'no', title: 'Not Mindful'}]);
+            pgUtil.notification.addActionGroup('mindful', [{id: 'yes', title: 'Mindful'}, {id: 'no', title: 'Not Mindful'}]);
             pgUtil.notification.on('yes', this.surveyResponse.bind(this, true));
             pgUtil.notification.on('no', this.surveyResponse.bind(this, false));
             if (pgUtil.notification['fireQueuedEvents']) {
@@ -39,7 +37,7 @@ export class PGNotify {
         }
         this.nextID = Math.floor(Math.random() * 10000);
         
-        this.removeCategory("*");
+        this.cancelCategory('*');
         
         //pgUtil.notification.getAll(
         //    function (notifications) {
@@ -74,10 +72,10 @@ export class PGNotify {
         }
         return data;
     }
-    setNotification(category, atTime, countdownTime, hasText, hasSound) {
+    setNotifications(category, atTime, countdownTime, hasText, hasSound) {
         if (this.alertIndices[category] && this.alertIndices[category].length) {
-            pgDebug.showLog('Error: pending notification in ' + category);
-            this.removeCategory(category);
+            pgDebug.showLog('Pending notification in ' + category);
+            //this.cancelCategory(category);
         }
         this.alertIndices[category] = [];
         //let sound = null;
@@ -95,7 +93,8 @@ export class PGNotify {
                 if (hasSound) {
                     snd = 'file://' + pg.categorySound[category];
                 }
-                const opts = this.getOpts(category, atTime[i], countdownTime[i], txt, snd);
+                let resetTime = (i == numNotifications-1) ? 0 : countdownTime[i+1];
+                const opts = this.getOpts(category, atTime[i], countdownTime[i], resetTime, txt, snd);
                 if (this.usePlugin) {
                     opts.id = this.nextID++;
                     pgUtil.notification.schedule(opts);
@@ -109,7 +108,7 @@ export class PGNotify {
             pgDebug.showLog('Set ' + category + ' notification for: ' + atTime);
         }
     }
-    getOpts(category, atTime, countdownTime, txt, sound) {
+    getOpts(category, atTime, countdownTime, resetTime, txt, sound) {
         //let catData  = pg.getCategoryData(category);
         const opts = {
             'sound': sound,
@@ -122,7 +121,8 @@ export class PGNotify {
             actionGroupId: null
         };
         const optData = {
-            'category': category, 'time': atTime, 'resetTime': countdownTime, 'id': pg.uniqueEventID(), 'title': '', 'text': ''
+            'category': category, 'time': atTime, 'dur': countdownTime, 'resetTime': resetTime,
+            'id': pg.uniqueEventID(), 'title': '', 'text': ''
         };
         // show the icon only on android
         if (!pgUtil.isWebBrowser && pgUtil.device.platform === 'Android') {
@@ -153,67 +153,48 @@ export class PGNotify {
         opts.data = JSON.stringify(optData);
         return opts;
     }
-    /*
     // Call any missed callbacks that have elapsed.
-    callElapsed(category, running) {
+    callElapsed(cat = pgUI.category()) {
         // clear all of the indices
         if (this.usePlugin) {
-            pgUtil.notification.getAll(notifyCB.bind(this, category), this);
+            pgUtil.notification.getAll(notifyCB.bind(this, cat), this);
         }
-        function notifyCB(category, notifications) {
+        function notifyCB(cat, notifications) {
             // The intent of this method is to send notification callbacks for all events that transpired while the app was sleeping
             notifications = notifications.concat(this.clicked);
-            delete(this.clicked);
+            delete (this.clicked);
             this.clicked = [];
-    
-            for(let note in notifications) {
-                pgUtil.notification.isTriggered(notifications[note].id, cb.bind(this, notifications[note]));
+            for (let note of notifications) {
+                pgUtil.notification.isTriggered(note.id, cb.bind(this, note));
             }
-    
             function cb(notification, triggered) {
-                const data = JSON.parse(notification.data);
-                if (typeof(data) === "string") // weirdness in the recent release of local.notification
+                let data = JSON.parse(notification.data);
+                if (typeof (data) === 'string') {
+                    pgDebug.showLog("parsing JSON data twice in notifyCB");
                     data = JSON.parse(data);
-                if (category === data.category) {
-                    pgDebug.showLog("Removing notification " + notification.id  + ": " + notification.data);
-                    this.removeID(notification.id, true);
-                    if(triggered && false) {
-                        //if (!triggered)
-                        //    pgDebug.showLog("Notification should have triggered: " + notifications[note].id);
-                        const latestData = {};
-                        latestData.alarm = true;
-                        latestData.time = 0;
-                        latestData.category = category;
-                        latestData.elapsed = false;
-                        latestData.time = pgUtil.getCurrentTime(); // we regard the alarm as having elapsed... now.
-                        latestData.id = pg.uniqueEventID();
-                        this.callback("elapsed", latestData, running);
+                }
+                if (cat === data.category) {
+                    //pgDebug.assert(triggered == (data.time < pgUtil.getCurrentTime()) );
+                    if (triggered) {
+                        pgDebug.showLog('Removing notification ' + notification.id + ': ' + notification.data);
+                        this.cancelID(notification.id, true);
+                        const notifyData = {
+                            alarm: true,
+                            category: data.category,
+                            elapsed: true,
+                            time: data.time,
+                            start: data.time - data.dur,
+                            resetTime: data.resetTime,
+                            dur: data.dur,
+                            id: pg.uniqueEventID()
+                        };
+                        this.notificationCB('elapsed', notifyData);
                     }
                 }
             }
         }
     }
-    */
-    removeCategory(category) {
-        if (!this.usePlugin) {
-            try {
-                for (const i in this.alertIndices[category]) {
-                    const id = this.alertIndices[category][i];
-                    if (id) {
-                        this.removeID(id);
-                    }
-                }
-            } catch (err) { // do nothing
-            }
-        } else {
-            if(category=="*")
-                pgUtil.notification.clearAll();
-            else
-                pgUtil.notification.getAll(this.remove.bind(this, category));
-        }
-        this.alertIndices[category] = [];
-    }
-    removeID(id) {
+    cancelID(id, delay=0) {
         for (const ndx in this.alertIndices) {
             for (const i in this.alertIndices[ndx]) {
                 if (this.alertIndices[ndx][i] === id) {
@@ -222,42 +203,61 @@ export class PGNotify {
                 }
             }
         }
-        if (this.usePlugin) {
-            pgUtil.notification.get(id, this.remove.bind(this, '*'));
-        } else {
-            clearTimeout(id);
+        pgDebug.showLog('cancelling notification: ' + id);
+        setTimeout(cb.bind(this, id), delay);
+        function cb(id) {
+            if (this.usePlugin) {
+                pgUtil.notification.cancel(id);
+            } else {
+                clearTimeout(id);
+            }
         }
     }
-    remove(category, notifications) {
-        for (const n in notifications) {
-            const notification = notifications[n];
-            let data = JSON.parse(notification.data);
-            data = JSON.parse(data);
-            if (category === '*' || data.category === category) {
-                const triggered = data.time < 1000 + pgUtil.getCurrentTime();
-                // only cancel triggered notifications after a timeout, otherwise the sound will stop playing
-                if (triggered) {
-                    setTimeout(this.cancel.bind(this, notification.id, data.time), 12000);
-                } else {
-                    this.cancel(notification.id, data.time);
+    cancelCategory(category) {
+        if (!this.usePlugin) {
+            try {
+                for (const i in this.alertIndices[category]) {
+                    const id = this.alertIndices[category][i];
+                    if (id) {
+                        this.cancelID(id);
+                    }
+                }
+            } catch (err) { // do nothing
+            }
+        } else {
+            if (category == '*') {
+                pgUtil.notification.cancelAll();
+            } else {
+                pgUtil.notification.getAll(cancelCategoryCB.bind(this, category));
+            }
+        }
+        this.alertIndices[category] = [];
+        
+        function cancelCategoryCB(cat, notifications) {
+            for (const notification of notifications) {
+                let data = JSON.parse(notification.data);
+                if (typeof (data) === 'string') {
+                    pgDebug.showLog("parsing JSON data twice in cancelCategory");
+                    data = JSON.parse(data);
+                }
+                if (cat === '*' || data.category === cat) {
+                    const triggered = data.time < 1000 + pgUtil.getCurrentTime();
+                    // only cancel triggered notifications after a timeout, otherwise the sound will stop playing
+                    if (triggered) {
+                        this.cancelID(notification.id, 12000);
+                    } else {
+                        this.cancelID(notification.id);
+                    }
                 }
             }
         }
-        //if (this.callback) {
-        //    this.callback('updateView');
-        //}
-    }
-    cancel(id, time) {
-        pgDebug.showLog('cancelling notification: ' + time);
-        pgUtil.notification.cancel(id);
     }
     
-    removeAll() {
+    cancelAll() {
         for (const cat in this.alertIndices) {
-            this.removeCategory(cat);
+            this.cancelCategory(cat);
         }
         if (this.usePlugin) {
-            // just to be sure
             pgUtil.notification.cancelAll();
         }
     }
@@ -269,7 +269,11 @@ export class PGNotify {
         }
     }
     onTrigger(notification) {
-        const data = JSON.parse(notification.data);
+        let data = JSON.parse(notification.data);
+        if (typeof (data) === 'string') {
+            pgDebug.showLog("parsing JSON data twice in Trigger()");
+            data = JSON.parse(data);
+        }
         for (const ndx in this.alertIndices) {
             for (const i in this.alertIndices[ndx]) {
                 if (this.alertIndices[ndx][i] === notification.id) {
@@ -278,15 +282,22 @@ export class PGNotify {
             }
         }
         // If we did this, the notification would dismiss immediately.
-        //this.removeCategory(data.category);
-        data.alarm = true;
-        data.elapsed = true;
-        data.text = notification.text;
-        data.title = notification.title;
-        data.sound = notification.sound;
+        //this.cancelCategory(data.category);
+        const notifyData = {
+            alarm: true,
+            category: data.category,
+            elapsed: true,
+            time:  data.time,
+            start: data.time - data.dur,
+            dur:   data.dur,
+            resetTime: data.resetTime,
+            id: pg.uniqueEventID()
+        };
         //data.foreground = notification.foreground;
-        if (this.callback) {
-            this.callback('trigger', data);
+        if (this.notificationCB) {
+            this.notificationCB('trigger', notifyData);
+        } else {
+            this.cancelID(notification.id);
         }
         this.alarm(data);
     }
@@ -302,16 +313,31 @@ export class PGNotify {
     }
     
     surveyResponse(tf, notification, eopts) {
-        pgDebug.showLog('Survey Response: '+tf);
-        const data = JSON.parse(notification.data);
-        data.survey = tf;
-        if (this.callback) {
-            this.callback('survey', data);
+        pgDebug.showLog('Survey Response: ' + tf);
+        let data = JSON.parse(notification.data);
+        if (typeof (data) === 'string') {
+            pgDebug.showLog("parsing JSON data twice in survey");
+            data = JSON.parse(data);
+        }
+        const notifyData = {
+            survey: tf,
+            alarm: true,
+            category: data.category,
+            elapsed: true,
+            time: data.time,
+            start: data.time - data.dur,
+            dur: data.dur,
+            resetTime: data.resetTime,
+            id: pg.uniqueEventID()
+        };
+        if (this.notificationCB) {
+            //this.onTrigger(notification);
+            this.notificationCB('survey', notifyData);
         }
     }
     
     setCallback(callback) {
-        this.callback = callback;
+        this.notificationCB = callback;
     }
     scheduleCalendar(create) {
         if (pgUtil.isWebBrowser) {

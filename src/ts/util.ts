@@ -108,7 +108,12 @@ export class PGUtil {
         var date = new Date();
         return date.getTime();
     }
-    
+    async pause(ms = 1000) {
+        return new Promise(wait);
+        function wait(resolve, reject) {
+            setTimeout(resolve.bind(this,1), ms);
+        }
+    }
     //getDateString: function(ms) {
     //    var d = new Date(ms - pgUtil.timezoneOffset);
     //    // 2014-09-11T02:32:36.955Z
@@ -255,7 +260,9 @@ export class PGUtil {
         }
         return true;
     }
-    
+    isEmpty(obj) {
+        return Object.keys(obj).length === 0;
+    }
     equal(value, other) {
         // Get the value type
         var type = Object.prototype.toString.call(value);

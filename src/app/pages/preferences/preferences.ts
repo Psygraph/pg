@@ -8,7 +8,7 @@ import {pgDebug, pgUtil} from '../../../ts/util';
 import {pg} from '../../../ts/pg';
 import {pgNet} from '../../../ts/net';
 import {RouterOutlet} from '@angular/router';
-import {CustomRouterOutlet} from '../../CustomRouterOutlet';
+//import {CustomRouterOutlet} from '../../CustomRouterOutlet';
 
 
 @Component({
@@ -27,6 +27,9 @@ export class PreferencesPage extends Page {
     
     device = '';
     allDevices = [];
+    allBTDevices = [];
+    connectedBTDevices = [];
+    connectedBTDeviceName = 'none';
     hasBluetooth = false;
     
     constructor(public toastCtrl: ToastController,
@@ -38,13 +41,14 @@ export class PreferencesPage extends Page {
                 public navCtrl: NavController,
                 readonly ngZone: NgZone,) {
         super(modalCtrl, routerOutlet, config, alertCtrl, ngZone);
-        if(PreferencesPage.initialized)
+        if(PreferencesPage.initialized) {
             this.pgPage = pgUI.preferences;
+        }
     }
     init() {
         //PreferencesPage.initialized = true;
         this.pgPage = pgUI.preferences;
-        this.pgPage.init({});
+        this.pgPage.init( {connectCB: this.updateDevsCB.bind(this)} );
         this.header.hasSettings = false;
         this.header.hasCategories = false;
         this.settingsButtons.hasApply = true;
@@ -62,10 +66,10 @@ export class PreferencesPage extends Page {
         if(load) {
             this.email = this.pgPage.pageData.email;
             this.wifiOnly = this.pgPage.pageData.wifiOnly;
-            this.allDevices = this.pgPage.getAllDevicesNV();
             this.debug = this.pgPage.pageData.debug;
             this.showFooter = this.pgPage.pageData.showFooter;
             this.darkMode = this.pgPage.pageData.darkMode;
+            this.updateDevsCB();
         }
         else {
             this.pgPage.pageData.email = this.email;
@@ -85,14 +89,14 @@ export class PreferencesPage extends Page {
     }
     onDeleteSettings() {
         pgNet.selectAction('deleteSettings');
+        this.updateData(true);
+        this.updateData(false);
     }
     onDeleteEverything() {
         pgNet.selectAction('deleteEverything');
     }
     onDeleteEvents() {
         pgNet.selectAction('deleteEvents');
-    }
-    onBTConnect() {
     }
     onDownload() {
         pgNet.selectAction('downloadEvents');
@@ -109,11 +113,40 @@ export class PreferencesPage extends Page {
             pgNet.sendEmail(this.email);
         }
     }
-    onDevicePrefs(device) {
-        this.pgPage.deviceSettings(device, callback);
-        function callback(success) {
-            if(success) {
+    onBTPermissions() {
+        this.pgPage.doPermissions(cb.bind(this));
+        function cb(success) {
+            this.hasBluetooth = success;
+        }
+    }
+    async onOpenDevice() {
+        let name = this.connectedBTDeviceName;
+        if(this.connectedBTDevices.length > 0) {
+            if(name !== this.connectedBTDevices[0].name) {
+                await this.pgPage.bluetoothDisconnect();
             }
+        }
+        else if(name !== "none") {
+            await this.pgPage.bluetoothConnect(name);
+        }
+        this.updateDevsCB();
+    }
+    updateDevsCB() {
+        this.allDevices = this.pgPage.getAllDevicesNV();
+        this.allBTDevices = this.pgPage.getAllBTDevicesNV();
+        this.allBTDevices.push({name: 'none', value: 'none'});
+        this.connectedBTDevices = this.pgPage.getConnectedBTDevicesNV();
+        if(this.connectedBTDevices.length) {
+            this.connectedBTDeviceName = this.connectedBTDevices.map(a => a.name)[0];
+        }
+        else {
+            this.connectedBTDeviceName = 'none';
+        }
+    }
+    async onDevicePrefs(device) {
+        await this.pgPage.deviceSettings(device, callback.bind(this));
+        function callback(success) {
+            this.updateDevsCB();
         }
     }
     onCancel() {

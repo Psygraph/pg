@@ -8,7 +8,7 @@ import {CategoryFilterPage} from '../category-filter/category-filter';
 
 import * as $ from 'jquery';
 import {RouterOutlet} from '@angular/router';
-import {CustomRouterOutlet} from '../../CustomRouterOutlet';
+//import {CustomRouterOutlet} from '../../CustomRouterOutlet';
 
 @Component({
     selector: 'header',
@@ -58,6 +58,7 @@ export class HeaderWidget {
         this.showSettingsSection(show);
         //this.showInfoSection(show);
         this.page.pgPage.updateView(!show);
+        this.page.updateData(show);
     }
     showMainSection(show) {
         const pagename = this.page.pgPage.name;

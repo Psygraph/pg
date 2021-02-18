@@ -16,15 +16,15 @@
                     <ion-label>Show signals:</ion-label>
                     <ion-select multiple="true" placeholder="Signals:" [(ngModel)]="signals">
                         <div *ngFor="let sig of allSignals">
-                            <ion-select-option value={{sig.value}}>{{sig.name}}</ion-select-option>
+                            <ion-select-option value="{{sig.value}}">{{sig.name}}</ion-select-option>
                         </div>
                     </ion-select>
                 </ion-item>
                 <ion-item lines="none">
-                    <ion-label>Graph period:</ion-label>
-                    <ion-select multiple="false" placeholder="Signals:" [(ngModel)]="interval">
+                    <ion-label>Interval width:</ion-label>
+                    <ion-select multiple="false" [(ngModel)]="interval">
                         <div *ngFor="let int of allIntervals">
-                            <ion-select-option value={{int.value}}>{{int.name}}</ion-select-option>
+                            <ion-select-option value="{{int.value}}">{{int.name}}</ion-select-option>
                         </div>
                     </ion-select>
                 </ion-item>

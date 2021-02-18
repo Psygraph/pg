@@ -1,5 +1,5 @@
 #categories_main {
-  xxoverflow: auto;
+  overflow: auto;
 }
 
 ion-input[slot="end"] {
@@ -10,6 +10,12 @@ ion-item-divider, .center {
   justify-content: center;
   align-content: center;
   align-items: center;
+}
+
+ion-range.color, ion-col.color {
+  height: unset;
+  padding-top: 0px;
+  padding-bottom: 0px;
 }
 
 #colorItem {

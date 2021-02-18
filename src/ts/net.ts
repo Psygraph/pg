@@ -90,8 +90,7 @@ export class PGNet {
         //this.syncSoon();
     }
     
-    postData(data, callback = (tf, {}) => {
-    }, isAsync = true) {
+    postData(data, callback = (tf, {}) => {}, isAsync = true) {
         let url = '';
         if (data.action === 'login' || data.action === 'checkUser') {
             url = data.server + '/server.php';
@@ -193,7 +192,7 @@ export class PGNet {
         }
         this.postData({'action': 'checkUser', 'server': server, 'username': username}, verifyCB, false);
     }
-    localLogin(username, callback = function(success) { }) {
+    localLogin(username, callback = (success) => { }) {
         // read the PG followed by the events
         this.readPG(pgLoaded.bind(this));
         
@@ -221,7 +220,7 @@ export class PGNet {
         
         function finishLogin(success) {
             if (success) {
-                pgNet.updateSettings(pg, function(success) {
+                pgNet.updateSettings(pg, (success) => {
                     pgNet.writePG(pg);
                 });
             }
@@ -325,13 +324,13 @@ export class PGNet {
         //if(pg.server == "")
         //    return;
         pgUI.savePage(); // update data of current page
+        this.writePsygraph();
         
         if (!pg.isDirty() && !force) {
-            this.writePG(pg, cb);// eslint-disable-line
+            this.writePG(pg, cb);
             return;
         }
         pgUI.updateStateObservers(false); // write any new state to the PG
-        this.writePsygraph();
         pgFile.writeFile('com.psygraph.state', pgUI.state);
         //if(!quick) // Doing this on the settings pages will blow away any of the user's changes.
         //    resetPage();
@@ -405,27 +404,28 @@ export class PGNet {
         }
     }
     readPG(callback, fn = 'com.psygraph.pg') {
-        pgFile.existFile(fn, cb.bind(this));// eslint-disable-line
+        pgFile.existFile(fn, cb.bind(this));
         function cb(exists) {
             if (exists) {
                 pgFile.readFile(fn, callback);
-            } else {
-                fn = 'com.psygraph.default';
-                pgFile.readFile(fn, callback, true, pgFile.mediaEntry);
+            }
+            else {
+                callback(false);
+                //    fn = 'com.psygraph.default';
+                //    pgFile.readFile(fn, callback, true, pgFile.mediaEntry);
             }
         }
     }
-    writeEvents(pgTemp, callback = function(success) {
-    }) {
+    writeEvents(pgTemp, callback = (success) => {}) {
         const data = {
             'events': pgTemp.events, 'deletedEvents': pgTemp.deletedEvents, 'selectedEvents': pgTemp.selectedEvents
         };
         if (pg.getReadOnly()) {
             cb(true);
-        }// eslint-disable-line
+        }
         else {
             pgFile.writeFile('com.psygraph.events', data, cb);
-        }// eslint-disable-line
+        }
         function cb(success) {
             if (!success) {
                 pgUI.showAlert('Error', 'Could not save pg events file');
@@ -435,7 +435,7 @@ export class PGNet {
             callback(success);
         }
     }
-    readEvents(callback) {
+    readEvents(callback = (success)=>{}) {
         pgFile.readFile('com.psygraph.events', cbEvents);
         
         function cbEvents(success, data) {
@@ -452,11 +452,10 @@ export class PGNet {
                 pgUI.state = data;
             } else {
                 pgDebug.showLog('Could not read state file.');
+                pgUI.updateStateObservers(false);
             }
             pgUI.updateStateObservers(true);
-            if (callback) {
-                callback(success);
-            }
+            callback(success);
         }
     }
     deleteFiles() {
@@ -498,7 +497,7 @@ export class PGNet {
         }
     }
     // download events from the server
-    downloadEvents(callback) {
+    downloadEvents(callback = (success)=>{}) {
         const lastOffset = 0;
         if (!(pg.loggedIn && pg.online)) {
             pgUI.showAlert('Warning', 'You must be online and logged in to download events.');
@@ -511,7 +510,7 @@ export class PGNet {
             if (success) {
                 pg.addEventArray(rslt.data, false, true);
                 if (rslt.offset == 0) {
-                    this.writeEvents(pg, cb);// eslint-disable-line
+                    this.writeEvents(pg, callback.bind(this,success));
                 } else {
                     const lastOffset = rslt.offset;
                     this.postData({action: 'getEventArray', timeout: 12000, offset: lastOffset}, createEvents);
@@ -519,16 +518,11 @@ export class PGNet {
             } else {
                 pgUI.showBusy(false);
                 pgUI.showAlert('Error', 'GetEventArray timeout at event offset: ' + lastOffset);
-                cb();// eslint-disable-line
-            }
-            
-            function cb() {
                 callback(success);
             }
         }
     }
-    uploadFiles(force = false, callback = function(tf) {
-    }) {
+    uploadFiles(force = false, callback = (success) => {}) {
         if (!(pg.loggedIn && pg.online)) {
             pgUI.showAlert('Error', 'You must be online and logged in to upload files.');
             callback(false);
@@ -538,8 +532,7 @@ export class PGNet {
     }
     
     // upload events to the server
-    uploadEvents(callback = function(success) {
-    }) {
+    uploadEvents(callback = (success) => {}) {
         if (!(pg.loggedIn && pg.online)) {
             pgUI.showAlert('Error', 'You must be online and logged in to upload events.');
             return;
@@ -669,13 +662,13 @@ export class PGNet {
             const localPG = new PG();
             localPG.init();
             localPG.setDirty(true);
-            this.updateSettings(localPG, settingsCB.bind(this, localPG));// eslint-disable-line
+            this.updateSettings(localPG, settingsCB.bind(this, localPG));
         } else if (selection === 'deleteEvents') {
             let text = '';
             if (pg.loggedIn && pg.online) {
                 text = '<p>Do you wish to delete all events from both this device and the server?</p>' + '<p>(You can log out to delete events on this device only).</p>';
             } else {
-                text = '<p>Do you wish to delete all events from this device?</p>' + '<p>(You can log in to delete events on the server).</p>';
+                text = '<p>Do you wish to delete all events from this device?</p>';
             }
             pgUI.showDialog({title: 'Delete events?', true: 'Delete', false: 'Cancel'}, text, deleteEventsCB.bind(this));// eslint-disable-line
         } else if (selection === 'deleteEverything') {
@@ -728,8 +721,9 @@ export class PGNet {
             }
             pg.copy(localPG, false);
             this.writePG(pg);
-            //pgUI.gotoPage(pgUI.page());
-            pgUI.resetPage();
+            // reload pageData for all active pages
+            pgUI.updateAllPages();
+            pgUI.resetPage(false);
         }
         return false;
     }

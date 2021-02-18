@@ -1,0 +1,21 @@
+ion-grid {
+  height:100%;
+  layout: flex;
+  align-items: stretch;
+  flex-direction: column;
+}
+ion-row.button {
+  height: 45%;
+}
+ion-row {
+  height: 10%;
+}
+ion-col {
+  vertical-align: center;
+  text-align: center;
+}
+ion-modal.fullscreen {
+  --width: 100%;
+  --height: 100%;
+  --border-radius: 10;
+}

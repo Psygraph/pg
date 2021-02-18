@@ -7,7 +7,7 @@ import {Page} from '../page/page';
 import {pgNet} from '../../../ts/net';
 import {pg} from '../../../ts/pg';
 import {pgUtil} from '../../../ts/util';
-import {CustomRouterOutlet} from '../../CustomRouterOutlet';
+//import {CustomRouterOutlet} from '../../CustomRouterOutlet';
 
 @Component({
     selector: 'page-login', templateUrl: 'login.html', styleUrls: ['./login.scss'],
